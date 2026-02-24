@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "nome": "Vinho Quinta do Morgado Tinto Suave",
+    "preço": "36,99",
+    "img": "/vinho/v.1.png"
+  },
+  {
+    "id": 2,
+    "nome": "Vinho Campo Largo Suave Rosé",
+    "preço": "27,99",
+    "img": "/vinho/v.2.png"
+  },
+  {
+    "id": 3,
+    "nome": "Galiotto Tinto Suave",
+    "preço": "26,99",
+    "img": "/vinho/v.3.png"
+  },
+  {
+    "id": 4,
+    "nome": "Vinho Pérgola Tinto Suave",
+    "preço": "23,99",
+    "img": "/vinho/v.4.png"
+  },
+  {
+    "id": 5,
+    "nome": "Vinho Nacional Pergola",
+    "preço": "34,99",
+    "img": "/vinho/v.5.png"
+  },
+  {
+    "id": 6,
+    "nome": "Vinho Chileno Gato Negro",
+    "preço": "59,99",
+    "img": "/vinho/v.6.png"
+  }
+]
