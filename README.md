@@ -118,7 +118,7 @@ Criar uma plataforma institucional moderna, responsiva e profissional para repre
 
 ## 👨‍💻 Desenvolvedor
 
-Projeto desenvolvido por **Gustavo Alves da Silva**.
+Projeto desenvolvido por **David Santos da Costa**.
 
 ---
 
