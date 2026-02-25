@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "nome": "Arroz Aladdin Branco TP1 5kg",
+    "preço1": "18,99",
+    "preço2": "14,99",
+    "img": "/alimentos/1.png"
+  },
+  {
+    "id": 2,
+    "nome": "Arroz Boca Cheia Branco TP3 5kg",
+    "preço1": "14,99",
+    "preço2": "12,99",
+    "img": "/alimentos/2.png"
+  },
+  {
+    "id": 3,
+    "nome": "Açúcar Cristal Ecoçúcar 2kg",
+    "preço1": "8,99",
+    "preço2": "5,99",
+    "img": "/alimentos/3.png"
+  },
+  {
+    "id": 4,
+    "nome": "Óleo de Soja Vila Velha 900ml",
+    "preço1": "8,49",
+    "preço2": "6,99",
+    "img": "/alimentos/4.png"
+  },
+  {
+    "id": 5,
+    "nome": "Leite em Pó CCGL 1kg",
+    "preço1": "39,99",
+    "preço2": "34,99",
+    "img": "/alimentos/5.png"
+  },
+  {
+    "id": 6,
+    "nome": "Leite em Pó Piracanjuba Integral 1kg",
+    "preço1": "39,99",
+    "preço2": "29,99",
+    "img": "/alimentos/6.png"
+  },
+  {
+    "id": 7,
+    "nome": "Macarrão Paulista Parafuso 500g",
+    "preço1": "3,79",
+    "preço2": "2,99",
+    "img": "/alimentos/7.png"
+  },
+  {
+    "id": 8,
+    "nome": "Molho de Tomate Fugini Tradicional 300g",
+    "preço1": "2,19",
+    "preço2": "1,89",
+    "img": "/alimentos/8.png"
+  },
+  {
+    "id": 9,
+    "nome": "Trigo Dona Benta c/ Fermento 1kg",
+    "preço1": "5,79",
+    "preço2": "4,99",
+    "img": "/alimentos/9.png"
+  },
+  {
+    "id": 10,
+    "nome": "Fécula de Mandioca Lopes 1kg",
+    "preço1": "7,99",
+    "preço2": "6,99",
+    "img": "/alimentos/10.png"
+  }
+]

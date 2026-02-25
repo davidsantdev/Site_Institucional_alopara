@@ -1,13 +1,15 @@
 <script setup lang="ts">
+import Alimentos from './alimentos.vue';
 import CarousselSobre from './CarousselSobre.vue';
 import DialogVideo from './DialogVideo.vue';
 import Produtos from './Produtos.vue';
+
 
 </script>
 
 <template>
     <div>
-        <Produtos/>
+        
 
 
 
@@ -21,6 +23,9 @@ import Produtos from './Produtos.vue';
 
              <CarousselSobre/>
 
+         </div>
+         <div class="bg-slate-50">
+           <Produtos/>
          </div>
 
 

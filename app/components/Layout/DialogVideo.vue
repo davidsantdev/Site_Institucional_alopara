@@ -22,15 +22,8 @@ import DialogHeader from '../ui/dialog/DialogHeader.vue';
                  </DialogHeader>
                  <div class="flex flex-col w-[90%] text-center gap-3 ">
 
-                    <video 
-                          autoplay 
-                          
-                          loop 
-                     playsinline 
-                   class=" rounded-xl h-150">
-                  <source src="../../assets/img/bingo.mp4" type="video/mp4"  />
-                Seu navegador não suporta vídeo.
-  </video>
+ 
+
                    
 
                  </div>

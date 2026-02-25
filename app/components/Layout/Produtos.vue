@@ -1,17 +1,55 @@
 <script setup lang="ts">
-import produtos from "../../data/produtosVinho.json"
+import { ref } from 'vue'
+import Alimentos from './alimentos.vue'
+import Vinho from './Vinho.vue'
+
+const Vinh = ref(false)
+const Alimen = ref(true)
+
+function promo() {
+  Alimen.value = true
+  Vinh.value = false
+}
+
+function Adega() {
+  Alimen.value = false
+  Vinh.value = true
+}
 </script>
 
 <template>
-    <div class="flex justify-center bg-slate-100">
-        <div class="flex flex-wrap w-[60%] justify-center gap-6 ">
-        <div v-for="V in produtos" :key="V.id  " class="bg-slate-50 h-100  p-2 shadow">
-            <img class="w-[250px]" :src="V.img" alt="">
-            <h3 class="text-[20px ] text-black  w-[70%] font-semibold" >{{ V.nome }}</h3>
-            <h4 class="text-slate-800">R$ <span class="text-green-500 text-[40px] font-bold"> {{ V.preço }}</span> </h4> 
-        </div>
-    </div>
+    <div class="bg-slate-50 h-300">
+        <h3>
+            Produtos
+        </h3>
 
+        <div class="flex gap-10 ml-10">
+             <button
+    @click="promo"
+    :class="[
+      'text-[22px] pb-2 transition-all',
+      Alimen
+        ? 'border-b-6 border-red-600 text-red-600'
+        : 'text-slate-900 hover:text-red-500'
+    ]"
+  >
+    Promoções
+  </button>
+          <button
+    @click="Adega"
+    :class="[
+      'text-[22px] pb-2 transition-all',
+      Vinh
+        ? 'border-b-6 border-red-600 text-red-600'
+        : 'text-slate-900 hover:text-red-500'
+    ]"
+  >
+    Adega
+  </button>
+        </div>
+
+        <Alimentos v-show="Alimen"/>
+        <Vinho v-show="Vinh"></Vinho>
     </div>
-    
 </template>
+
