@@ -1,54 +1,133 @@
-![nuxt-shadcn-dashboard-social-card](https://nuxt-shadcn-dashboard.vercel.app/social-card.png)
+# 🛒 Site Institucional – Alô Pará
 
-# Nuxt Shadcn Vue TailwindCSS 4 - Dashboard
+Projeto desenvolvido para o **Supermercado Alô Pará**, com foco em presença digital, divulgação institucional, ofertas e oportunidades de emprego.
 
-[![built with nuxt][nuxt-src]][nuxt-href]
+---
 
-- [Live demo](https://nuxt-shadcn-dashboard.vercel.app)
-- [Component Documentation](https://shadcn-vue.com/docs/introduction)
+## 📌 Sobre o Projeto
 
-## Quick Start
+Este é um site institucional moderno desenvolvido para apresentar:
 
-```bash [Terminal]
-npx nuxi@latest init -t github:dianprata/nuxt-shadcn-dashboard my-dashboard-app
-cd my-dashboard-app
-pnpm i # If you don't have pnpm installed, run: npm install -g pnpm
+* Informações sobre o supermercado
+* Vantagens de comprar no Alô Pará
+* Clube de Ofertas
+* Trabalhe Conosco
+* FAQ (Perguntas Frequentes)
+* Divulgação de vagas
+* Download do aplicativo
+* Integração com WhatsApp e Instagram
+
+O objetivo é fortalecer a marca, melhorar a comunicação com os clientes e centralizar informações importantes em um só lugar.
+
+---
+
+## 🚀 Tecnologias Utilizadas
+
+* Nuxt 3
+* Vue 3
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+* Lucide Icons
+* AOS (Animate On Scroll)
+
+---
+
+## 🎯 Funcionalidades Implementadas
+
+### ✅ Listagem dinâmica de produtos
+
+Produtos organizados em JSON e renderizados com `v-for`.
+
+### ✅ Carousel de imagens
+
+Seção interativa para banners e destaques.
+
+### ✅ Página Trabalhe Conosco
+
+* Explicação sobre como se tornar colaborador
+* Orientação para acompanhar vagas pelo Instagram
+* Contato via WhatsApp para mais informações
+
+### ✅ Clube de Ofertas
+
+Área dedicada a promoções e benefícios exclusivos.
+
+### ✅ FAQ
+
+Sessão com perguntas frequentes como:
+
+* Por que comprar no Alô Pará?
+* O supermercado faz entregas?
+* Como acompanhar ofertas?
+
+### ✅ Integração com redes sociais
+
+* Instagram para divulgação de vagas
+* WhatsApp para contato direto
+
+---
+
+## 📱 Aplicativo
+
+O site também divulga o aplicativo do supermercado, incentivando os clientes a baixarem para:
+
+* Acompanhar ofertas
+* Receber promoções
+* Facilitar compras
+
+---
+
+## 📂 Estrutura do Projeto
+
+```
+my-dashboard-app/
+ ├── assets/
+ ├── components/
+ ├── pages/
+ ├── public/
+ ├── app.vue
+ └── nuxt.config.ts
 ```
 
-## App Settings
-You can change the app settings in `app.config.ts` file.
-If you want to change app settings, you have to clear cookie 'app_settings' first.
-```
-export default defineAppConfig({
-  appSettings: {
-    sidebar: {
-      collapsible: 'offcanvas', // 'offcanvas' | 'icon' | 'none'
-      side: 'left', // 'left' | 'right'
-      variant: 'inset', // 'sidebar' | 'floating' | 'inset'
-    },
-    theme: {
-      color: 'default', // 'default' | 'blue' | 'green' | 'orange' | 'purple' | 'red' | 'teal' | 'yellow' | 'rose'
-      type: 'scaled', // 'default' | 'mono' | 'scaled'
-    }
-  },
-})
+---
+
+## ⚙️ Como Rodar o Projeto
+
+```bash
+# Instalar dependências
+npm install
+
+# Rodar ambiente de desenvolvimento
+npm run dev
 ```
 
-## Contributing
+O projeto ficará disponível em:
 
-1. Clone this repository.
-2. Install dependencies `pnpm install`.
-3. Use `pnpm run dev` to start dev server.
+```
+http://localhost:3000
+```
 
-## Credits
+---
 
-- [Nuxt.js](https://nuxtjs.org/)
-- [Shadcn Vue](https://shadcn-vue.com/)
-- [TailwindCSS](https://tailwindcss.com/)
+## 🌟 Objetivo do Projeto
 
-## License
+Criar uma plataforma institucional moderna, responsiva e profissional para representar o Supermercado Alô Pará no ambiente digital.
 
-MIT
+---
 
-[nuxt-src]: https://img.shields.io/badge/Built%20With%20Nuxt-18181B?logo=nuxt.js
-[nuxt-href]: https://nuxt.com/
+## 👨‍💻 Desenvolvedor
+
+Projeto desenvolvido por **David Santos da Costa**.
+
+---
+
+## 📌 Status
+
+🚧 Em desenvolvimento – melhorias visuais e novas funcionalidades sendo implementadas continuamente.
+
+---
+
+## 📄 Licença
+
+Este projeto é de uso institucional e priva
