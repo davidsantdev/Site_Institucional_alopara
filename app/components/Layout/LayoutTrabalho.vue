@@ -32,7 +32,7 @@ import Button from '../ui/button/Button.vue';
         </div>
 
         <div class="bg-slate-100 flex justify-center items-center  ">
-            <div class="w-[100%] md:w-[80%] bg-white shadow rounded-[20px] p-5 md:p-7 md:p-20 mt-10">
+            <div class="w-[100%] md:w-[80%] bg-white shadow rounded-[20px] md:m-40 mb-10 p-5 md:p-7 md:p-20 mt-10">
                 <div>
                     <h4 class="font-bold text-[35px] md:text-[50px] text-slate-900">Quais vagas disponiveis? </h4>
 

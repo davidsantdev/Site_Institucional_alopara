@@ -10,11 +10,11 @@ import DialogTrigger from '../ui/dialog/DialogTrigger.vue';
 
 <template>
     <div >
-        <div class="text-slate-100 flex flex-col items-center ">
+        <div class="text-slate-100 flex flex-col items-center pt-30">
             <h1 class="font-bold text-[100px]">BEM VINDO AO </h1>
             <h1 class="font-bold text-[100px] text-red-600">ALÔ PARÁ </h1>
             
-            <p class=" text-[22px] text-slate-300">Há anos fazendo parte do dia a dia das famílias, oferecendo qualidade, economia e confiança</p>
+            <p class=" text-[22px] text-slate-300">Há anos presente no dia a dia das famílias, levando qualidade, economia e confiança</p>
             <div class="mt-10 flex gap-10 justify-between">
                 <Dialog>
                     <DialogTrigger>

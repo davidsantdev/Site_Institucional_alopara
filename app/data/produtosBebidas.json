@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "nome": "Refrigerante Coca-Cola Original 2L",
+    "preço": "9,99",
+    "img": "/bebidas/1.png"
+  },
+  {
+    "id": 2,
+    "nome": "Energético Baly 2L",
+    "preço": "14,99",
+    "img": "/bebidas/2.png"
+  },
+  {
+    "id": 3,
+    "nome": "Energético Red Bull 250ml",
+    "preço": "9,99",
+    "img": "/bebidas/3.png"
+  },
+  {
+    "id": 4,
+    "nome": "Energético Monster Energy 473ml",
+    "preço": "11,99",
+    "img": "/bebidas/4.png"
+  },
+  {
+    "id": 5,
+    "nome": "Refrigerante Fanta Sabores 2L",
+    "preço": "9,99",
+    "img": "/bebidas/5.png"
+  },
+  {
+    "id": 6,
+    "nome": "Refrigerante Tuchaua 2L",
+    "preço": "7,99",
+    "img": "/bebidas/6.png"
+  },
+  {
+    "id": 7,
+    "nome": "Refrigerante Pepsi 2L",
+    "preço": "8,99",
+    "img": "/bebidas/7.png"
+  },
+  {
+    "id": 8,
+    "nome": "Suco Integral Aurora 1,5L",
+    "preço": "27,99",
+    "img": "/bebidas/8.png"
+  }
+]

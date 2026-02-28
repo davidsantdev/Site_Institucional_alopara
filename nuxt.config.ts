@@ -1,9 +1,12 @@
 import tailwindcss from '@tailwindcss/vite'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+
   devtools: { enabled: true },
 
   css: ['~/assets/css/tailwind.css'],
+
   vite: {
     plugins: [
       tailwindcss(),
@@ -30,14 +33,7 @@ export default defineNuxtConfig({
   ],
 
   shadcn: {
-    /**
-     * Prefix for all the imported component
-     */
     prefix: '',
-    /**
-     * Directory that the component lives in.
-     * @default "~/components/ui"
-     */
     componentDir: '~/components/ui',
   },
 
@@ -63,13 +59,26 @@ export default defineNuxtConfig({
   },
 
   imports: {
-    dirs: [
-      './lib',
-    ],
-     lucide: {
+    dirs: ['./lib'],
+  },
+
+  lucide: {
     namePrefix: 'Icon'
-  }
   },
 
   compatibilityDate: '2024-12-14',
+
+ 
+app: {
+  head: {
+    meta: [
+      { charset: 'utf-8' },
+      { name: 'google', content: 'notranslate' }
+    ],
+    htmlAttrs: {
+      lang: 'pt-BR',
+      translate: 'no'
+    }
+  }
+}
 })

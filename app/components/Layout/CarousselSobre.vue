@@ -33,7 +33,7 @@ const images = [img1, img2, img3, img4, img5]
             <CardContent class="p-0">
               <img
                 :src="image"
-                class="w-full h-64 object-cover"
+                class="w-full h-70 object-cover"
                 alt="Imagem do carousel"
               />
             </CardContent>

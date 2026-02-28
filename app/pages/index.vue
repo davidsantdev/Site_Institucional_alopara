@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CarousselSobre from '~/components/Layout/CarousselSobre.vue';
 import ConteudoMain from '~/components/Layout/conteudoMain.vue';
 import Faqs from '~/components/Layout/Faqs.vue';
 import Footer from '~/components/Layout/Footer.vue';
@@ -15,6 +16,8 @@ import MainlayoutSecundary from '~/components/Layout/MainlayoutSecundary.vue';
     <HeaderMain class="text-gray-300 "/>
 
     <ConteudoMain/>
+
+    
 
   </div>
   <div class="bg-[#0E0808]">

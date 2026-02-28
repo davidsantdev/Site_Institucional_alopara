@@ -4,69 +4,48 @@
     "nome": "Água Sanitária Clorada Branca 1L",
     "preço1": "2,69",
     "preço2": "1,99",
-    "img": "/alimentos/1.png"
+    "img": "/limpeza/1.png"
   },
   {
     "id": 2,
     "nome": "Água Sanitária FC Cloro Ativo 5L",
     "preço1": "10,99",
     "preço2": "9,99",
-    "img": "/alimentos/2.png"
+    "img": "/limpeza/2.png"
   },
   {
     "id": 3,
     "nome": "Amaciante Comfort Frescor Intenso 400ml",
     "preço1": "7,49",
     "preço2": "6,99",
-    "img": "/alimentos/3.png"
+    "img": "/limpeza/3.png"
   },
   {
     "id": 4,
     "nome": "Amaciante Fofo Azul Talco 500ml",
     "preço1": "7,49",
     "preço2": "6,99",
-    "img": "/alimentos/4.png"
+    "img": "/limpeza/4.png"
   },
   {
     "id": 5,
     "nome": "Amaciante Vida Macia 1L",
     "preço1": "12,99",
     "preço2": "11,99",
-    "img": "/alimentos/5.png"
+    "img": "/limpeza/5.png"
   },
   {
     "id": 6,
     "nome": "Desinfetante Econômico 1L",
     "preço1": "4,29",
     "preço2": "3,99",
-    "img": "/alimentos/6.png"
+    "img": "/limpeza/6.png"
   },
   {
     "id": 7,
     "nome": "Detergente Ypê 500ml",
     "preço1": "2,79",
     "preço2": "2,49",
-    "img": "/alimentos/7.png"
-  },
-  {
-    "id": 8,
-    "nome": "Esponja Brilhus Multiuso 4un",
-    "preço1": "5,99",
-    "preço2": "4,99",
-    "img": "/alimentos/8.png"
-  },
-  {
-    "id": 9,
-    "nome": "Papel Higiênico Sublime 4x1",
-    "preço1": "4,99",
-    "preço2": "4,49",
-    "img": "/alimentos/9.png"
-  },
-  {
-    "id": 10,
-    "nome": "Sabão em Pó Brilhante 1,6kg",
-    "preço1": "19,99",
-    "preço2": "16,49",
-    "img": "/alimentos/10.png"
+    "img": "/limpeza/7.png"
   }
 ]

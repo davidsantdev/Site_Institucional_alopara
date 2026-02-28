@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import { Menu } from 'lucide-vue-next';
+import { Menu, MenuIcon, Store, UserPlus } from 'lucide-vue-next';
 import DropdownMenu from '../ui/dropdown-menu/DropdownMenu.vue';
 import DropdownMenuContent from '../ui/dropdown-menu/DropdownMenuContent.vue';
 import DropdownMenuGroup from '../ui/dropdown-menu/DropdownMenuGroup.vue';
@@ -17,32 +17,40 @@ import Mobilemenu from './Mobilemenu.vue';
 
 <template>
     <div >
-        <header class="flex justify-between md:mx-20  text-[20px]  ">
+      
+        <header class="flex justify-between pd:mx-20  text-[20px]  bg-gray-50 text-gray-900 w-[full] items-center px-30">
             
             <div>
-                <img src="../../assets/img/alop.png"" alt="" class="w-[180px] ">
+                <img src="../../assets/img/alop.png"" alt="" class="w-[120px] ">
+
+            </div>
+            <div class="flex gap-10">
+                <div class="flex gap-2 items-center text-red-600 font-semibold">
+                    <Store :size="40"></Store>
+                   <h2 class="text-[18px]">Compre online</h2> 
+                </div>
+                 <div class="flex gap-2 items-center text-red-600 font-semibold">
+                    <UserPlus :size="40"></UserPlus>
+                   <h2 class="text-[18px]">Seja um fornecedor</h2> 
+                </div>
 
             </div>
 
-            <div class="md:flex gap-10 hidden">
-                <button>
-                   <NuxtLink to="/">Inicio</NuxtLink>
-                </button>
-                <button>
-                    <NuxtLink to="/Baixar">Baixar app</NuxtLink>
+         
+        </header>
 
-                </button>
-                
+        <div class="bg-gray-50 shadow border-1 border-gray-300 text-gray-800 flex justify-between px-7 ">
+            <div>
 
-        <DropdownMenu>
+                   <DropdownMenu>
     <DropdownMenuTrigger as-child>
         <button>
-            Saiba mais <span class="mt-3"> <Icon name="lucide:chevron-down"  /></span>
+            <Menu :size="50" class="  "/> 
         </button>
 
 
     </DropdownMenuTrigger>
-    <DropdownMenuContent class="w-40 h-100 mt-[-50px]" >
+    <DropdownMenuContent class="w-40 h-100 " >
       <DropdownMenuLabel>Junte-se a equipe</DropdownMenuLabel>
       <DropdownMenuGroup>
         <DropdownMenuItem >
@@ -66,6 +74,25 @@ import Mobilemenu from './Mobilemenu.vue';
     </DropdownMenuContent>
         </DropdownMenu>
 
+
+
+
+            </div>
+
+
+
+               <div class="md:flex gap-10 hidden">
+                <button>
+                   <NuxtLink to="/">Inicio</NuxtLink>
+                </button>
+                <button>
+                    <NuxtLink to="/Baixar">Baixar app</NuxtLink>
+
+                </button>
+                <button><NuxtLink to="/trabalhe-conosco">Trabalhe Conosco</NuxtLink></button>
+                
+
+     
             </div>
 
 
@@ -79,7 +106,7 @@ import Mobilemenu from './Mobilemenu.vue';
           
 
             </div>
-        </header>
+        </div>
         </div>
 
 </template>

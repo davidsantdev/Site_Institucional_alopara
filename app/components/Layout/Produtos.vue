@@ -18,7 +18,7 @@ function Adega() {
 </script>
 
 <template>
-    <div class="bg-slate-50 h-300">
+    <div class="bg-slate-50 h-300 select-none">
         <h3>
             Produtos
         </h3>

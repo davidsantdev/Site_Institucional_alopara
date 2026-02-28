@@ -8,25 +8,19 @@ import Produtos from './Produtos.vue';
 </script>
 
 <template>
-    <div>
+    <div >
+        <div class="flex justify-center p-15">
+            <CarousselSobre/>
+
+        </div>
+        <div class="bg-slate-50">
+           <Produtos/>
+         </div>
         
 
 
 
-         <div class="flex justify-center items-center flex-col pt-16">
-            <h4 class="font-bold text-[40px] pt-7 ">Mais sobre nossas PROMOÇÕES </h4>
-            <p class="text-[17px] w-[1000px] text-slate-300 p-5">Pensando Pensando na família, na economia do dia a dia e na importância de 
-                levar qualidade para a mesa, resolvemos fazer diferente: agora temos descontos diários e ofertas 
-                variadas todos os dias, para que você sempre encontre um motivo novo para economizar. Assim, cada visita
-                 ao mercado se torna uma nova oportunidade de pagar menos e levar mais para casa. Aqui, o compromisso é com 
-                 o seu bolso e com a sua casa.</p>
 
-             <CarousselSobre/>
-
-         </div>
-         <div class="bg-slate-50">
-           <Produtos/>
-         </div>
 
 
 
