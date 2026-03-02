@@ -12,6 +12,9 @@ import MainlayoutSecundary from '~/components/Layout/MainlayoutSecundary.vue';
 </script>
 
 <template>
+  <div class="flex flex-col gap-2">
+
+  
   <div class="fundo-alo">
     <HeaderMain class="text-gray-300 "/>
 
@@ -21,12 +24,18 @@ import MainlayoutSecundary from '~/components/Layout/MainlayoutSecundary.vue';
 
   </div>
   <div class="bg-[#0E0808]">
+    <CarousselSobre/>
+  </div>
+
+
+  <div class="bg-[#0E0808]">
     <MainlayoutSecundary/>
 
     <Faqs/>
     <Footer/>
     
 
+  </div>
   </div>
 
 </template>

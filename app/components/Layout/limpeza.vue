@@ -3,59 +3,141 @@ import limpeza from "../../data/produtosLimpeza.json"
 import { Carousel, CarouselContent, CarouselNext, CarouselPrevious } from "../ui/carousel";
 import CarouselItem from "../ui/carousel/CarouselItem.vue";
 
+import Dialog from "../ui/dialog/Dialog.vue";
+import DialogTrigger from "../ui/dialog/DialogTrigger.vue";
+import DialogContent from "../ui/dialog/DialogContent.vue";
+
+import { PhoneCallIcon } from "lucide-vue-next";
+
+
+const produtoSelecionado = ref<any>(null)
+
+function comprarWhatsapp() {
+
+
+
+  const numero = "5594991923141"
+
+  const produto = produtoSelecionado.value
+
+  const mensagem = `
+Olá! Quero comprar:
+
+  Produto: ${produto.nome}
+  Preço: R$ ${produto.preço2 ?? produto.preço}
+
+Vi no site do Supermercado Alô Pará.
+  `
+
+  const url =
+    `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
+
+  window.open(url, "_blank")
+}
+
+
+
+
 </script>
 
 <template>
-    <div class="flex justify-center">
-         <Carousel
-      class="relative w-full flex justify-center w-[80%] p-10"
-      :opts="{
-        align: 'start',
-        
-      }"
-    >
-      <CarouselContent class="bg-slate-50 flex  gap-10 p-3 ">
-        <CarouselItem
-          v-for="L in limpeza"
-          :key="L.id"
-          class="basis-1/5 bg-slate-50 p-2 shadow flex border-[2px]  justify-center flex-col items-center"
-        >
-          <img class="w-40" :src="L.img" alt="">
-          <div class=" h-25 pt-5">
-             <h3 class="text-[17px] text-center text-slate-800 font-semibold">
-            {{ L.nome }}
-          </h3>
+<div class="flex justify-center">
 
-          </div>
-          <div>
+  <Carousel
+    class="relative w-full flex justify-center w-[80%] p-10"
+    :opts="{ align: 'start' }"
+  >
+
+    <CarouselContent class="bg-slate-50 flex gap-10 p-3">
+
+      <Dialog v-for="L in limpeza" :key="L.id">
+
+        <DialogTrigger as-child>
+
+          <CarouselItem
+            class="basis-1/5 bg-slate-50 p-2 shadow border-[2px]
+            flex flex-col items-center cursor-pointer"
+          >
+
+            <img class="w-40" :src="L.img" alt="">
+
+            <div class="h-25 pt-5">
+              <h3 class="text-[17px] text-center text-slate-800 font-semibold">
+                {{ L.nome }}
+              </h3>
+            </div>
+
             <h4 class="text-slate-800 text-center font-bold">
-                DE: R$
-
-                <span class="text-red-500 text-[14px] font-bold">
-                       {{ L.preço1 }}
-                     </span>
+              DE:
+              <span class="text-red-500 text-[14px] line-through">
+                R$ {{ L.preço1 }}
+              </span>
             </h4>
 
-          </div>
-         
-        
-           
-            <div class="">
-                  <h4 class="text-slate-800 text-center font-bold">R$
-               
-                <span class="text-green-500 text-[40px] font-bold">
-                  {{ L.preço2 }}
+            <h4 class="text-slate-800 text-center font-bold">
+              R$
+              <span class="text-green-500 text-[40px] font-bold">
+                {{ L.preço2 }}
+              </span>
+            </h4>
+
+          </CarouselItem>
+
+        </DialogTrigger>
+
+
+        <DialogContent class="bg-white text-slate-900 w-200 h-150">
+
+          <div class="flex justify-between items-center gap-4 mx-7">
+
+            <div>
+              <img class="w-70" :src="L.img" alt="">
+            </div>
+
+            <div class="flex flex-col gap-4 text-center">
+
+              <h3 class="text-[32px] font-bold text-center">
+                {{ L.nome }}
+              </h3>
+
+              <p class="w-100 text-slate-500">
+                Clique em comprar no whatsapp e seja direcionado para o contato do nosso
+                atacado de compras online
+              </p>
+
+              <div class="flex gap-6 m-3">
+
+                <p class="text-green-600 text-3xl font-bold">
+                  R$ {{ L.preço2 }}
+                </p>
+
+                <p class="text-red-500 line-through">
+                  R$ {{ L.preço1 }}
+                </p>
+
+              </div>
+
+              <Button @click="produtoSelecionado = L; comprarWhatsapp()" class="bg-green-500 p-7 mt-10 font-bold text-[16px]">
+                Comprar no Whatsapp
+                <span>
+                  <PhoneCallIcon />
                 </span>
-                </h4>
+              </Button>
 
             </div>
-          
-        </CarouselItem>
-      </CarouselContent>
-      
 
-      <CarouselPrevious />
-      <CarouselNext />
-    </Carousel>
-    </div>
+          </div>
+
+        </DialogContent>
+
+      </Dialog>
+
+    </CarouselContent>
+
+    <CarouselPrevious />
+    <CarouselNext />
+
+  </Carousel>
+
+</div>
 </template>

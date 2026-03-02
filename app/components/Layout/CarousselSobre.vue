@@ -18,6 +18,13 @@ const images = [img1, img2, img3, img4, img5]
 </script>
 
 <template>
+  <div class="flex justify-center p-15 ">
+           
+
+       
+
+
+
   <Carousel
     class="relative w-[90%] "
     :opts="{ align: 'start' }"
@@ -45,4 +52,7 @@ const images = [img1, img2, img3, img4, img5]
     <CarouselPrevious />
     <CarouselNext />
   </Carousel>
+
+
+   </div>
 </template>

@@ -71,6 +71,7 @@ export default defineNuxtConfig({
  
 app: {
   head: {
+    title:['Alô Pará'],
     meta: [
       { charset: 'utf-8' },
       { name: 'google', content: 'notranslate' }

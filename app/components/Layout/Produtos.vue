@@ -44,7 +44,7 @@ function Adega() {
         : 'text-slate-900 hover:text-red-500'
     ]"
   >
-    Adega
+    Bebidas
   </button>
         </div>
 

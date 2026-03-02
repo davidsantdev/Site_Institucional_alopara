@@ -9,10 +9,7 @@ import Produtos from './Produtos.vue';
 
 <template>
     <div >
-        <div class="flex justify-center p-15">
-            <CarousselSobre/>
-
-        </div>
+        
         <div class="bg-slate-50">
            <Produtos/>
          </div>

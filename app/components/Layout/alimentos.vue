@@ -9,6 +9,32 @@ import DialogContent from "../ui/dialog/DialogContent.vue";
 
 import Limpeza from "./limpeza.vue";
 import { PhoneCallIcon } from "lucide-vue-next";
+
+
+const produtoSelecionado = ref<any>(null)
+
+function comprarWhatsapp() {
+
+
+
+  const numero = "5594991923141"
+
+  const produto = produtoSelecionado.value
+
+  const mensagem = `
+Olá! Quero comprar:
+
+  Produto: ${produto.nome}
+  Preço: R$ ${produto.preço2 ?? produto.preço}
+
+Vi no site do Supermercado Alô Pará.
+  `
+
+  const url =
+    `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
+
+  window.open(url, "_blank")
+}
 </script>
 
 <template>
@@ -22,7 +48,7 @@ import { PhoneCallIcon } from "lucide-vue-next";
 
   <div class="flex justify-center items-center flex-col">
 
-    <Carousel
+      <Carousel
       class="relative w-[80%] p-10"
       :opts="{ align: 'start' }"
     >
@@ -86,7 +112,8 @@ import { PhoneCallIcon } from "lucide-vue-next";
                 </p>
                 <div  class="flex gap-6 m-3">
                  
-                  <p class="text-green-600 text-3xl font-bold">
+                  <p class="text-green-6
+                   text-3xl font-bold">
                     R$ {{ A.preço2 }}
                   </p>
                    <p class="text-red-500 line-through">
@@ -96,7 +123,7 @@ import { PhoneCallIcon } from "lucide-vue-next";
                  
 
                 </div>
-                 <Button class="bg-green-500 p-7 mt-10 font-bold text-[16px]">Comprar no Whatsapp <span><PhoneCallIcon></PhoneCallIcon></span> </Button>
+                 <Button   @click="produtoSelecionado = A; comprarWhatsapp()" class="bg-green-500 p-7 mt-10 font-bold text-[16px]">Comprar no Whatsapp <span><PhoneCallIcon></PhoneCallIcon></span> </Button>
 
               </div>
 
