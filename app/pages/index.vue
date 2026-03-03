@@ -12,7 +12,7 @@ import MainlayoutSecundary from '~/components/Layout/MainlayoutSecundary.vue';
 </script>
 
 <template>
-  <div class="flex flex-col gap-2">
+  <div class="flex flex-col ">
 
   
   <div class="fundo-alo">

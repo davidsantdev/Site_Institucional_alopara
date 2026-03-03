@@ -52,7 +52,7 @@ import { Button } from '../ui/button';
 
         </div>
         <div class="w-full bg-[#272727] h-25 flex items-center pl-30 justify-between">
-            <div class="flex"><Copyright/> <p>Copyright 2026 Todos os direitos reservados </p></div>
+            <div class="flex"><Copyright/> <p>2026 Todos os direitos reservados </p></div>
             <div class="flex "><img src="../../assets/img/alop.png" class="w-40" alt=""></div>
             
 

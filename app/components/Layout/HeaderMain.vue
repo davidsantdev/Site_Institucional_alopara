@@ -39,45 +39,8 @@ import Mobilemenu from './Mobilemenu.vue';
          
         </header>
 
-        <div class="bg-gray-50 shadow border-1 border-gray-300 text-gray-800 flex justify-between px-7 ">
-            <div>
-
-                   <DropdownMenu>
-    <DropdownMenuTrigger as-child>
-        <button>
-            <Menu :size="50" class="  "/> 
-        </button>
-
-
-    </DropdownMenuTrigger>
-    <DropdownMenuContent class="w-40 h-100 " >
-      <DropdownMenuLabel>Junte-se a equipe</DropdownMenuLabel>
-      <DropdownMenuGroup>
-        <DropdownMenuItem >
-
-          <NuxtLink to="/trabalhe-conosco">Trabalhe Conosco</NuxtLink>
-
-        </DropdownMenuItem>
-        <DropdownMenuSeparator/>
-        <DropdownMenuLabel>Duvidas</DropdownMenuLabel>
-        <DropdownMenuItem>
-          Clube de descontos
-
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          Compras online
-
-        </DropdownMenuItem>
-
-         
-      </DropdownMenuGroup>
-    </DropdownMenuContent>
-        </DropdownMenu>
-
-
-
-
-            </div>
+        <div class="bg-gray-50 shadow border-1 border-gray-300 text-gray-800 flex justify-end px-7 ">
+       
 
 
 

@@ -1,4 +1,9 @@
-<script setup lang="ts">
+<script setup lang="ts"    >
+
+
+
+
+
 import alimentos from "../../data/produtosAlimentos.json"
 import { Carousel, CarouselContent, CarouselNext, CarouselPrevious } from "../ui/carousel";
 import CarouselItem from "../ui/carousel/CarouselItem.vue";
@@ -6,12 +11,15 @@ import CarouselItem from "../ui/carousel/CarouselItem.vue";
 import Dialog from "../ui/dialog/Dialog.vue";
 import DialogTrigger from "../ui/dialog/DialogTrigger.vue";
 import DialogContent from "../ui/dialog/DialogContent.vue";
+import Limpeza from "./limpeza.vue"
 
-import Limpeza from "./limpeza.vue";
 import { PhoneCallIcon } from "lucide-vue-next";
+import Button from "../ui/button/Button.vue";
 
 
 const produtoSelecionado = ref<any>(null)
+
+const quantidade = ref <any>(1)
 
 function comprarWhatsapp() {
 
@@ -26,15 +34,31 @@ Olá! Quero comprar:
 
   Produto: ${produto.nome}
   Preço: R$ ${produto.preço2 ?? produto.preço}
+  quantidade: ${quantidade.value}
 
-Vi no site do Supermercado Alô Pará.
+
   `
 
   const url =
     `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
 
   window.open(url, "_blank")
+  quantidade.value=1
 }
+
+
+function adicionar(){
+  return quantidade.value ++
+}
+function diminuir(){
+
+  if(quantidade.value > 1){
+      quantidade.value --
+  }
+
+    
+}
+
 </script>
 
 <template>
@@ -46,10 +70,10 @@ Vi no site do Supermercado Alô Pará.
     </h2>
   </div>
 
-  <div class="flex justify-center items-center flex-col">
+  <div class="flex justify-center items-center flex-col ">
 
       <Carousel
-      class="relative w-[80%] p-10"
+      class="relative  w-full flex justify-center w-[80%] p-10 "
       :opts="{ align: 'start' }"
     >
 
@@ -62,7 +86,7 @@ Vi no site do Supermercado Alô Pará.
 
             <CarouselItem
               class="basis-1/5 bg-slate-50 p-2 shadow border-[2px]
-              flex flex-col items-center cursor-pointer"
+              flex flex-col items-center cursor-pointer md:w-[100%] w-20"
             >
 
               <img class="w-40" :src="A.img" alt="">
@@ -119,10 +143,17 @@ Vi no site do Supermercado Alô Pará.
                    <p class="text-red-500 line-through">
                    R$ {{ A.preço1 }}
                   </p>
+                  
 
                  
 
                 </div>
+                <div class="flex gap-4">
+                  <p class="font-bold">quantidade:</p> <Button @click="diminuir"> <span  class="">-</span></Button>   <input  v-model="quantidade" class="bg-gray-200 rounded-[10px]  text-center w-20 p-1"></input> <Button @click="adicionar" >  <span >+</span></Button> 
+
+                </div>
+
+
                  <Button   @click="produtoSelecionado = A; comprarWhatsapp()" class="bg-green-500 p-7 mt-10 font-bold text-[16px]">Comprar no Whatsapp <span><PhoneCallIcon></PhoneCallIcon></span> </Button>
 
               </div>

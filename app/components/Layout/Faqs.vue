@@ -14,7 +14,7 @@ import Footer from './Footer.vue';
     <AccordionItem value="item-1">
       <AccordionTrigger class="text-[20px]">Quais são os horários de funcionamento do Alô Pará?</AccordionTrigger>
       <AccordionContent>
-        <p>
+        <p class="text-[18px]">
           Nossas lojas funcionam em horário comercial, podendo variar conforme a unidade. Para saber o horário 
           atualizado, consulte nossa página de contato ou nossas redes sociais
         </p>
@@ -24,7 +24,7 @@ import Footer from './Footer.vue';
     <AccordionItem value="item-2">
       <AccordionTrigger class="text-[20px]">Quais formas de pagamento o supermercado aceita?</AccordionTrigger>
       <AccordionContent>
-        <p>
+        <p class="text-[18px]">
           Aceitamos dinheiro, cartões de débito e 
           crédito, Pix e outras formas de pagamento disponíveis na loja.
         </p>
@@ -34,7 +34,7 @@ import Footer from './Footer.vue';
     <AccordionItem value="item-3">
       <AccordionTrigger  class="text-[20px]">O Alô Pará possui aplicativo?</AccordionTrigger>
       <AccordionContent>
-        <p>
+        <p class="text-[18px]">
           Sim! Com o nosso aplicativo você acompanha ofertas exclusivas, encartes atualizados e promoções em tempo real, direto no seu celular.
         </p>
         

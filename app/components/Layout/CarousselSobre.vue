@@ -18,7 +18,7 @@ const images = [img1, img2, img3, img4, img5]
 </script>
 
 <template>
-  <div class="flex justify-center p-15 ">
+  <div class="flex justify-center md:p-15 p-7">
            
 
        
@@ -26,21 +26,21 @@ const images = [img1, img2, img3, img4, img5]
 
 
   <Carousel
-    class="relative w-[90%] "
+    class="relative md:w-[90%] w-[100%] "
     :opts="{ align: 'start' }"
   >
     <CarouselContent>
       <CarouselItem
         v-for="(image, index) in images"
         :key="index"
-        class="md:basis-1/2 lg:basis-1/3"
+        class="md:basis-1/2 basis-1/1"
       >
         <div class="p-1">
           <Card class="overflow-hidden rounded-2xl">
             <CardContent class="p-0">
               <img
                 :src="image"
-                class="w-full h-70 object-cover"
+                class="md:w-full  md:h-70 h-40 w-120 object-cover"
                 alt="Imagem do carousel"
               />
             </CardContent>
@@ -49,8 +49,8 @@ const images = [img1, img2, img3, img4, img5]
       </CarouselItem>
     </CarouselContent>
 
-    <CarouselPrevious />
-    <CarouselNext />
+    <CarouselPrevious class="ml-5" />
+    <CarouselNext class="mr-5"/>
   </Carousel>
 
 

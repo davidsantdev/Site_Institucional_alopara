@@ -11,15 +11,15 @@ import DialogTrigger from '../ui/dialog/DialogTrigger.vue';
 <template>
     <div >
         <div class="text-slate-100 flex flex-col items-center pt-30">
-            <h1 class="font-bold text-[100px]">BEM VINDO AO </h1>
-            <h1 class="font-bold text-[100px] text-red-600">ALÔ PARÁ </h1>
+            <h1 class="font-bold text-[45px] md:text-[100px]">BEM VINDO AO </h1>
+            <h1 class="font-bold text-[45px] md:text-[100px] text-red-600">ALÔ PARÁ </h1>
             
-            <p class=" text-[22px] text-slate-300">Há anos presente no dia a dia das famílias, levando qualidade, economia e confiança</p>
+            <p class=" text-[15px] md:text-[22px] text-slate-300 md:w-[100%] w-[80%] text-center ">Há anos presente no dia a dia das famílias, levando qualidade, economia e confiança</p>
             <div class="mt-10 flex gap-10 justify-between">
                 <Dialog>
                     <DialogTrigger>
                         <span></span>
-                        <button class="bg-red-600 p-4 rounded-[50px] w-[200px] hover:bg-red-500 ">Entre em contato</button>
+                        <button class="bg-red-600 md:p-4 p-[12px] rounded-[50px] md:w-[200px] w-[150px] hover:bg-red-500 ">Entre em contato</button>
                     </DialogTrigger>
                      <DialogContent class="flex flex-col items-center text-center">
                <DialogHeader>
@@ -46,7 +46,7 @@ import DialogTrigger from '../ui/dialog/DialogTrigger.vue';
 
                 </Dialog>
 
-                <a href="#Sobre"><button class="border-[3px] p-4 rounded-[50px] w-[200px] border-red-600 hover:bg-red-600">Sobre nos</button></a>
+                <a href="#Sobre"><button class="border-[3px] md:p-4 rounded-[50px] md:w-[200px]  p-[12px] w-[150px] border-red-600 hover:bg-red-600">Sobre nos</button></a>
             </div>
         </div>
 

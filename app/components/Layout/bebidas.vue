@@ -12,6 +12,9 @@ import { PhoneCallIcon } from "lucide-vue-next";
 
 const produtoSelecionado = ref<any>(null)
 
+
+const quantidade = ref <any>(1)
+
 function comprarWhatsapp() {
 
 
@@ -20,19 +23,33 @@ function comprarWhatsapp() {
 
   const produto = produtoSelecionado.value
 
-  const mensagem = `
+   const mensagem = `
 Olá! Quero comprar:
 
   Produto: ${produto.nome}
   Preço: R$ ${produto.preço2 ?? produto.preço}
+  quantidade: ${quantidade.value}
 
-Vi no site do Supermercado Alô Pará.
+
   `
 
   const url =
     `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
 
   window.open(url, "_blank")
+  quantidade.value=1
+}
+
+function adicionar(){
+  return quantidade.value ++
+}
+function diminuir(){
+
+  if(quantidade.value > 1){
+      quantidade.value --
+  }
+
+    
 }
 
 
@@ -104,6 +121,10 @@ Vi no site do Supermercado Alô Pará.
                   <p class="text-green-600 text-3xl font-bold">
                     R$ {{ b.preço }}
                   </p>
+                </div>
+                  <div class="flex gap-4">
+                  <p class="font-bold">quantidade:</p> <Button @click="diminuir"> <span  class="">-</span></Button>   <input  v-model="quantidade" class="bg-gray-200 rounded-[10px]  text-center w-20 p-1"></input> <Button @click="adicionar" >  <span >+</span></Button> 
+
                 </div>
 
                 <Button @click="produtoSelecionado = b; comprarWhatsapp()" class="bg-green-500 p-7 mt-10 font-bold text-[16px]">
