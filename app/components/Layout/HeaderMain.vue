@@ -16,7 +16,7 @@ import Mobilemenu from './Mobilemenu.vue';
 </script>
 
 <template>
-    <div >
+    <div class="flex flex-col  w-[100%] z-100 ">
       
         <header class="flex justify-between pd:mx-20  text-[20px]  bg-gray-50 text-gray-900 w-[full] items-center px-30">
             
@@ -39,20 +39,24 @@ import Mobilemenu from './Mobilemenu.vue';
          
         </header>
 
-        <div class="bg-gray-50 shadow border-1 border-gray-300 text-gray-800 flex justify-end px-7 ">
+        <div class="bg-gray-50 shadow p-2 border-1 border-gray-300 text-gray-800 flex justify-end px-7 ">
        
 
 
 
                <div class="md:flex gap-10 hidden">
-                <button>
+                <Button variant="ghost">
                    <NuxtLink to="/">Inicio</NuxtLink>
-                </button>
-                <button>
+                </Button>
+                <Button variant="ghost">
                     <NuxtLink to="/Baixar">Baixar app</NuxtLink>
 
-                </button>
-                <button><NuxtLink to="/trabalhe-conosco">Trabalhe Conosco</NuxtLink></button>
+                </Button>
+                <Button variant="ghost"><NuxtLink to="/trabalhe-conosco">Trabalhe Conosco</NuxtLink></Button>
+
+                <a href="https://cadastramento-alopara.mercafacil.com/home"> <Button variant="ghost">Clube de descontos</Button> </a>
+
+                
                 
 
      

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Button from '../ui/button/Button.vue';
+import DialogCurriculo from './dialogCurriculo.vue';
 
 </script>
 
@@ -16,7 +17,7 @@ import Button from '../ui/button/Button.vue';
                         profissionalmente, venha fazer parte da nossa família!</p>
 
                         <div class="flex gap-5">
-                            <Button class="mt-7 p-6 md:p-7 text-[13px] md:text-[18px]">Enviar currículo</Button>
+                            <DialogCurriculo/>
                             <Button class="mt-7 p-6 md:p-7 text-[13px] md:text-[18px]">Saiba mais</Button>
 
                         </div>

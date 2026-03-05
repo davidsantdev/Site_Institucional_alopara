@@ -6,6 +6,7 @@ import Footer from '~/components/Layout/Footer.vue';
 
 import HeaderMain from '~/components/Layout/HeaderMain.vue';
 import MainlayoutSecundary from '~/components/Layout/MainlayoutSecundary.vue';
+import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue';
 
 
 
@@ -16,20 +17,25 @@ import MainlayoutSecundary from '~/components/Layout/MainlayoutSecundary.vue';
 
   
   <div class="fundo-alo">
-    <HeaderMain class="text-gray-300 "/>
+    <HeaderMain class="text-gray-300 fixed"/>
 
     <ConteudoMain/>
 
     
 
   </div>
-  <div class="bg-[#0E0808]">
+  <div class="bg-slate-50 flex flex-col justify-center items-center ">
     <CarousselSobre/>
+    <hr class=" bg-slate-300 w-[90%] m-10"/>
+    <ProdutosRedondo/>
+    <hr class=" bg-slate-300 w-[90%] m-10"/>
   </div>
 
 
   <div class="bg-[#0E0808]">
+    
     <MainlayoutSecundary/>
+    
 
     <Faqs/>
     <Footer/>

@@ -74,8 +74,8 @@ function diminuir(){
           <DialogTrigger as-child>
 
             <CarouselItem
-              class="basis-1/5 bg-slate-50 p-2 shadow border-[2px]
-              flex flex-col items-center cursor-pointer"
+              class="basis-1/2 md:basis-1/4 border-[1px] border-slate-300 bg-slate-50 p-1 shadow 
+            flex flex-col items-center cursor-pointer w-[15px] md:w-[90%]"
             >
 
               <img class="w-full" :src="b.img" alt="">

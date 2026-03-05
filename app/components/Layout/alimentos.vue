@@ -65,7 +65,7 @@ function diminuir(){
 <div>
 
   <div>
-    <h2 class="text-slate-800 font-bold text-[30px] p-5">
+    <h2 class="text-slate-800 font-bold text-[30px] p-14">
       Ofertas da semana:
     </h2>
   </div>
@@ -86,7 +86,7 @@ function diminuir(){
 
             <CarouselItem
               class="basis-1/5 bg-slate-50 p-2 shadow border-[2px]
-              flex flex-col items-center cursor-pointer md:w-[100%] w-20"
+              flex flex-col items-center cursor-pointer md:w-[100%] border-1 border-slate-300 w-20"
             >
 
               <img class="w-40" :src="A.img" alt="">

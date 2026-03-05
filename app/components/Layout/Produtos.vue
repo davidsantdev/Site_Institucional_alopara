@@ -18,12 +18,10 @@ function Adega() {
 </script>
 
 <template>
-    <div class="bg-slate-50 h-300 select-none">
-        <h3>
-            Produtos
-        </h3>
+    <div class="bg-slate-50 h-300 select-none ">
 
-        <div class="flex gap-10 ml-10">
+
+        <div class="flex gap-10 ml-[10%]">
              <button
     @click="promo"
     :class="[

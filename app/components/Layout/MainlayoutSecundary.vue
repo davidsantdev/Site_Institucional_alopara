@@ -3,6 +3,7 @@ import Alimentos from './alimentos.vue';
 import CarousselSobre from './CarousselSobre.vue';
 import DialogVideo from './DialogVideo.vue';
 import Produtos from './Produtos.vue';
+import ProdutosRedondo from './ProdutosRedondo.vue';
 
 
 </script>
@@ -12,6 +13,7 @@ import Produtos from './Produtos.vue';
         
         <div class="bg-slate-50">
            <Produtos/>
+           
          </div>
         
 
