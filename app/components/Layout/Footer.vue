@@ -5,28 +5,28 @@ import { Button } from '../ui/button';
 </script>
 
 <template>
-    <div class="flex justify-between  p-20 bg-[#121212] ">
-        <div class="w-[40%] flex gap-5 flex-wrap">
-            <div class="flex flex-col">
-                <h4 class="text-[25px] p-3">Fale conosco</h4>
-                <Button variant="link" class="text-[22px] font-light"> Atacado</Button>
-                <Button variant="link" class="text-[22px] font-light">Compras</Button>
-                <Button variant="link" class="text-[22px] font-light">Crediario</Button>
-                <Button variant="link" class="text-[22px] font-light">Financeiro</Button>
+    <div class="md:flex text-white  justify-between  md:p-20 pt-10 bg-[#121212] ">
+        <div class="md:w-[40%] w-[100%] flex gap-5 flex-wrap">
+            <div class="flex flex-col text-white">
+                <h4 class="text-[25px]  p-3">Fale conosco</h4>
+                <Button variant="link" class="text-[22px] font-light text-white"> Atacado</Button>
+                <Button variant="link" class="text-[22px] font-light text-white">Compras</Button>
+                <Button variant="link" class="text-[22px] font-light text-white">Crediario</Button>
+                <Button variant="link" class="text-[22px] font-light text-white">Financeiro</Button>
 
             </div>
-             <div class="flex flex-col">
+             <div class="flex flex-col text-white">
                 <h4 class="text-[25px] p-3">Redes sociais</h4>
-                <Button variant="link" class="text-[22px] font-light"> Instagram</Button>
-                <Button variant="link" class="text-[22px] font-light">Facebook</Button>
+                <Button variant="link" class="text-[22px] font-light text-white"> Instagram</Button>
+                <Button variant="link" class="text-[22px] font-light text-white">Facebook</Button>
  
 
             </div>
-            <div class="flex flex-col">
-                <h4 class="text-[25px] p-3 text-center">Informações </h4>
-                <Button variant="link" class="text-[22px] font-light"> Registre-se no Clube
+            <div class="flex flex-col text-white">
+                <h4 class="text-[25px] p-3 text-center text-white">Informações </h4>
+                <Button variant="link" class="text-[22px] font-ligh text-whitet"> Registre-se no Clube
                      </Button>
-                <Button variant="link" class="text-[22px] font-light">Vagas</Button>
+                <Button variant="link" class="text-[22px] font-ligh text-white">Vagas</Button>
 
 
 
@@ -37,7 +37,7 @@ import { Button } from '../ui/button';
 
         </div>
 
-        <div class="w-[50%]">     
+        <div class="md:w-[50%] flex justify-center p-2">     
     <iframe
       class="w-[90%] h-[400px] rounded-xl "
       src="https://www.google.com/maps?q=-4.2520391,-49.9427902&hl=pt-BR&z=17&output=embed"

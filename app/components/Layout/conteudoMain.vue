@@ -9,7 +9,7 @@ import DialogTrigger from '../ui/dialog/DialogTrigger.vue';
 </script>
 
 <template>
-    <div class="flex justify-center mt-25" >
+    <div class="flex justify-center md:mt-25 mt-50" >
         <div class="text-slate-100 flex flex-col items-center pt-30">
             <h1 class="font-bold text-[45px] md:text-[100px]">BEM VINDO AO </h1>
             <h1 class="font-bold text-[45px] md:text-[100px] text-red-600">ALÔ PARÁ </h1>

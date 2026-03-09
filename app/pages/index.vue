@@ -37,7 +37,7 @@ import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue';
     <MainlayoutSecundary/>
     
 
-    <Faqs/>
+    <Faqs class="text-white"/>
     <Footer/>
     
 

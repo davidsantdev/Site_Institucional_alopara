@@ -18,7 +18,7 @@ function Adega() {
 </script>
 
 <template>
-    <div class="bg-slate-50 h-300 select-none ">
+    <div class="bg-slate-50 md:h-300 p-10 select-none ">
 
 
         <div class="flex gap-10 ml-[10%]">

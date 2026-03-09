@@ -9,7 +9,7 @@ import HeaderMain from '~/components/Layout/HeaderMain.vue';
 
 <template>
     <div>
-    <div class="fundo-baixar">
+    <div class="bg-[#A11A2D] ">
         <HeaderMain class="text-gray-300 "></HeaderMain>
         <BaixarLayout/>
     </div>
@@ -23,12 +23,6 @@ import HeaderMain from '~/components/Layout/HeaderMain.vue';
 </template>
 
 <style scoped>
-.fundo-baixar{
-    background-image: url(../assets/img/ok.jpg);
-      background-size: cover;   /* cobre toda a div */
-  background-position: center; /* centraliza */
-  background-repeat: no-repeat; /* não repete a imagem */
-  width: 100%;
-  height: 95vh; /* ocupa toda a altura da tela */
-}
+
+
 </style>

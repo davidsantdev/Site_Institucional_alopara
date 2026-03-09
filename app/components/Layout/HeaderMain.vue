@@ -12,19 +12,22 @@ import DropdownMenuTrigger from '../ui/dropdown-menu/DropdownMenuTrigger.vue';
 import Mobilemenu from './Mobilemenu.vue';
 
 
+function inicio (){
+
+}
 
 </script>
 
 <template>
-    <div class="flex flex-col  w-[100%] z-100 ">
+    <div class="flex flex-col  w-full z-100 ">
       
-        <header class="flex justify-between pd:mx-20  text-[20px]  bg-gray-50 text-gray-900 w-[full] items-center px-30">
+        <header class="flex justify-between pd:mx-20 h-20  text-[20px]  bg-gray-50 text-gray-900  items-center px-20">
             
             <div>
-                <img src="../../assets/img/alop.png"" alt="" class="w-[120px] ">
+                <img  src="../../assets/img/alop.png"" alt="" class="w-[200px] md:block hidden">
 
             </div>
-            <div class="flex gap-10">
+            <div class="flex ">
                 <div class="flex gap-2 items-center text-red-600 font-semibold">
                     <Store :size="40"></Store>
                    <h2 class="text-[18px]">Compre online</h2> 
@@ -34,27 +37,35 @@ import Mobilemenu from './Mobilemenu.vue';
                    <h2 class="text-[18px]">Seja um fornecedor</h2> 
                 </div>
 
-            </div>
+            </div>            
 
          
         </header>
 
-        <div class="bg-gray-50 shadow p-2 border-1 border-gray-300 text-gray-800 flex justify-end px-7 ">
+        <div class="bg-gray-50 shadow h-30 md:h-13 p-2 border-1 border-gray-300 text-gray-800 flex justify-between px-7 ">
+
+            
+                <div>
+                    
+                    <img  src="../../assets/img/alop.png"" alt="" class="w-[170px] md:hidden">
+    
+                
+                </div>
+
        
 
 
 
                <div class="md:flex gap-10 hidden">
-                <Button variant="ghost">
-                   <NuxtLink to="/">Inicio</NuxtLink>
-                </Button>
-                <Button variant="ghost">
-                    <NuxtLink to="/Baixar">Baixar app</NuxtLink>
+                 <Button @click="navigateTo('/')" variant="ghost" class=" text-[14px] font-bold flex gap-3">   Inicio     </Button>
+                <Button  variant="ghost">
+                     <Button @click="navigateTo('/Baixar')" variant="ghost" class="  text-[14px] font-bold flex gap-3">   Baixar app   </Button>
+
 
                 </Button>
-                <Button variant="ghost"><NuxtLink to="/trabalhe-conosco">Trabalhe Conosco</NuxtLink></Button>
+                 <Button @click="navigateTo('/trabalhe-conosco')" variant="ghost" class=" text-[14px] font-bold flex gap-3">   Trabalhe conosco    </Button>
 
-                <a href="https://cadastramento-alopara.mercafacil.com/home"> <Button variant="ghost">Clube de descontos</Button> </a>
+                <a href="https://cadastramento-alopara.mercafacil.com/home"> <Button class=" text-[14px] font-bold flex gap-3" variant="ghost">Clube de descontos</Button> </a>
 
                 
                 
