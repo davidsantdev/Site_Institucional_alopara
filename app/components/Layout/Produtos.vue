@@ -18,7 +18,7 @@ function Adega() {
 </script>
 
 <template>
-    <div class="bg-slate-50 md:h-300 p-10 select-none ">
+    <div class="bg-[#F4F4F4]  md:p-10 pt-10 select-none ">
 
 
         <div class="flex gap-10 ml-[10%]">
@@ -47,6 +47,7 @@ function Adega() {
         </div>
 
         <Alimentos v-show="Alimen"/>
+        
         <Vinho v-show="Vinh"></Vinho>
     </div>
 </template>

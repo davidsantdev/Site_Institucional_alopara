@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Download, Home, Menu, PercentSquareIcon, PersonStanding, ShoppingCart, Tag, User2, UserPlus } from 'lucide-vue-next';
+import { Download, DownloadIcon, Home, Menu, PercentSquareIcon, PersonStanding, ShoppingCart, Tag, User2, UserPlus } from 'lucide-vue-next';
 import Button from '../ui/button/Button.vue';
 import DropdownMenu from '../ui/dropdown-menu/DropdownMenu.vue';
 import DropdownMenuContent from '../ui/dropdown-menu/DropdownMenuContent.vue';
@@ -31,19 +31,38 @@ import { Separator } from 'reka-ui';
 
 
 
-                                <Button @click="navigateTo('/Baixar')" variant="ghost" class="h-13  text-[14px] font-bold flex gap-3">   Baixar app   </Button>
+                                <Button @click="navigateTo('/Baixar')" variant="ghost" class="h-13  text-[14px] font-bold flex gap-3"> <DownloadIcon/>   Baixar app   </Button>
 
 
 
                                    <DropdownMenuSeparator class="my-2 bg-slate-300"/>
 
-                                     <a href="https://cadastramento-alopara.mercafacil.com/home"> <Button class=" text-[14px] font-bold flex gap-3" variant="ghost">Clube de descontos</Button> </a>
+                                     <a href="https://cadastramento-alopara.mercafacil.com/home"> <Button class=" text-[14px] font-bold flex gap-3" variant="ghost"> Clube de descontos</Button> </a>
 
                                       <DropdownMenuSeparator class="my-2 bg-slate-300"/>
+                                       <Button @click="navigateTo('/Alimentos')" variant="ghost" class="h-13  text-[14px] font-bold flex gap-3">    Alimentos    </Button>
 
-                                       <Button variant="ghost" class="h-13 font-bold text-[14px]"> <ShoppingCart/> Compras online</Button>
+                                <DropdownMenuSeparator class="my-2 bg-slate-300"/>
+
+                                 <Button @click="navigateTo('/Bebidas')" variant="ghost" class="h-13  text-[14px] font-bold flex gap-3">    Bebidas   </Button>
+                                 
+
+                                <DropdownMenuSeparator class="my-2 bg-slate-300"/>
+
+                                        <Button @click="navigateTo('/Vinhos')" variant="ghost" class="h-13  text-[14px] font-bold flex gap-3">   Vinhos    </Button>
+
+                                <DropdownMenuSeparator class="my-2 bg-slate-300"/>
 
 
+                                 <Button @click="navigateTo('/LImpeza')" variant="ghost" class="h-13  text-[14px] font-bold flex gap-3">    Limpeza   </Button>
+
+                                <DropdownMenuSeparator class="my-2 bg-slate-300"/>
+
+                                 <Button @click="navigateTo('/Perfumaria')" variant="ghost" class="h-13  text-[14px] font-bold flex gap-3">   Perfumaria   </Button>
+
+                                <DropdownMenuSeparator class="my-2 bg-slate-300"/>
+
+                                
 
 
 

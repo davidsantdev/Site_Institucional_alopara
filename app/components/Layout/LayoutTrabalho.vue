@@ -18,7 +18,7 @@ import DialogCurriculo from './dialogCurriculo.vue';
 
                         <div class="flex gap-5 justify-center">
                             <DialogCurriculo/>
-                            <Button class="mt-7 p-6 md:p-7 text-[13px] md:text-[18px]">Saiba mais</Button>
+                            <Button class="mt-7 p-6 md:p-7 text-[12px] md:text-[18px]">Saiba mais</Button>
 
                         </div>
 

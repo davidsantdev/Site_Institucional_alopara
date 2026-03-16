@@ -4,25 +4,21 @@
 
 
 
-import alimentos from "../../data/produtosAlimentos.json"
-import { Carousel, CarouselContent, CarouselNext, CarouselPrevious } from "../ui/carousel";
-import CarouselItem from "../ui/carousel/CarouselItem.vue";
-
-import Dialog from "../ui/dialog/Dialog.vue";
-import DialogTrigger from "../ui/dialog/DialogTrigger.vue";
-import DialogContent from "../ui/dialog/DialogContent.vue";
-import Limpeza from "./limpeza.vue"
+import Button from "~/components/ui/button/Button.vue";
+import Perfumaria from "../data/produtosPerfumaria.json"
 
 import { Flame, PhoneCallIcon } from "lucide-vue-next";
-import Button from "../ui/button/Button.vue";
-import Perfumaria from "./Perfumaria.vue";
+import HeaderMain from "~/components/Layout/HeaderMain.vue";
+import Footer from "~/components/Layout/Footer.vue";
+
+
 
 
 const produtoSelecionado = ref<any>(null)
 
 const quantidade = ref <any>(1)
 
-  const alimentosLimitados = alimentos.slice(0, 5)
+
 
 function comprarWhatsapp() {
 
@@ -65,18 +61,35 @@ function diminuir(){
 </script>
 
 <template>
-<div class="flex justify-center flex-col items-center" >
+    <div class="bg-[#F4F4F4] flex flex-col justify-center ">
+        <HeaderMain/>
+        
+        
+        
+        <div class="bg-red-500 h-[100px]  items-center flex justify-center">
+            <h3 class="text-[27px] font-bold p-5">Produtos da Perfumaria mais comprados do ALô Pará</h3>
+            
+        </div>
+        
+        <div >
+             <div class=" p-4 flex flex gap-1 flex-wrap">
+                <Button  @click="navigateTo('/Alimentos')" variant="link" class="text-blue-500 text-[17px] ">Alimentos</Button>
+               
+        <Button  @click="navigateTo('/Limpeza')" variant="link" class="text-blue-500 text-[17px] ">Limpeza</Button>
+        <Button  @click="navigateTo('/Perfumaria')" variant="link" class="text-blue-500 text-[17px] ">Perfumaria</Button>
+        <Button  @click="navigateTo('/Vinhos')" variant="link" class="text-blue-500 text-[17px] ">Vinhos</Button>
+        <Button  @click="navigateTo('/Bebidas')" variant="link" class="text-blue-500 text-[17px] ">Bebidas</Button>
+    </div>
 
-  <div class="flex justify-between w-[60%] items-center">
-    <h2 class="text-slate-800 font-bold md:text-[30px] md:p-14 text-[20px] p-3">
-      Alimentos
-    </h2>
+        <div class="flex justify-center flex-col items-center" >
 
-    <Button variant="link" @click="navigateTo('/Alimentos')" class="text-blue-500 text-[20px]">Ver mais</Button>
-  
-  </div>
+
 
   <div class="flex justify-center items-center flex-col ">
+    
+   
+
+
     <div class="w-[100%]">
 
 
@@ -90,7 +103,7 @@ function diminuir(){
       <div class=" flex md:gap-15 gap-1 flex-wrap  md:px-4">
   
   
-        <Dialog v-for="A in alimentosLimitados" :key="A.id">
+        <Dialog v-for="P in Perfumaria" :key="P.id">
   
           <DialogTrigger as-child>
   
@@ -99,7 +112,7 @@ function diminuir(){
             flex flex-col  cursor-pointer md:w-[300px] w-[48%] md:h-[450px] h-75  "
             >
             <div class="flex items-center justify-center">
-              <img class="md:w-40 w-25" :src="A.img" alt="">
+              <img class="md:w-40 w-25" :src="P.img" alt="">
 
             </div>
             <div class="px-6"> 
@@ -116,7 +129,7 @@ function diminuir(){
   
               <div class="md:h-25 h-[30%] md:pt-5 ">
                 <h3 class="md:text-[17px] text-[13px]  text-center text-slate-800 font-semibold">
-                  {{ A.nome }}
+                  {{ P.nome }}
                 </h3>
               </div>
               <div class="h-25 flex items-center justify-center flex-col ">
@@ -124,14 +137,14 @@ function diminuir(){
               <h4 class="text-slate-800  md:text-[16px] text-[11px]">
                  R$
                 <span class="text-slate-500  md:text-[17px] text-[12px] line-through">
-                  {{ A.preço1 }}
+                  {{ P.preço1 }}
                 </span>
               </h4>
   
               <h4 class="text-slate-800  ">
                 
                 <span class="text-slate-900 md:text-[33px] text-[20px] font-semibold">
-                   R$ {{ A.preço2 }}
+                   R$ {{ P.preço2 }}
                 </span>
               </h4>
 
@@ -149,13 +162,13 @@ function diminuir(){
               <div class="md:flex justify-between items-center gap-4 md:mx-7">
 
                 <div class="flex item justify-center">
-                  <img class="md:w-70 w-[50%]" :src="A.img" alt="">
+                  <img class="md:w-70 w-[50%]" :src="P.img" alt="">
                 </div>
 
                 <div class="flex flex-col gap-4 text-center">
 
                   <h3 class="text-[32px] font-bold text-center">
-                    {{ A.nome }}
+                    {{ P.nome }}
                   </h3>
 
                   <p class="md:w-100 w-[90%] text-slate-500">
@@ -165,11 +178,11 @@ function diminuir(){
                    <div class="flex items-center justify-center md:gap-6 md:m-3">
 
                 <p class="text-green-600 text-3xl font-bold">
-                  R$ {{ A.preço2 }}
+                  R$ {{ P.preço2 }}
                 </p>
 
                 <p class="text-red-500 line-through">
-                  R$ {{ A.preço1 }}
+                  R$ {{ P.preço1 }}
                 </p>
 
               </div>
@@ -191,7 +204,7 @@ function diminuir(){
                   </div>
 
                   <Button
-                    @click="produtoSelecionado = A; comprarWhatsapp()"
+                    @click="produtoSelecionado = P; comprarWhatsapp()"
                     class="bg-green-500 p-7 md:mt-10 font-bold text-[16px]"
                   >
                     Comprar no Whatsapp
@@ -214,8 +227,7 @@ function diminuir(){
         
     </div>
     </div>
-    <Limpeza/>
-    <Perfumaria/>
+</div>
 
 
     
@@ -224,5 +236,6 @@ function diminuir(){
   </div>
 
 </div>
-
+<Footer/>
+    </div>
 </template>

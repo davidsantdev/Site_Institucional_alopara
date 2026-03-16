@@ -32,7 +32,7 @@ function inicio (){
                     <Store :size="40"></Store>
                    <h2 class="text-[18px]">Compre online</h2> 
                 </div>
-                 <div class="flex gap-2 items-center text-red-600 font-semibold">
+                 <div class="flex gap-2 items-center text-red-600 m-4 font-semibold">
                     <UserPlus :size="40"></UserPlus>
                    <h2 class="text-[18px]">Seja um fornecedor</h2> 
                 </div>

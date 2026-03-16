@@ -26,6 +26,9 @@ import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue';
   </div>
   <div class="bg-slate-50 flex flex-col justify-center items-center ">
     <CarousselSobre/>
+    <LayoutSection/>
+
+
     <hr class=" bg-slate-300 w-[90%] m-10"/>
     <ProdutosRedondo/>
     <hr class=" bg-slate-300 w-[90%] m-10"/>
@@ -37,7 +40,7 @@ import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue';
     <MainlayoutSecundary/>
     
 
-    <Faqs class="text-white"/>
+    <Faqs />
     <Footer/>
     
 

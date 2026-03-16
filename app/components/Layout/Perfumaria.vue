@@ -4,25 +4,25 @@
 
 
 
-import alimentos from "../../data/produtosAlimentos.json"
+import perfumaria from "../../data/produtosPerfumaria.json"
 import { Carousel, CarouselContent, CarouselNext, CarouselPrevious } from "../ui/carousel";
 import CarouselItem from "../ui/carousel/CarouselItem.vue";
 
 import Dialog from "../ui/dialog/Dialog.vue";
 import DialogTrigger from "../ui/dialog/DialogTrigger.vue";
 import DialogContent from "../ui/dialog/DialogContent.vue";
-import Limpeza from "./limpeza.vue"
+
 
 import { Flame, PhoneCallIcon } from "lucide-vue-next";
 import Button from "../ui/button/Button.vue";
-import Perfumaria from "./Perfumaria.vue";
+
 
 
 const produtoSelecionado = ref<any>(null)
 
 const quantidade = ref <any>(1)
 
-  const alimentosLimitados = alimentos.slice(0, 5)
+  const PerfumariaLimitados = perfumaria.slice(0, 5)
 
 function comprarWhatsapp() {
 
@@ -67,12 +67,12 @@ function diminuir(){
 <template>
 <div class="flex justify-center flex-col items-center" >
 
-  <div class="flex justify-between w-[60%] items-center">
+    <div class="flex justify-between w-[60%] items-center">
     <h2 class="text-slate-800 font-bold md:text-[30px] md:p-14 text-[20px] p-3">
-      Alimentos
+      Perfumaria
     </h2>
 
-    <Button variant="link" @click="navigateTo('/Alimentos')" class="text-blue-500 text-[20px]">Ver mais</Button>
+    <Button variant="link" @click="navigateTo('/Perfumaria')" class="text-blue-500 text-[20px]">Ver mais</Button>
   
   </div>
 
@@ -90,7 +90,7 @@ function diminuir(){
       <div class=" flex md:gap-15 gap-1 flex-wrap  md:px-4">
   
   
-        <Dialog v-for="A in alimentosLimitados" :key="A.id">
+        <Dialog v-for="P in PerfumariaLimitados" :key="P.id">
   
           <DialogTrigger as-child>
   
@@ -99,7 +99,7 @@ function diminuir(){
             flex flex-col  cursor-pointer md:w-[300px] w-[48%] md:h-[450px] h-75  "
             >
             <div class="flex items-center justify-center">
-              <img class="md:w-40 w-25" :src="A.img" alt="">
+              <img class="md:w-40 w-25" :src="P.img" alt="">
 
             </div>
             <div class="px-6"> 
@@ -108,7 +108,7 @@ function diminuir(){
   
 
               <div class="justify-between flex">
-                   <button class="bg-[#FF7733] leading-none flex gap-1 h-6 w-30 justify-center items-center text-[12px] rounded-[3px] font-semibold">Mais vendido  <Flame/> </button>
+                 <button class="bg-[#FF7733] leading-none flex gap-1 h-6 w-30 justify-center items-center text-[12px] rounded-[3px] font-semibold">Mais vendido  <Flame/> </button>
 
                 <button class="bg-green-400 w-[40px] h-[40px] rounded-full">+</button>
 
@@ -116,26 +116,27 @@ function diminuir(){
   
               <div class="md:h-25 h-[30%] md:pt-5 ">
                 <h3 class="md:text-[17px] text-[13px]  text-center text-slate-800 font-semibold">
-                  {{ A.nome }}
+                  {{ P.nome }}
                 </h3>
               </div>
-              <div class="h-25 flex items-center justify-center flex-col ">
+
+              <div class="h-20 flex items-center justify-center flex-col ">
   
               <h4 class="text-slate-800  md:text-[16px] text-[11px]">
                  R$
                 <span class="text-slate-500  md:text-[17px] text-[12px] line-through">
-                  {{ A.preço1 }}
+                  {{ P.preço1 }}
                 </span>
               </h4>
   
               <h4 class="text-slate-800  ">
                 
                 <span class="text-slate-900 md:text-[33px] text-[20px] font-semibold">
-                   R$ {{ A.preço2 }}
+                   R$ {{ P.preço2 }}
                 </span>
               </h4>
+              </div>
 
-               </div>
                </div>
             </div>
   
@@ -149,13 +150,13 @@ function diminuir(){
               <div class="md:flex justify-between items-center gap-4 md:mx-7">
 
                 <div class="flex item justify-center">
-                  <img class="md:w-70 w-[50%]" :src="A.img" alt="">
+                  <img class="md:w-70 w-[50%]" :src="P.img" alt="">
                 </div>
 
                 <div class="flex flex-col gap-4 text-center">
 
                   <h3 class="text-[32px] font-bold text-center">
-                    {{ A.nome }}
+                    {{ P.nome }}
                   </h3>
 
                   <p class="md:w-100 w-[90%] text-slate-500">
@@ -165,11 +166,11 @@ function diminuir(){
                    <div class="flex items-center justify-center md:gap-6 md:m-3">
 
                 <p class="text-green-600 text-3xl font-bold">
-                  R$ {{ A.preço2 }}
+                  R$ {{ P.preço2 }}
                 </p>
 
                 <p class="text-red-500 line-through">
-                  R$ {{ A.preço1 }}
+                  R$ {{ P.preço1 }}
                 </p>
 
               </div>
@@ -191,7 +192,7 @@ function diminuir(){
                   </div>
 
                   <Button
-                    @click="produtoSelecionado = A; comprarWhatsapp()"
+                    @click="produtoSelecionado = P; comprarWhatsapp()"
                     class="bg-green-500 p-7 md:mt-10 font-bold text-[16px]"
                   >
                     Comprar no Whatsapp
@@ -214,8 +215,8 @@ function diminuir(){
         
     </div>
     </div>
-    <Limpeza/>
-    <Perfumaria/>
+ 
+
 
 
     
