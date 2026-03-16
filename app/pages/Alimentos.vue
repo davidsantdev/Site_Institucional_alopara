@@ -67,7 +67,7 @@ function diminuir(){
         
         
         <div class="bg-red-500 h-[100px]  items-center flex justify-center">
-            <h3 class="text-[27px] font-bold p-5">Alimentos mais comprados do ALô Pará</h3>
+            <h3 class="text-[27px] font-bold p-5">Alimentos mais comprados do Alô Pará</h3>
             
         </div>
         
