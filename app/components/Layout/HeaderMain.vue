@@ -23,7 +23,7 @@ function inicio (){
       
         <header class="flex justify-between pd:mx-20 h-20  text-[20px]  bg-gray-50 text-gray-900  items-center px-20">
             
-            <div>
+            <div @click="navigateTo('/')">
                 <img  src="../../assets/img/alop.png"" alt="" class="w-[200px] md:block hidden">
 
             </div>
@@ -45,7 +45,7 @@ function inicio (){
         <div class="bg-gray-50 shadow h-30 md:h-13 p-2 border-1 border-gray-300 text-gray-800 flex justify-between px-7 ">
 
             
-                <div>
+                <div @click="navigateTo('/')">
                     
                     <img  src="../../assets/img/alop.png"" alt="" class="w-[170px] md:hidden">
     

@@ -54,10 +54,13 @@ function diminuir(){
 <template>
 <div class="flex justify-center flex-col items-center" >
 
-  <div>
-    <h2 class="text-slate-800 font-bold md:text-[30px] md:p-14 text-[20px] p-1">
-      Bebidas:
+   <div class="flex justify-between w-[60%] items-center">
+    <h2 class="text-slate-800 font-bold md:text-[30px] md:p-14 text-[20px] p-3">
+      Bebidas
     </h2>
+
+    <Button variant="link" @click="navigateTo('/Bebidas')" class="text-blue-500 text-[20px]">Ver mais</Button>
+  
   </div>
 
   <div class="flex justify-center items-center flex-col">
