@@ -10,7 +10,9 @@ import Alimentos from "../data/produtosAlimentos.json"
 import { Flame, PhoneCallIcon } from "lucide-vue-next";
 import HeaderMain from "~/components/Layout/HeaderMain.vue";
 import Footer from "~/components/Layout/Footer.vue";
+import { useCarrinho } from "~/data/composable/UseCarrinho";
 
+const { carrinho, adicionarCarrinho } = useCarrinho()
 
 
 
@@ -79,6 +81,7 @@ function diminuir(){
         <Button  @click="navigateTo('/Perfumaria')" variant="link" class="text-blue-500 text-[17px] ">Perfumaria</Button>
         <Button  @click="navigateTo('/Vinhos')" variant="link" class="text-blue-500 text-[17px] ">Vinhos</Button>
         <Button  @click="navigateTo('/Bebidas')" variant="link" class="text-blue-500 text-[17px] ">Bebidas</Button>
+
     </div>
 
         <div class="flex justify-center flex-col items-center" >
@@ -123,7 +126,7 @@ function diminuir(){
               <div class="justify-between flex">
                   <button class="bg-[#FF7733] leading-none flex gap-1 h-6 w-30 justify-center items-center text-[12px] rounded-[3px] font-semibold">Mais vendido  <Flame/> </button>
 
-                <button class="bg-green-400 w-[40px] h-[40px] rounded-full">+</button>
+                <button @click="adicionarCarrinho(A, 1)" class="bg-green-400 w-[40px] h-[40px] rounded-full ">+</button>
 
               </div>
   
@@ -236,6 +239,9 @@ function diminuir(){
   </div>
 
 </div>
-<Footer/>
+
+ 
+<Foote/>
+
     </div>
 </template>
