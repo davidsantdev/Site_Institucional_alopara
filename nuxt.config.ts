@@ -85,7 +85,7 @@ export default defineNuxtConfig({
   app: {
     head: {
 
-      title: 'Supermercado Alô Pará - Ofertas',
+      title: 'Alô Pará - Ofertas ',
 
       meta: [
         { charset: 'utf-8' },
