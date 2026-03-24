@@ -1,7 +1,33 @@
+import { Slice } from "lucide-vue-next"
 import { watch } from "vue"
+import {  computed } from "vue"
+import { ref } from "vue"
 
 
 export function useCarrinho(){
+const messageErro = ref(false)
+
+  const totalItens = computed(() => {
+    if (carrinho.value.length === 0){
+     return {
+      total: "",
+      vazio: true,
+      compra: false
+    }
+
+      
+    
+
+    }
+   
+       return {
+    total: carrinho.value.length,
+    vazio: false,
+    compra: true
+  }
+    
+  } )
+ 
 
   const carrinho = useState<any[]>("carrinho", () => [])
 
@@ -26,7 +52,7 @@ export function useCarrinho(){
 
   function adicionarCarrinho(produto: any, quantidade: number = 1) {
     const existente = carrinho.value.find(
-      (p: any) => p.id === produto.id
+      (p: any) => p.nome === produto.nome
     )  
 
     if (existente) {
@@ -38,6 +64,13 @@ export function useCarrinho(){
       })
     }
   }
+function removeItem(nome:string) {
 
-  return { carrinho, adicionarCarrinho }
+  carrinho.value = carrinho.value.filter((p: any) => p.nome !== nome) 
+
+}
+  
+
+
+  return { carrinho, adicionarCarrinho, removeItem, totalItens }
 }

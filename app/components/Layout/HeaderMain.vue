@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import { Menu, MenuIcon, Store, UserPlus } from 'lucide-vue-next';
+import { LucideShoppingCart, Menu, MenuIcon, ShoppingBasket, ShoppingCart, Store, UserPlus } from 'lucide-vue-next';
 import DropdownMenu from '../ui/dropdown-menu/DropdownMenu.vue';
 import DropdownMenuContent from '../ui/dropdown-menu/DropdownMenuContent.vue';
 import DropdownMenuGroup from '../ui/dropdown-menu/DropdownMenuGroup.vue';
@@ -10,6 +10,9 @@ import DropdownMenuSeparator from '../ui/dropdown-menu/DropdownMenuSeparator.vue
 
 import DropdownMenuTrigger from '../ui/dropdown-menu/DropdownMenuTrigger.vue';
 import Mobilemenu from './Mobilemenu.vue';
+import { useCarrinho } from '~/data/composable/UseCarrinho';
+
+const {totalItens} = useCarrinho()
 
 
 function inicio (){
@@ -27,14 +30,21 @@ function inicio (){
                 <img  src="../../assets/img/alop.png"" alt="" class="w-[200px] md:block hidden">
 
             </div>
-            <div class="flex ">
+            <div class="flex items-center">
+                <div class="flex md:mx-20 mr-7 w-30 ">
+                    <img src="../../assets/img/car.png"  class="text-red-600 w-[53px]" @click="navigateTo('/Carrinho')">  </img>
+                    <div v-if="totalItens.compra" class="w-6 h-6 bg-red-500 text-center flex items-center justify-center rounded-full text-white font-bold"> {{ totalItens.total }} </div>
+
+                </div>
+                
+
                 <div class="flex gap-2 items-center text-red-600 font-semibold">
                     <Store :size="40"></Store>
-                   <h2 class="text-[18px]">Compre online</h2> 
+                   <h2 class="md:text-[18px] text-[13px]">Compre online</h2> 
                 </div>
                  <div class="flex gap-2 items-center text-red-600 m-4 font-semibold">
                     <UserPlus :size="40"></UserPlus>
-                   <h2 class="text-[18px]">Seja um fornecedor</h2> 
+                   <h2 class="md:text-[18px] text-[13px]">Seja um fornecedor</h2> 
                 </div>
 
             </div>            

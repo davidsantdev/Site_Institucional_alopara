@@ -13,8 +13,15 @@ import DialogTrigger from "../ui/dialog/DialogTrigger.vue";
 import DialogContent from "../ui/dialog/DialogContent.vue";
 
 
-import { Flame, PhoneCallIcon } from "lucide-vue-next";
+import { Flame, PhoneCallIcon, ShoppingBasket } from "lucide-vue-next";
 import Button from "../ui/button/Button.vue";
+import { useCarrinho } from "~/data/composable/UseCarrinho";
+import Produtos from "./Produtos.vue";
+
+
+
+
+const { carrinho, adicionarCarrinho } = useCarrinho()
 
 
 
@@ -191,13 +198,14 @@ function diminuir(){
 
                   </div>
 
+                
                   <Button
-                    @click="produtoSelecionado = P; comprarWhatsapp()"
-                    class="bg-green-500 p-7 md:mt-10 font-bold text-[16px]"
+                    @click="produtoSelecionado = P; adicionarCarrinho(P)"
+                    class="bg-green-500 p-7 md:mt-10 font-bold text-[16px] "
                   >
-                    Comprar no Whatsapp
+                    Adicionar ao carrinho
                     <span>
-                      <PhoneCallIcon />
+                      <ShoppingBasket/>
                     </span>
                   </Button>
 

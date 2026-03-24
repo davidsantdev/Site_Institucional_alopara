@@ -39,7 +39,7 @@ window.open(url, "_blank")
       </Button>
     </DialogTrigger>
 
-    <DialogContent class="w-[50%] bg-slate-50 flex justify-center">
+    <DialogContent class="md:w-[50%] w-[80%] bg-slate-50 flex justify-center">
 
       <div class="w-[90%] flex flex-col">
         
@@ -47,9 +47,9 @@ window.open(url, "_blank")
           Enviar currículo
         </h4>
 
-        <div class="flex justify-between">
+        <div class="md:flex justify-between ">
 
-          <div class="w-[50%]">
+          <div class="md:w-[50%]">
             <p class="text-slate-500 font-light">Nome:</p>
             <input
               v-model="Nome"
@@ -58,7 +58,7 @@ window.open(url, "_blank")
             >
           </div>
 
-          <div class="w-[50%]">
+          <div class="md:w-[50%]">
             <p class="text-slate-500 font-light">Numero:</p>
             <input
               v-model="Numero"
@@ -75,7 +75,7 @@ window.open(url, "_blank")
 
           <textarea
             v-model="Mensagem"
-            class="border-slate-300 h-20 resize-none text-[17px] border text-slate-900 w-[70%] p-3 rounded-[10px]"
+            class="border-slate-300 h-20 resize-none text-[17px] border text-slate-900 md:w-[70%] p-3 rounded-[10px]"
           ></textarea>
 
         </div>

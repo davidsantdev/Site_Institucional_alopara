@@ -7,11 +7,13 @@
 import Button from "~/components/ui/button/Button.vue";
 import Vinhos from "../data/produtosVinho.json"
 
-import { Flame, PhoneCallIcon } from "lucide-vue-next";
+import { Flame, PhoneCallIcon, ShoppingBasket } from "lucide-vue-next";
 import HeaderMain from "~/components/Layout/HeaderMain.vue";
 import Footer from "~/components/Layout/Footer.vue";
 
+import { useCarrinho } from "~/data/composable/UseCarrinho";
 
+const { carrinho, adicionarCarrinho } = useCarrinho()
 
 
 const produtoSelecionado = ref<any>(null)
@@ -195,14 +197,13 @@ function diminuir(){
                     <Button @click="adicionar">+</Button>
 
                   </div>
-
                   <Button
-                    @click="produtoSelecionado = V; comprarWhatsapp()"
-                    class="bg-green-500 p-7 md:mt-10 font-bold text-[16px]"
+                    @click="produtoSelecionado = V; adicionarCarrinho(V)"
+                    class="bg-green-500 p-7 md:mt-10 font-bold text-[16px] "
                   >
-                    Comprar no Whatsapp
+                    Adicionar ao carrinho
                     <span>
-                      <PhoneCallIcon />
+                      <ShoppingBasket :size="90"/>
                     </span>
                   </Button>
 

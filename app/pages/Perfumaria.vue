@@ -10,7 +10,9 @@ import Perfumaria from "../data/produtosPerfumaria.json"
 import { Flame, PhoneCallIcon } from "lucide-vue-next";
 import HeaderMain from "~/components/Layout/HeaderMain.vue";
 import Footer from "~/components/Layout/Footer.vue";
+import { useCarrinho } from "~/data/composable/UseCarrinho";
 
+const { carrinho, adicionarCarrinho } = useCarrinho()
 
 
 
@@ -204,12 +206,12 @@ function diminuir(){
                   </div>
 
                   <Button
-                    @click="produtoSelecionado = P; comprarWhatsapp()"
-                    class="bg-green-500 p-7 md:mt-10 font-bold text-[16px]"
+                    @click="produtoSelecionado = P; adicionarCarrinho(P)"
+                    class="bg-green-500 p-7 md:mt-10 font-bold text-[16px] "
                   >
-                    Comprar no Whatsapp
+                    Adicionar ao carrinho
                     <span>
-                      <PhoneCallIcon />
+                      <ShoppingBasket :size="90"/>
                     </span>
                   </Button>
 

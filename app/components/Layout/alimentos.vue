@@ -13,53 +13,40 @@ import DialogTrigger from "../ui/dialog/DialogTrigger.vue";
 import DialogContent from "../ui/dialog/DialogContent.vue";
 import Limpeza from "./limpeza.vue"
 
-import { Flame, PhoneCallIcon } from "lucide-vue-next";
+
+
+import { Flame, Import, PhoneCallIcon, ShoppingBasket } from "lucide-vue-next";
 import Button from "../ui/button/Button.vue";
 import Perfumaria from "./Perfumaria.vue";
+import { useCarrinho } from "~/data/composable/UseCarrinho";
+import Produtos from "./Produtos.vue";
 
+
+
+
+const { carrinho, adicionarCarrinho } = useCarrinho()
 
 const produtoSelecionado = ref<any>(null)
+ 
 
-const quantidade = ref <any>(1)
 
   const alimentosLimitados = alimentos.slice(0, 5)
 
-function comprarWhatsapp() {
 
 
 
-  const numero = "5594991923141"
 
-  const produto = produtoSelecionado.value
-
-  const mensagem = `
-Olá! Quero comprar:
-
-  Produto: ${produto.nome}
-  Preço: R$ ${produto.preço2 ?? produto.preço}
-  quantidade: ${quantidade.value}
-
-
-  `
-
-  const url =
-    `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
-
-  window.open(url, "_blank")
-  quantidade.value=1
+if (produtoSelecionado.value) {
+  produtoSelecionado.value.quantidade++
 }
 
-
-function adicionar(){
-  return quantidade.value ++
-}
-function diminuir(){
-
-  if(quantidade.value > 1){
-      quantidade.value --
+function diminuir() {
+  if (
+    produtoSelecionado.value &&
+    produtoSelecionado.value.quantidade > 1
+  ) {
+    produtoSelecionado.value.quantidade--
   }
-
-    
 }
 
 </script>
@@ -176,27 +163,15 @@ function diminuir(){
 
                  
 
-                  <div class="flex gap-4">
-                    <p class="font-bold">quantidade:</p>
-
-                    <Button @click="diminuir">-</Button>
-
-                    <input
-                      v-model="quantidade"
-                      class="bg-gray-200 rounded-[10px] text-center w-20 p-1"
-                    >
-
-                    <Button @click="adicionar">+</Button>
-
-                  </div>
+                  
 
                   <Button
-                    @click="produtoSelecionado = A; comprarWhatsapp()"
-                    class="bg-green-500 p-7 md:mt-10 font-bold text-[16px]"
+                    @click="produtoSelecionado = A; adicionarCarrinho(A)"
+                    class="bg-green-500 p-7 md:mt-10 font-bold text-[16px] "
                   >
-                    Comprar no Whatsapp
+                    Adicionar ao carrinho
                     <span>
-                      <PhoneCallIcon />
+                      <ShoppingBasket/>
                     </span>
                   </Button>
 

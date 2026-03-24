@@ -35,6 +35,8 @@ Olá! Quero comprar:
   Preço: R$ ${produto.preço2 ?? produto.preço}
   quantidade: ${quantidade.value}
 
+  
+
 
   `
 
