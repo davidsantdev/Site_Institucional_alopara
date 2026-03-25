@@ -1,23 +1,16 @@
-# 🛒 Site Institucional – Alô Pará
+# 🛒 Site Institucional + Encarte Digital – Alô Pará
 
-Projeto desenvolvido para o **Supermercado Alô Pará**, com foco em presença digital, divulgação institucional, ofertas e oportunidades de emprego.
+## 👨‍💻 Desenvolvedor
+
+**David Santos da Costa**
 
 ---
 
 ## 📌 Sobre o Projeto
 
-Este é um site institucional moderno desenvolvido para apresentar:
+Evolução do site institucional do **Alô Pará**, agora com **encarte digital completo**, **carrinho de compras** e **integração direta com WhatsApp**.
 
-* Informações sobre o supermercado
-* Vantagens de comprar no Alô Pará
-* Clube de Ofertas
-* Trabalhe Conosco
-* FAQ (Perguntas Frequentes)
-* Divulgação de vagas
-* Download do aplicativo
-* Integração com WhatsApp e Instagram
-
-O objetivo é fortalecer a marca, melhorar a comunicação com os clientes e centralizar informações importantes em um só lugar.
+Além de apresentar a empresa, o sistema permite que o cliente **navegue por produtos, monte seu carrinho e finalize o pedido pelo WhatsApp**, tornando o site uma ferramenta prática de vendas.
 
 ---
 
@@ -33,48 +26,63 @@ O objetivo é fortalecer a marca, melhorar a comunicação com os clientes e cen
 
 ---
 
-## 🎯 Funcionalidades Implementadas
+## 🎯 Funcionalidades
 
-### ✅ Listagem dinâmica de produtos
+### 🛍️ Encarte Digital
 
-Produtos organizados em JSON e renderizados com `v-for`.
+* Listagem dinâmica de produtos via JSON
+* Estrutura organizada por categorias
+* Exibição de preços (incluindo casos com **2 preços**, ex: promoções por kg)
+* Layout inspirado em encartes reais de supermercado
 
-### ✅ Carousel de imagens
+### 🛒 Carrinho de Compras
 
-Seção interativa para banners e destaques.
+* Adição e remoção de produtos
+* Contador dinâmico de itens
+* Atualização reativa com `computed`
+* Tratamento de carrinho vazio
 
-### ✅ Página Trabalhe Conosco
+### 📲 Integração com WhatsApp
 
-* Explicação sobre como se tornar colaborador
-* Orientação para acompanhar vagas pelo Instagram
-* Contato via WhatsApp para mais informações
+* Geração automática da mensagem com os itens do carrinho
+* Envio direto para o WhatsApp do supermercado
+* Fluxo simples: **cliente escolhe → monta carrinho → envia pedido**
 
-### ✅ Clube de Ofertas
+### 🎠 Interface Interativa
 
-Área dedicada a promoções e benefícios exclusivos.
+* Carousel de banners e produtos
+* Animações com AOS
+* Design responsivo (mobile-first)
 
-### ✅ FAQ
+### 💼 Trabalhe Conosco
 
-Sessão com perguntas frequentes como:
+* Página institucional de recrutamento
+* Direcionamento para Instagram
+* Contato via WhatsApp
 
-* Por que comprar no Alô Pará?
-* O supermercado faz entregas?
-* Como acompanhar ofertas?
+### 🏷️ Clube de Ofertas
 
-### ✅ Integração com redes sociais
+* Área dedicada a promoções
+* Destaque de produtos estratégicos
 
-* Instagram para divulgação de vagas
-* WhatsApp para contato direto
+### ❓ FAQ (Perguntas Frequentes)
+
+* Respostas rápidas para dúvidas comuns
+
+### 📲 Integrações
+
+* WhatsApp (principal canal de conversão)
+* Instagram (divulgação e vagas)
 
 ---
 
-## 📱 Aplicativo
+## 🧠 Lógica do Sistema
 
-O site também divulga o aplicativo do supermercado, incentivando os clientes a baixarem para:
-
-* Acompanhar ofertas
-* Receber promoções
-* Facilitar compras
+* Produtos vindos de arquivo JSON
+* Uso de `v-for` para renderização
+* Estado global/local do carrinho com Composition API
+* Uso de `ref`, `computed` e `watch`
+* Montagem dinâmica da mensagem para WhatsApp
 
 ---
 
@@ -84,6 +92,10 @@ O site também divulga o aplicativo do supermercado, incentivando os clientes a 
 my-dashboard-app/
  ├── assets/
  ├── components/
+ ├── composables/
+ │    └── useCarrinho.ts
+ ├── data/
+ │    └── produtosAlimentos.json
  ├── pages/
  ├── public/
  ├── app.vue
@@ -102,7 +114,7 @@ npm install
 npm run dev
 ```
 
-O projeto ficará disponível em:
+A aplicação estará disponível em:
 
 ```
 http://localhost:3000
@@ -110,24 +122,37 @@ http://localhost:3000
 
 ---
 
-## 🌟 Objetivo do Projeto
+## 🌟 Objetivo
 
-Criar uma plataforma institucional moderna, responsiva e profissional para representar o Supermercado Alô Pará no ambiente digital.
+Criar uma solução digital que une:
+
+* Presença institucional
+* Divulgação de ofertas
+* Conversão direta em vendas via WhatsApp
 
 ---
 
-## 👨‍💻 Desenvolvedor
+## 🔥 Diferenciais
 
-Projeto desenvolvido por **David Santos da Costa**.
+* Sistema híbrido: institucional + e-commerce simplificado
+* Foco em conversão real (WhatsApp)
+* Estrutura pensada para uso em supermercado de verdade
+* Escalável para futuras integrações (backend, banco de dados)
 
 ---
 
 ## 📌 Status
 
-🚧 Em desenvolvimento – melhorias visuais e novas funcionalidades sendo implementadas continuamente.
+🚧 Em desenvolvimento
+
+Melhorias em andamento:
+
+* Persistência do carrinho
+* Painel administrativo
+* Integração com backend
 
 ---
 
 ## 📄 Licença
 
-Este projeto é de uso institucional e priva
+Projeto de uso institucional.
