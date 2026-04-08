@@ -11,41 +11,32 @@ import { Flame, PhoneCallIcon, ShoppingBasket } from "lucide-vue-next";
 import HeaderMain from "~/components/Layout/HeaderMain.vue";
 import Footer from "~/components/Layout/Footer.vue";
 import { useCarrinho } from "~/data/composable/UseCarrinho";
+import Limpeza from "~/components/Layout/limpeza.vue";
 
 const { carrinho, adicionarCarrinho } = useCarrinho()
 
-
+const quantidade = Limpeza.quantidade
 
 const produtoSelecionado = ref<any>(null)
 
-const quantidade = ref <any>(1)
+const PaginacaoAtual = ref(1)
+const itensPorPagina = 10
 
+const totalPaginas = computed (()=>
+Math.ceil(Alimentos.length / itensPorPagina))
 
+const produtosPaginados = computed (()=>{
+  const inicio= (PaginacaoAtual.value -1) * itensPorPagina
+  const fim = inicio + itensPorPagina
+  return Alimentos.slice(inicio,fim)
+})
 
-function comprarWhatsapp() {
-
-
-
-  const numero = "5594991923141"
-
-  const produto = produtoSelecionado.value
-
-  const mensagem = `
-Olá! Quero comprar:
-
-  Produto: ${produto.nome}
-  Preço: R$ ${produto.preço2 ?? produto.preço}
-  quantidade: ${quantidade.value}
-
-
-  `
-
-  const url =
-    `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
-
-  window.open(url, "_blank")
-  quantidade.value=1
+function irParaPagina(Pagina){
+  PaginacaoAtual.value = Pagina
 }
+
+
+
 
 
 function adicionar(){
@@ -72,6 +63,17 @@ function diminuir(){
             <h3 class="text-[27px] font-bold p-5">Alimentos mais comprados do Alô Pará</h3>
             
         </div>
+
+
+
+        
+
+
+
+
+
+
+
         
         <div >
               <div class=" p-4 flex flex gap-1 flex-wrap">
@@ -83,6 +85,40 @@ function diminuir(){
         <Button  @click="navigateTo('/Bebidas')" variant="link" class="text-blue-500 text-[17px] ">Bebidas</Button>
 
     </div>
+
+
+     <div class="flex justify-center gap-2 m-10 flex-wrap">
+
+  <!-- ANTERIOR -->
+  <button 
+    @click="PaginacaoAtual > 1 && PaginacaoAtual--"
+    class="px-3 py-1 bg-blue-400 rounded"
+  >
+    Anterior
+  </button>
+
+  <!-- NÚMEROS -->
+  <button
+    v-for="page in totalPaginas"
+    :key="page"
+    @click="irParaPagina(page)"
+    :class="[
+      'px-3 py-1 rounded',
+      page === PaginacaoAtual ? 'bg-blue-500 text-white' : 'bg-blue-400'
+    ]"
+  >
+    {{ page }}
+  </button>
+
+  <!-- PRÓXIMO -->
+  <button 
+    @click="PaginacaoAtual < totalPaginas && PaginacaoAtual++"
+    class="px-3 py-1 bg-blue-400 rounded"
+  >
+    Próximo
+  </button>
+
+</div>
 
         <div class="flex justify-center flex-col items-center" >
 
@@ -106,7 +142,7 @@ function diminuir(){
       <div class=" flex md:gap-15 gap-1 flex-wrap  md:px-4">
   
   
-        <Dialog v-for="A in Alimentos" :key="A.id">
+        <Dialog v-for="A in produtosPaginados" :key="A.id">
   
           <DialogTrigger as-child>
   
@@ -137,12 +173,7 @@ function diminuir(){
               </div>
               <div class="h-25 flex items-center justify-center flex-col ">
   
-              <h4 class="text-slate-800  md:text-[16px] text-[11px]">
-                 R$
-                <span class="text-slate-500  md:text-[17px] text-[12px] line-through">
-                  {{ A.preço1 }}
-                </span>
-              </h4>
+             
   
               <h4 class="text-slate-800  ">
                 
@@ -212,7 +243,7 @@ function diminuir(){
                   >
                     Adicionar ao carrinho
                     <span>
-                      <ShoppingBasket size="90"/>
+                      <ShoppingBasket :size="90"/>
                     </span>
                   </Button>
                 </div>
@@ -236,6 +267,42 @@ function diminuir(){
     
 
   </div>
+
+
+  <div class="flex justify-center gap-2 m-10 flex-wrap">
+
+  <!-- ANTERIOR -->
+  <button 
+    @click="PaginacaoAtual > 1 && PaginacaoAtual--"
+    class="px-3 py-1 bg-blue-400 rounded"
+  >
+    Anterior
+  </button>
+
+  <!-- NÚMEROS -->
+  <button
+    v-for="page in totalPaginas"
+    :key="page"
+    @click="irParaPagina(page)"
+    :class="[
+      'px-3 py-1 rounded',
+      page === PaginacaoAtual ? 'bg-blue-500 text-white' : 'bg-blue-400'
+    ]"
+  >
+    {{ page }}
+  </button>
+
+  <!-- PRÓXIMO -->
+  <button 
+    @click="PaginacaoAtual < totalPaginas && PaginacaoAtual++"
+    class="px-3 py-1 bg-blue-400 rounded"
+  >
+    Próximo
+  </button>
+
+</div>
+
+
 
 </div>
 

@@ -8,7 +8,7 @@ import Footer from './Footer.vue';
 </script>
 
 <template>
-    <div class="flex flex-col bg-[#121212]  justify-center items-center center pt-20">
+    <div class="flex flex-col    justify-center items-center center pt-20">
       <h4 class="text-[30px] text-white">Perguntas Frequentes</h4>
         <Accordion type="single" collapsible class="md:w-[50%] text-center p-1" default-value="">
     <AccordionItem value="item-1">

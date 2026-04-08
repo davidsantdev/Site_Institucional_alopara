@@ -1,83 +1,51 @@
 [
-  {
-    "id": 1,
-    "nome": "Arroz Aladdin Branco TP1 5kg",
-    "preço1": "18,99",
-    "preço2": "14,99",
-    "img": "/alimentos/1.png",
-    "quantidade":1
-  },
-  {
-    "id": 2,
-    "nome": "Arroz Boca Cheia Branco TP3 5kg",
-    "preço1": "14,99",
-    "preço2": "12,99",
-    "img": "/alimentos/2.png",
-    "quantidade":1
-    
-  },
-  {
-    "id": 3,
-    "nome": "Açúcar Cristal Ecoçúcar 2kg",
-    "preço1": "8,99",
-    "preço2": "5,99",
-    "img": "/alimentos/3.png",
-    "quantidade":1
-  },
-  {
-    "id": 4,
-    "nome": "Óleo de Soja Vila Velha 900ml",
-    "preço1": "8,49",
-    "preço2": "6,99",
-    "img": "/alimentos/4.png",
-    "quantidade":1
-  },
-  {
-    "id": 5,
-    "nome": "Leite em Pó CCGL 1kg",
-    "preço1": "39,99",
-    "preço2": "34,99",
-    "img": "/alimentos/5.png",
-    "quantidade":1
-  },
-  {
-    "id": 6,
-    "nome": "Leite em Pó Piracanjuba Integral 1kg",
-    "preço1": "39,99",
-    "preço2": "29,99",
-    "img": "/alimentos/6.png",
-    "quantidade":1
-  },
-  {
-    "id": 7,
-    "nome": "Macarrão Paulista Parafuso 500g",
-    "preço1": "3,79",
-    "preço2": "2,99",
-    "img": "/alimentos/7.png",
-    "quantidade":1
-  },
-  {
-    "id": 8,
-    "nome": "Molho de Tomate Fugini Tradicional 300g",
-    "preço1": "2,19",
-    "preço2": "1,89",
-    "img": "/alimentos/8.png",
-    "quantidade":1
-  },
-  {
-    "id": 9,
-    "nome": "Trigo Dona Benta c/ Fermento 1kg",
-    "preço1": "5,79",
-    "preço2": "4,99",
-    "img": "/alimentos/9.png",
-    "quantidade":1
-  },
-  {
-    "id": 10,
-    "nome": "Fécula de Mandioca Lopes 1kg",
-    "preço1": "7,99",
-    "preço2": "6,99",
-    "img": "/alimentos/10.png",
-    "quantidade":1
-  }
+  { "id": 1, "nome": "Arroz Aladdin Branco TP1 5kg", "preço2": "18,99", "preço2": "14,99", "img": "https://i.ibb.co/d0CLsf9Y/1.png", "quantidade":1 },
+  { "id": 2, "nome": "Arroz Boca Cheia Branco TP3 5kg", "preço2": "14,99", "preço2": "12,99", "img": "https://i.ibb.co/ns3L980Z/2.png", "quantidade":1 },
+  { "id": 3, "nome": "Açúcar Cristal Ecoçúcar 2kg", "preço2": "8,99", "preço2": "5,99", "img": "https://i.ibb.co/DDygtPK1/3.png", "quantidade":1 },
+  { "id": 4, "nome": "Óleo de Soja Vila Velha 900ml", "preço2": "8,49", "preço2": "6,99", "img": "https://i.ibb.co/gLZZgqPh/4.png", "quantidade":1 },
+  { "id": 5, "nome": "Leite em Pó CCGL 1kg", "preço2": "39,99", "preço2": "34,99", "img": "https://i.ibb.co/20rqs7HW/5.png", "quantidade":1 },
+  { "id": 6, "nome": "Leite em Pó Piracanjuba Integral 1kg", "preço2": "39,99", "preço2": "29,99", "img": "https://i.ibb.co/TMMXh4tr/6.png", "quantidade":1 },
+  { "id": 7, "nome": "Macarrão Paulista Parafuso 500g", "preço2": "3,79", "preço2": "2,99", "img": "https://i.ibb.co/4gT9KNWV/7.png", "quantidade":1 },
+  { "id": 8, "nome": "Molho de Tomate Fugini Tradicional 300g", "preço2": "2,19", "preço2": "1,89", "img": "https://i.ibb.co/DPgKXdCM/8.png", "quantidade":1 },
+  { "id": 9, "nome": "Trigo Dona Benta c/ Fermento 1kg", "preço2": "5,79", "preço2": "4,99", "img": "https://i.ibb.co/mFv4xCf5/9.png", "quantidade":1 },
+  { "id": 10, "nome": "Fécula de Mandioca Lopes 1kg", "preço2": "7,99", "preço2": "6,99", "img": "https://i.ibb.co/DgVV6sQ9/10.png", "quantidade":1 },
+
+  { "id": 11, "nome": "Arroz Tio Jorge Branco 5kg", "preço2": "21,99", "img": "https://i.ibb.co/4QsntSt/11.png", "quantidade": 1 },
+  { "id": 12, "nome": "Arroz Painho Branco TP1 5kg", "preço2": "19,99", "img": "https://i.ibb.co/DfRyTC5H/12.png", "quantidade": 1 },
+  { "id": 13, "nome": "Arroz Realengo Branco TP1 5kg", "preço2": "19,99", "img": "https://i.ibb.co/zhY9W1TM/13.png", "quantidade": 1 },
+  { "id": 14, "nome": "Feijão Carioca Aladdin 1kg", "preço2": "7,99", "img": "https://i.ibb.co/0y1ZDT5Q/14.png", "quantidade": 1 },
+  { "id": 15, "nome": "Café Kimimo 250g", "preço2": "14,99", "img": "https://i.ibb.co/pBFX1KCy/15.png", "quantidade": 1 },
+  { "id": 16, "nome": "Café Santa Clara a Vácuo 250g", "preço2": "16,49", "img": "https://i.ibb.co/Ld1vgk71/16.png", "quantidade": 1 },
+  { "id": 17, "nome": "Café Santa Clara Extra Forte 250g", "preço2": "14,99", "img": "https://i.ibb.co/wNXt5bf0/17.png", "quantidade": 1 },
+  { "id": 18, "nome": "Leite Longa Vida Piracanjuba Integral 1L", "preço2": "7,99", "img": "https://i.ibb.co/7Jdqzq7X/18.png", "quantidade": 1 },
+  { "id": 19, "nome": "Leite Condensado Piracanjuba 395g", "preço2": "7,39", "img": "https://i.ibb.co/hFSThPPv/19.png", "quantidade": 1 },
+  { "id": 20, "nome": "Margarina Primor com Sal 1kg", "preço2": "13,99", "img": "https://i.ibb.co/YC8cWsy/20.png", "quantidade": 1 },
+
+  { "id": 21, "nome": "Trigo Mirela com Fermento 1kg", "preço2": "5,49", "img": "https://i.ibb.co/5WbjP3gn/21.png", "quantidade": 1 },
+  { "id": 22, "nome": "Trigo Mirela sem Fermento 1kg", "preço2": "5,29", "img": "https://i.ibb.co/tpv2T4J8/22.png", "quantidade": 1 },
+  { "id": 23, "nome": "Macarrão Instantâneo Sandella 85g", "preço2": "1,99", "img": "https://i.ibb.co/TMBvzB9Y/23.png", "quantidade": 1 },
+  { "id": 24, "nome": "Flocão Bonoflokos Milho 400g", "preço2": "2,19", "img": "https://i.ibb.co/5WhZDMxQ/24.png", "quantidade": 1 },
+  { "id": 25, "nome": "Flocão de Arroz Painho 400g", "preço2": "1,99", "img": "https://i.ibb.co/Pz9Shkx0/25.png", "quantidade": 1 },
+  { "id": 26, "nome": "Canjiquinha Sinhá de Milho Xerém 500g", "preço2": "2,99", "img": "https://i.ibb.co/Z6VKcWhB/26.png", "quantidade": 1 },
+  { "id": 27, "nome": "Massa Pronta Amafil Tapioca 1kg", "preço2": "11,99", "img": "https://i.ibb.co/bj6wXhwX/27.png", "quantidade": 1 },
+  { "id": 28, "nome": "Milho Verde Quero 170g", "preço2": "4,39", "img": "https://i.ibb.co/SXzD0DMg/28.png", "quantidade": 1 },
+  { "id": 29, "nome": "Extrato de Tomate Fugini 190g", "preço2": "2,49", "img": "https://i.ibb.co/vxn2sXCs/29.png", "quantidade": 1 },
+  { "id": 30, "nome": "Extrato de Tomate Olé Copo 190g", "preço2": "3,49", "img": "https://i.ibb.co/673hhRWr/30.png", "quantidade": 1 },
+
+  { "id": 31, "nome": "Ketchup Lanchero 3kg", "preço2": "17,99", "img": "https://i.ibb.co/SwYbxRSd/31.png", "quantidade": 1 },
+  { "id": 32, "nome": "Maionese Arisco Tradicional 500g", "preço2": "5,99", "img": "https://i.ibb.co/yBXdrpWq/32.png", "quantidade": 1 },
+  { "id": 33, "nome": "Maionese Lancheiro 2kg", "preço2": "15,99", "img": "https://i.ibb.co/5gw1cRdy/33.png", "quantidade": 1 },
+  { "id": 34, "nome": "Maionese Ariane Sachê 180un", "preço2": "14,76", "img": "https://i.ibb.co/jvM9x7Vz/34.png", "quantidade": 1 },
+  { "id": 35, "nome": "Pão de Forma Pullman 480g", "preço2": "10,99", "img": "https://i.ibb.co/rR7dcYZp/35.png", "quantidade": 1 },
+  { "id": 36, "nome": "Creme de Leite Frimesa 200g", "preço2": "4,49", "img": "https://i.ibb.co/qMhTmPdC/36.png", "quantidade": 1 },
+  { "id": 37, "nome": "Achocolatado em Pó Chocolattoo 3 Corações 560g", "preço2": "17,99", "img": "https://i.ibb.co/5H7cM9c/37.png", "quantidade": 1 },
+  { "id": 38, "nome": "Achocolatado Pronto Pirakids 200ml", "preço2": "1,89", "img": "https://i.ibb.co/nMnmMrRq/38.png", "quantidade": 1 },
+  { "id": 39, "nome": "Batata Palha Pratic Leve Lanche 500g", "preço2": "22,99", "img": "https://i.ibb.co/yFgyjvKh/39.png", "quantidade": 1 },
+  { "id": 40, "nome": "Bombom Garoto Tabletes 250g", "preço2": "17,99", "img": "https://i.ibb.co/23SYsnMz/40.png", "quantidade": 1 },
+
+  { "id": 41, "nome": "Chantilly Chanty Mix Amélia 1kg", "preço2": "24,99", "img": "https://i.ibb.co/5XzXd56Z/41.png", "quantidade": 1 },
+  { "id": 42, "nome": "Rosquinhas de Coco Micos 600g", "preço2": "8,99", "img": "https://i.ibb.co/V5cbZMd/42.png", "quantidade": 1 },
+  { "id": 43, "nome": "Pipoca São João Doce 20g", "preço2": "1,20", "img": "https://i.ibb.co/pBpFmB0G/43.png", "quantidade": 1 },
+  { "id": 44, "nome": "Refresco em Pó Frisco 18g", "preço2": "1,19", "img": "https://i.ibb.co/1ttrzLj5/44.png", "quantidade": 1 },
+  { "id": 45, "nome": "Vinagre de Álcool Figueira 500ml", "preço2": "1,99", "img": "https://i.ibb.co/QjFTvt0q/45.png", "quantidade": 1 }
 ]

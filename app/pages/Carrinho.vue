@@ -27,6 +27,7 @@ Preço: R$ ${item.preço ?? item.preço2}
 <template>
 <div class="bg-[#F4F4F4] flex flex-col justify-center">
   <HeaderMain/>
+  
 
   <div class="flex justify-center flex-col items-center">
 
@@ -113,13 +114,14 @@ Preço: R$ ${item.preço ?? item.preço2}
 
 
       <div class="justify-end flex w-[60%] md:mt-10 mt-5">
-        <button 
+        <Button 
           v-if="totalItens.compra"
           class="bg-[#05ff1a] w-[400px] h-14 text-[20px] rounded-[12px] m-10"
           @click="comprarWhatsapp()">
           Finalizar no Whatsapp
-        </button>
+        </Button>
       </div>
+      <div > </div>
 
     </div>
   </div>

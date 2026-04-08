@@ -86,7 +86,7 @@ export default defineNuxtConfig({
   app: {
     head: {
 
-      title: 'Alô Pará - Ofertas ',
+      title: 'Alô Pará | Você no coração da gente ',
 
       meta: [
         { charset: 'utf-8' },

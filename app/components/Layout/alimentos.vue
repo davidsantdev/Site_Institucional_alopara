@@ -54,6 +54,7 @@ function diminuir() {
 <template>
 <div class="flex justify-center flex-col items-center" >
 
+
   <div class="flex justify-between w-[60%] items-center">
     <h2 class="text-slate-800 font-bold md:text-[30px] md:p-14 text-[20px] p-3">
       Alimentos

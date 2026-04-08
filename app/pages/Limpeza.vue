@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Button from "~/components/ui/button/Button.vue";
-import Limpeza from "../data/produtosLimpeza.json"
+import LimpezaJson from "../data/produtosLimpeza.json"
 
 import { Flame, PhoneCallIcon, ShoppingBasket } from "lucide-vue-next";
 import HeaderMain from "~/components/Layout/HeaderMain.vue";
@@ -12,39 +12,39 @@ import { useCarrinho } from "~/data/composable/UseCarrinho"
 const { adicionarCarrinho } = useCarrinho()
 
 const produtoSelecionado = ref<any>(null)
-const quantidade = ref<number>(1)
 
-function comprarWhatsapp() {
-  const numero = "5594991923141"
-  const produto = produtoSelecionado.value
 
-  const mensagem = `
-Olá! Quero comprar:
+const PaginaAtual = ref(1)
+const ItensPorPagina = 10 
 
-Produto: ${produto.nome}
-Preço: R$ ${produto.preço2 ?? produto.preço}
-Quantidade: ${quantidade.value}
-`
+const totalPaginas = computed(()=> 
+   Math.ceil(LimpezaJson.length / ItensPorPagina)
+   
+)
 
-  const url =
-    `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
+const produtosPaginados = computed(()=>{
+  const Inicio = (PaginaAtual.value -1) * ItensPorPagina
+  const fim = (Inicio + ItensPorPagina)
+  return LimpezaJson.slice(Inicio,fim)
 
-  window.open(url, "_blank")
-  quantidade.value = 1
+})
+
+function irParaPagina(Pagina){
+  PaginaAtual.value = Pagina
 }
+
 
 function adicionarNoCarrinho(produto: any) {
-  adicionarCarrinho(produto, quantidade.value)
-  quantidade.value = 1
+  adicionarCarrinho(produto, produto.quantidade)
 }
 
-function adicionar() {
-  quantidade.value++
+function adicionar(item) {
+  item.quantidade++
 }
 
-function diminuir() {
-  if (quantidade.value > 1) {
-    quantidade.value--
+function diminuir(item) {
+  if (item.quantidade > 1) {
+    item.quantidade--
   }
 }
 </script>
@@ -60,11 +60,56 @@ function diminuir() {
   <div>
     <div class="p-4 flex flex gap-1 flex-wrap">
       <Button @click="navigateTo('/Alimentos')" variant="link" class="text-blue-500 text-[17px]">Alimentos</Button>
-      <Button @click="navigateTo('/Limpeza')" variant="link" class="text-blue-500 text-[17px]">Limpeza</Button>
+      <Button @click="navigateTo('/LimpezaJson')" variant="link" class="text-blue-500 text-[17px]">LimpezaJson</Button>
       <Button @click="navigateTo('/Perfumaria')" variant="link" class="text-blue-500 text-[17px]">Perfumaria</Button>
       <Button @click="navigateTo('/Vinhos')" variant="link" class="text-blue-500 text-[17px]">Vinhos</Button>
       <Button @click="navigateTo('/Bebidas')" variant="link" class="text-blue-500 text-[17px]">Bebidas</Button>
     </div>
+
+
+
+
+
+     <div class="flex justify-center gap-2 m-10 flex-wrap">
+
+  <!-- ANTERIOR -->
+  <button 
+    @click="PaginaAtual > 1 && PaginaAtual--"
+    class="px-3 py-1 bg-blue-400 rounded"
+  >
+    Anterior
+  </button>
+
+  <!-- NÚMEROS -->
+  <button
+    v-for="page in totalPaginas"
+    :key="page"
+    @click="irParaPagina(page)"
+    :class="[
+      'px-3 py-1 rounded',
+      page === PaginaAtual ? 'bg-blue-500 text-white' : 'bg-blue-400'
+    ]"
+  >
+    {{ page }}
+  </button>
+
+  <!-- PRÓXIMO -->
+  <button 
+    @click="PaginaAtual < totalPaginas && PaginaAtual++"
+    class="px-3 py-1 bg-blue-400 rounded"
+  >
+    Próximo
+  </button>
+
+</div>
+
+
+
+
+
+
+
+
 
     <div class="flex justify-center flex-col items-center">
       <div class="flex justify-center items-center flex-col">
@@ -72,7 +117,7 @@ function diminuir() {
           <div class="relative items-center md:w-full flex justify-center md:1p-10 p-3">
             <div class="flex md:gap-15 gap-1 flex-wrap md:px-4">
 
-              <Dialog v-for="L in Limpeza" :key="L.id">
+              <Dialog v-for="L in produtosPaginados" :key="L.id">
                 <DialogTrigger as-child>
                   <div class="border-[1px] border-slate-300 bg-slate-50 p-1 shadow flex flex-col cursor-pointer md:w-[300px] w-[48%] md:h-[450px] h-75">
                     <div class="flex items-center justify-center">
@@ -141,14 +186,14 @@ function diminuir() {
                       <div class="flex gap-4">
                         <p class="font-bold">quantidade:</p>
 
-                        <Button @click="diminuir">-</Button>
+                        <Button @click="diminuir(L)">-</Button>
 
                         <input
-                          v-model="quantidade"
+                          v-model="L.quantidade"
                           class="bg-gray-200 rounded-[10px] text-center w-20 p-1"
                         >
 
-                        <Button @click="adicionar">+</Button>
+                        <Button @click="adicionar(L)">+</Button>
                       </div>
 
                       <div class="flex flex-col gap-3 mt-5">
