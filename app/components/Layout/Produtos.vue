@@ -31,7 +31,7 @@ function Adega() {
         : 'text-slate-900 hover:text-red-500'
     ]"
   >
-    Promoções
+    Os melhores produtos
   </button>
           <button
     @click="Adega"

@@ -60,7 +60,7 @@ function diminuir(item) {
   <div>
     <div class="p-4 flex flex gap-1 flex-wrap">
       <Button @click="navigateTo('/Alimentos')" variant="link" class="text-blue-500 text-[17px]">Alimentos</Button>
-      <Button @click="navigateTo('/LimpezaJson')" variant="link" class="text-blue-500 text-[17px]">LimpezaJson</Button>
+      <Button @click="navigateTo('/Limpeza')" variant="link" class="text-blue-500 text-[17px]">Limpeza</Button>
       <Button @click="navigateTo('/Perfumaria')" variant="link" class="text-blue-500 text-[17px]">Perfumaria</Button>
       <Button @click="navigateTo('/Vinhos')" variant="link" class="text-blue-500 text-[17px]">Vinhos</Button>
       <Button @click="navigateTo('/Bebidas')" variant="link" class="text-blue-500 text-[17px]">Bebidas</Button>
@@ -75,7 +75,7 @@ function diminuir(item) {
   <!-- ANTERIOR -->
   <button 
     @click="PaginaAtual > 1 && PaginaAtual--"
-    class="px-3 py-1 bg-blue-400 rounded"
+    class="px-3 py-1 bg-red-500 rounded"
   >
     Anterior
   </button>
@@ -87,7 +87,7 @@ function diminuir(item) {
     @click="irParaPagina(page)"
     :class="[
       'px-3 py-1 rounded',
-      page === PaginaAtual ? 'bg-blue-500 text-white' : 'bg-blue-400'
+      page === PaginaAtual ? 'bg-red-500 text-white' : 'bg-red-400'
     ]"
   >
     {{ page }}
@@ -96,7 +96,7 @@ function diminuir(item) {
   <!-- PRÓXIMO -->
   <button 
     @click="PaginaAtual < totalPaginas && PaginaAtual++"
-    class="px-3 py-1 bg-blue-400 rounded"
+    class="px-3 py-1 bg-red-500 rounded"
   >
     Próximo
   </button>
@@ -222,6 +222,39 @@ function diminuir(item) {
       </div>
     </div>
   </div>
+
+  <div class="flex justify-center gap-2 m-10 flex-wrap">
+
+  <!-- ANTERIOR -->
+  <button 
+    @click="PaginaAtual > 1 && PaginaAtual--"
+    class="px-3 py-1 bg-red-500 rounded"
+  >
+    Anterior
+  </button>
+
+  <!-- NÚMEROS -->
+  <button
+    v-for="page in totalPaginas"
+    :key="page"
+    @click="irParaPagina(page)"
+    :class="[
+      'px-3 py-1 rounded',
+      page === PaginaAtual ? 'bg-red-500 text-white' : 'bg-red-400'
+    ]"
+  >
+    {{ page }}
+  </button>
+
+  <!-- PRÓXIMO -->
+  <button 
+    @click="PaginaAtual < totalPaginas && PaginaAtual++"
+    class="px-3 py-1 bg-red-500 rounded"
+  >
+    Próximo
+  </button>
+
+</div>
 
   <Footer/>
 </div>

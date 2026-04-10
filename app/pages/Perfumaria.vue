@@ -20,32 +20,27 @@ const produtoSelecionado = ref<any>(null)
 
 const quantidade = ref <any>(1)
 
+const PaginaAtual = ref(1)
+const ItensPorPagina = 10 
 
+const totalPaginas = computed (()=>
+  Math.ceil(Perfumaria.length / ItensPorPagina)
+)
 
-function comprarWhatsapp() {
+const ProdutosPaginados = computed(()=>{
+  const inicio = (PaginaAtual.value -1) * ItensPorPagina
+  const fim = (inicio + ItensPorPagina)
+  return Perfumaria.slice(inicio, fim)
+}) 
 
-
-
-  const numero = "5594991923141"
-
-  const produto = produtoSelecionado.value
-
-  const mensagem = `
-Olá! Quero comprar:
-
-  Produto: ${produto.nome}
-  Preço: R$ ${produto.preço2 ?? produto.preço}
-  quantidade: ${quantidade.value}
-
-
-  `
-
-  const url =
-    `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`
-
-  window.open(url, "_blank")
-  quantidade.value=1
+function irParaPagina(Pagina){
+  PaginaAtual.value = Pagina
 }
+
+
+
+
+
 
 
 function adicionar(){
@@ -83,6 +78,45 @@ function diminuir(){
         <Button  @click="navigateTo('/Bebidas')" variant="link" class="text-blue-500 text-[17px] ">Bebidas</Button>
     </div>
 
+
+    <div class="flex justify-center gap-2 m-10 flex-wrap">
+
+  <!-- ANTERIOR -->
+  <button 
+    @click="PaginaAtual > 1 && PaginaAtual--"
+    class="px-3 py-1 bg-red-500 rounded"
+  >
+    Anterior
+  </button>
+
+  <!-- NÚMEROS -->
+  <button
+    v-for="page in totalPaginas"
+    :key="page"
+    @click="irParaPagina(page)"
+    :class="[
+      'px-3 py-1 rounded',
+      page === PaginaAtual ? 'bg-red-500 text-white' : 'bg-red-400'
+    ]"
+  >
+    {{ page }}
+  </button>
+
+  <!-- PRÓXIMO -->
+  <button 
+    @click="PaginaAtual < totalPaginas && PaginaAtual++"
+    class="px-3 py-1 bg-red-500 rounded"
+  >
+    Próximo
+  </button>
+
+</div>
+
+
+
+
+
+
         <div class="flex justify-center flex-col items-center" >
 
 
@@ -105,7 +139,7 @@ function diminuir(){
       <div class=" flex md:gap-15 gap-1 flex-wrap  md:px-4">
   
   
-        <Dialog v-for="P in Perfumaria" :key="P.id">
+        <Dialog v-for="P in ProdutosPaginados" :key="P.id">
   
           <DialogTrigger as-child>
   
@@ -230,6 +264,7 @@ function diminuir(){
     </div>
     </div>
 </div>
+
 
 
     

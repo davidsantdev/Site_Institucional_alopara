@@ -31,7 +31,7 @@ function inicio (){
 
             </div>
             <div class="flex items-center">
-                <div class="flex md:mx-20 mr-7 w-30 ">
+                <div class="flex md:mx-20  w-22 ">
                     <img src="../../assets/img/car.png"  class="text-red-600 w-[53px]" @click="navigateTo('/Carrinho')">  </img>
                     <div v-if="totalItens.compra" class="w-6 h-6 bg-red-500 text-center flex items-center justify-center rounded-full text-white font-bold"> {{ totalItens.total }} </div>
 

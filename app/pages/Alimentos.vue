@@ -9,9 +9,10 @@ import Alimentos from "../data/produtosAlimentos.json"
 
 import { Flame, PhoneCallIcon, ShoppingBasket } from "lucide-vue-next";
 import HeaderMain from "~/components/Layout/HeaderMain.vue";
-import Footer from "~/components/Layout/Footer.vue";
+
 import { useCarrinho } from "~/data/composable/UseCarrinho";
 import Limpeza from "~/components/Layout/limpeza.vue";
+import Footer from "~/components/Layout/Footer.vue";
 
 const { carrinho, adicionarCarrinho } = useCarrinho()
 
@@ -92,7 +93,7 @@ function diminuir(){
   <!-- ANTERIOR -->
   <button 
     @click="PaginacaoAtual > 1 && PaginacaoAtual--"
-    class="px-3 py-1 bg-blue-400 rounded"
+    class="px-3 py-1 bg-red-500 rounded"
   >
     Anterior
   </button>
@@ -104,7 +105,7 @@ function diminuir(){
     @click="irParaPagina(page)"
     :class="[
       'px-3 py-1 rounded',
-      page === PaginacaoAtual ? 'bg-blue-500 text-white' : 'bg-blue-400'
+      page === PaginacaoAtual ? 'bg-red-500 text-white' : 'bg-red-400'
     ]"
   >
     {{ page }}
@@ -113,7 +114,7 @@ function diminuir(){
   <!-- PRÓXIMO -->
   <button 
     @click="PaginacaoAtual < totalPaginas && PaginacaoAtual++"
-    class="px-3 py-1 bg-blue-400 rounded"
+    class="px-3 py-1 bg-red-500 rounded"
   >
     Próximo
   </button>
@@ -269,12 +270,13 @@ function diminuir(){
   </div>
 
 
-  <div class="flex justify-center gap-2 m-10 flex-wrap">
+ 
+     <div class="flex justify-center gap-2 m-10 flex-wrap">
 
   <!-- ANTERIOR -->
   <button 
     @click="PaginacaoAtual > 1 && PaginacaoAtual--"
-    class="px-3 py-1 bg-blue-400 rounded"
+    class="px-3 py-1 bg-red-500 rounded"
   >
     Anterior
   </button>
@@ -286,7 +288,7 @@ function diminuir(){
     @click="irParaPagina(page)"
     :class="[
       'px-3 py-1 rounded',
-      page === PaginacaoAtual ? 'bg-blue-500 text-white' : 'bg-blue-400'
+      page === PaginacaoAtual ? 'bg-red-500 text-white' : 'bg-red-400'
     ]"
   >
     {{ page }}
@@ -295,12 +297,14 @@ function diminuir(){
   <!-- PRÓXIMO -->
   <button 
     @click="PaginacaoAtual < totalPaginas && PaginacaoAtual++"
-    class="px-3 py-1 bg-blue-400 rounded"
+    class="px-3 py-1 bg-red-500 rounded"
   >
     Próximo
   </button>
 
 </div>
+
+<Footer/>
 
 
 
