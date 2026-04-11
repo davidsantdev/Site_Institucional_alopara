@@ -1,4 +1,53 @@
 [
+  {
+    "id": 1,
+    "nome": "Água Sanitária Clorada Branca 1L",
+    "preço1": "2,69",
+    "preço2": "1,99",
+    "img": "/limpeza/1.png"
+  },
+  {
+    "id": 2,
+    "nome": "Água Sanitária FC Cloro Ativo 5L",
+    "preço1": "10,99",
+    "preço2": "9,99",
+    "img": "/limpeza/2.png"
+  },
+  {
+    "id": 3,
+    "nome": "Amaciante Comfort Frescor Intenso 400ml",
+    "preço1": "7,49",
+    "preço2": "6,99",
+    "img": "/limpeza/3.png"
+  },
+  {
+    "id": 4,
+    "nome": "Amaciante Fofo Azul Talco 500ml",
+    "preço1": "7,49",
+    "preço2": "6,99",
+    "img": "/limpeza/4.png"
+  },
+  {
+    "id": 5,
+    "nome": "Amaciante Vida Macia 1L",
+    "preço1": "12,99",
+    "preço2": "11,99",
+    "img": "/limpeza/5.png"
+  },
+  {
+    "id": 6,
+    "nome": "Desinfetante Econômico 1L",
+    "preço1": "4,29",
+    "preço2": "3,99",
+    "img": "/limpeza/6.png"
+  },
+  {
+    "id": 7,
+    "nome": "Detergente Ypê 500ml",
+    "preço1": "2,79",
+    "preço2": "2,49",
+    "img": "/limpeza/7.png"
+  },
   { "id": 8, "nome": "Água Sanitária FC Verde 1L", "preço1": "2,59", "preço2": "2,59", "img": "https://i.ibb.co/RT3mcT0B/8.png", "quantidade":5 },
   { "id": 9, "nome": "Água Sanitária Ypê 5L", "preço1": "21,99", "preço2": "21,99", "img": "https://i.ibb.co/wrFs1Jj4/9.png", "quantidade":1 },
   { "id": 10, "nome": "Amaciante de Roupa Ypê 2L", "preço1": "13,99", "preço2": "13,99", "img": "https://i.ibb.co/Dgr8dNyD/10.png", "quantidade":1 },
@@ -10,7 +59,7 @@
   { "id": 16, "nome": "Esponja Jeitosa Multiuso", "preço1": "1,00", "preço2": "1,00", "img": "https://i.ibb.co/V0QyP2j6/16.png", "quantidade":1 },
   { "id": 17, "nome": "Guardanapo Scala 100un", "preço1": "2,99", "preço2": "2,99", "img": "https://i.ibb.co/xc5XzRT/17.png", "quantidade":1 },
   { "id": 18, "nome": "Lava Roupa Líquido Bem Te Vi 5L", "preço1": "28,99", "preço2": "28,99", "img": "https://i.ibb.co/8DfbsHMT/18.png", "quantidade":1 },
-  { "id": 19, "nome": "Lava Roupas Lava Bem 1L", "preço1": "9,99", "preço2": "9,99", "img": "https://i.ibb.co/fd5WnwV8/19.png", "quantidade":1 },
+  { "id": 19, "nome": "DESINFETANTE LAVABEM  1L", "preço1": "9,99", "preço2": "9,99", "img": "https://i.ibb.co/fd5WnwV8/19.png", "quantidade":1 },
   { "id": 20, "nome": "Limpa Alumínio Econômico 500ml", "preço1": "2,39", "preço2": "2,39", "img": "https://i.ibb.co/232x707j/20.png", "quantidade":1 },
   { "id": 21, "nome": "Limpador Casa e Perfume 1L", "preço1": "9,99", "preço2": "9,99", "img": "https://i.ibb.co/PvrfBFNB/21.png", "quantidade":1 },
   { "id": 22, "nome": "Limpador CIF Cremoso 250ml", "preço1": "12,99", "preço2": "12,99", "img": "https://i.ibb.co/PZZ5xchz/22.png", "quantidade":1 },
@@ -23,18 +72,5 @@
   { "id": 29, "nome": "Sabão em Pó Brilhante 800g", "preço1": "12,49", "preço2": "12,49", "img": "https://i.ibb.co/TqHs8NMf/29.png", "quantidade":1 },
   { "id": 30, "nome": "Sabão em Pó Tixan Ypê 800g", "preço1": "10,99", "preço2": "10,99", "img": "https://i.ibb.co/v4BpWMdj/30.png", "quantidade":1 },
   { "id": 31, "nome": "Sabão em Pó Tixan Ypê 400g", "preço1": "5,99", "preço2": "5,99", "img": "https://i.ibb.co/dwzCZjWz/31.png", "quantidade":1 },
-  { "id": 32, "nome": "Sabão Líquido Omo 900ml", "preço1": "15,99", "preço2": "15,99", "img": "https://i.ibb.co/QjxYsHxM/32.png", "quantidade":1 },
-  { "id": 33, "nome": "Água Sanitária Clorada Branca 1L", "preço1": "2,69", "preço2": "1,99", "img": "https://i.ibb.co/zTRnHsKC/33.png", "quantidade":1 },
-  { "id": 34, "nome": "Água Sanitária FC Cloro Ativo 5L", "preço1": "10,99", "preço2": "9,99", "img": "https://i.ibb.co/3YzjXprM/34.png", "quantidade":1 },
-  { "id": 35, "nome": "Amaciante de Roupa Casa KM Vida Macia 500ml", "preço1": "6,99", "preço2": "6,75", "img": "https://i.ibb.co/4nC6snYS/35.png", "quantidade":1 },
-  { "id": 36, "nome": "Amaciante de Roupa Downy 350ml", "preço1": "9,99", "preço2": "8,99", "img": "https://i.ibb.co/FbVM5Rkr/36.png", "quantidade":1 },
-  { "id": 37, "nome": "Amaciante de Roupa Econômico 2L", "preço1": "8,99", "preço2": "7,99", "img": "https://i.ibb.co/KpgQ2K22/37.png", "quantidade":1 },
-  { "id": 38, "nome": "Amaciante de Roupa Fofo Azul 500ml", "preço1": "7,49", "preço2": "6,99", "img": "https://i.ibb.co/RptC9z4Q/38.png", "quantidade":1 },
-  { "id": 39, "nome": "Desinfetante Lavabem 2L", "preço1": "7,49", "preço2": "6,99", "img": "https://i.ibb.co/mV2DSnVV/39.png", "quantidade":1 },
-  { "id": 40, "nome": "Desinfetante Pinho Sol 1,75L", "preço1": "22,99", "preço2": "19,99", "img": "https://i.ibb.co/N6qgzL7d/40.png", "quantidade":1 },
-  { "id": 41, "nome": "Desinfetante Pinho Sol 1L", "preço1": "15,99", "preço2": "13,99", "img": "https://i.ibb.co/SwLbGG7v/41.png", "quantidade":1 },
-  { "id": 42, "nome": "Detergente Ypê 500ml", "preço1": "2,79", "preço2": "2,49", "img": "https://i.ibb.co/Xk8vJQTf/42.png", "quantidade":1 },
-  { "id": 43, "nome": "Sabão em Pó Brilhante 400g", "preço1": "6,99", "preço2": "6,49", "img": "https://i.ibb.co/nqC6rrjM/43.png", "quantidade":1 },
-  { "id": 44, "nome": "Vassoura Bettanin Noviça", "preço1": "19,99", "preço2": "14,99", "img": "https://i.ibb.co/1tXz4ZwR/44.png", "quantidade":1 }
-
+  { "id": 32, "nome": "Sabão Líquido Omo 900ml", "preço1": "15,99", "preço2": "15,99", "img": "https://i.ibb.co/QjxYsHxM/32.png", "quantidade":1 }
 ]

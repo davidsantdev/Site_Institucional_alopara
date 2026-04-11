@@ -11,7 +11,7 @@ import HeaderMain from '~/components/Layout/HeaderMain.vue';
 
         <LayoutTrabalho/>
 
-          <Faqs/>
+        
     <Footer/>
     </div>
 </template>
