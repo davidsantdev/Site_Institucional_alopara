@@ -6,7 +6,7 @@ import HeaderMain from '~/components/Layout/HeaderMain.vue';
 </script>
 
 <template>
-    <div class="bg-slate-50 ">
+    <div class=" ">
         <HeaderMain class="text-slate-900"/>
 
         <LayoutTrabalho/>

@@ -16,7 +16,7 @@ import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue';
   <div class="flex flex-col ">
 
   
-  <div class="fundo-alo">
+  <div >
     <HeaderMain class="text-gray-300 fixed"/>
 
     <ConteudoMain/>
@@ -24,18 +24,18 @@ import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue';
     
 
   </div>
-  <div class="bg-slate-50 flex flex-col justify-center items-center ">
+  <div class="bg-[#111111] flex flex-col justify-center items-center ">
     <CarousselSobre/>
     <LayoutSection/>
 
 
-    <hr class=" bg-slate-300 w-[90%] m-10"/>
-    <ProdutosRedondo/>
-    <hr class=" bg-slate-300 w-[90%] m-10"/>
+    <hr class=" border-[#222] w-[90%] m-10"/>
+    <ProdutosRedondo class="m-20"/>
+
   </div>
 
 
-  <div class="bg-[#0E0808]">
+  <div class="bg-[#111111]">
     
     <MainlayoutSecundary/>
     
@@ -49,13 +49,3 @@ import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue';
 
 </template>
 
-<style scoped>
-.fundo-alo{
-    background-image: url(../assets/img/bg.svg);
-      background-size: cover;   
-  background-position: center; 
-  background-repeat: no-repeat; 
-  width: 100%;
-  height: 90vh; 
-}
-</style>

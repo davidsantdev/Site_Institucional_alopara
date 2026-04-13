@@ -11,7 +11,7 @@ import ProdutosRedondo from './ProdutosRedondo.vue';
 <template>
     <div class="">
         
-        <div class="bg-slate-50">
+        <div class="bg-[#111111]">
            <Produtos/>
            
          </div>

@@ -82,57 +82,50 @@ function diminuir() {
   
           <DialogTrigger as-child>
   
-            <div
-              class="   border-[1px] border-slate-300 bg-slate-50 p-1 shadow 
-            flex flex-col  cursor-pointer md:w-[300px] w-[48%] md:h-[450px] h-75  "
-            >
-            <div class="flex items-center justify-center">
-              <img class="md:w-40 w-25" :src="A.img" alt="">
+<div
+  class="relative border border-slate-200 bg-white rounded-2xl shadow-md hover:shadow-xl 
+  transition-all duration-300 cursor-pointer md:w-[280px] w-[48%] overflow-hidden group"
+>
+  <!-- Badge mais vendido -->
+  <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold 
+    px-2 py-1 rounded-full flex items-center gap-1 shadow">
+    Mais vendido <Flame :size="11"/>
+  </div>
 
-            </div>
-            <div class="px-6"> 
+  <!-- Botão + rápido -->
+  <button 
+    @click.stop="adicionarCarrinho(A, 1)" 
+    class="absolute top-3 right-3 z-10 bg-green-500 hover:bg-green-600 text-white 
+    w-8 h-8 rounded-full text-xl font-bold shadow transition-colors flex items-center justify-center"
+  >+</button>
 
-           
-  
+  <!-- Imagem com fundo suave -->
+  <div class="flex items-center justify-center bg-slate-50 h-44 p-4 
+    group-hover:bg-red-100 transition-colors duration-300">
+    <img class="md:w-36 w-24 object-contain drop-shadow-md 
+      group-hover:scale-105 transition-transform duration-300" :src="A.img" alt="">
+  </div>
 
-              <div class="justify-between flex">
-                   <button class="bg-[#FF7733] leading-none flex gap-1 h-6 w-30 justify-center items-center text-[12px] rounded-[3px] font-semibold">Mais vendido  <Flame/> </button>
+  <!-- Infos -->
+  <div class="p-4 flex flex-col gap-2">
+    <h3 class="text-[13px] md:text-[15px] text-slate-800 font-semibold text-center leading-snug line-clamp-2 min-h-[2.5rem]">
+      {{ A.nome }}
+    </h3>
 
-                <button class="bg-green-400 w-[40px] h-[40px] rounded-full">+</button>
-
-              </div>
-  
-              <div class="md:h-25 h-[30%] md:pt-5 ">
-                <h3 class="md:text-[17px] text-[13px]  text-center text-slate-800 font-semibold">
-                  {{ A.nome }}
-                </h3>
-              </div>
-              <div class="h-25 flex items-center justify-center flex-col ">
-  
-              <h4 class="text-slate-800  md:text-[16px] text-[11px]">
-                 R$
-                <span class="text-slate-500  md:text-[17px] text-[12px] line-through">
-                  {{ A.preço1 }}
-                </span>
-              </h4>
-  
-              <h4 class="text-slate-800  ">
-                
-                <span class="text-slate-900 md:text-[33px] text-[20px] font-semibold">
-                   R$ {{ A.preço2 }}
-                </span>
-              </h4>
-
-               </div>
-               </div>
-            </div>
-  
+    <div class="flex flex-col items-center mt-1">
+      <span class="text-slate-400 text-xs line-through">R$ {{ A.preço1 }}</span>
+      <span class="text-green-600 text-2xl md:text-3xl font-extrabold leading-none">
+        R$ {{ A.preço2 }}
+      </span>
+    </div>
+  </div>
+</div>
             
   
           </DialogTrigger>
   
   
-          <DialogContent class="bg-white text-slate-900 md:w-200 w-[100%] md:h-150 h-[75%] md:mt-0 mt-[25%]">
+          <DialogContent class="bg-white text-slate-900 md:w-200 w-[100%] md:h-150 h-[75%] md:mt-0 mt-[25%]  overflow-y-auto">
 
               <div class="md:flex justify-between items-center gap-4 md:mx-7">
 

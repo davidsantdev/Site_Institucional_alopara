@@ -1,70 +1,133 @@
 <script setup lang="ts">
-import { Copy, Copyright } from 'lucide-vue-next';
-import { Button } from '../ui/button';
-import Faqs from './Faqs.vue';
+import { Instagram, Facebook, MessageCircle } from 'lucide-vue-next'
+import Faqs from './Faqs.vue'
 
+const contato = [
+  { label: 'Atacado',     href: '#' },
+  { label: 'Compras',     href: '#' },
+  { label: 'Crediário',   href: '#' },
+  { label: 'Financeiro',  href: '#' },
+]
+
+const redes = [
+  { label: 'Instagram', href: '#', icone: Instagram },
+  { label: 'Facebook',  href: '#', icone: Facebook },
+  { label: 'WhatsApp',  href: '#', icone: MessageCircle },
+]
+
+const info = [
+  { label: 'Clube de descontos', href: 'https://cadastramento-alopara.mercafacil.com/home' },
+  { label: 'Trabalhe conosco',   href: '/trabalhe-conosco' },
+  { label: 'Baixar app',         href: '/Baixar' },
+]
 </script>
 
-<template> 
+<template>
+  <footer class="bg-[#0d0d0d] border-t border-[#1a1a1a]">
 
+    <Faqs />
 
-<div class="rounded-[20px] flex flex-col bg-[#121212] m-[30px] ">
+    <!-- corpo principal -->
+    <div class="max-w-6xl mx-auto px-6 md:px-10 py-16 grid grid-cols-1 md:grid-cols-2 gap-14">
 
+      <!-- coluna esquerda -->
+      <div class="flex flex-col gap-10">
 
-    <Faqs/>
-    <div class="md:flex text-white  justify-between   md:p-20 pt-10  ">
-        
-        <div class="md:w-[40%]   w-[100%] flex gap-5 flex-wrap">
-            <div class="flex flex-col text-white">
-                <h4 class="text-[25px]  p-3">Fale conoscoo</h4>
-                <Button variant="link" class="text-[22px] font-light text-white"> Atacado</Button>
-                <Button variant="link" class="text-[22px] font-light text-white">Compras</Button>
-                <Button variant="link" class="text-[22px] font-light text-white">Crediario</Button>
-                <Button variant="link" class="text-[22px] font-light text-white">Financeiro</Button>
+        <!-- logo + descrição -->
+        <div>
+          <p class="text-white text-[28px] font-black leading-none tracking-tight mb-2">
+            <span class="text-red-600">Alô</span> Pará
+          </p>
+          <p class="text-[9px] font-black tracking-[4px] uppercase text-[#333] mb-5">Supermercado</p>
+          <p class="text-[#444] text-[13px] leading-relaxed max-w-xs">
+            Há mais de 20 anos levando qualidade, economia e confiança para as famílias paraenses.
+          </p>
+        </div>
 
+        <!-- links em grid -->
+        <div class="grid grid-cols-3 gap-8">
+
+          <!-- CONTATO -->
+          <div>
+            <p class="text-[10px] font-black tracking-[3px] uppercase text-red-600 mb-4">Contato</p>
+            <div class="flex flex-col gap-2">
+              <a
+                v-for="item in contato"
+                :key="item.label"
+                :href="item.href"
+                class="text-[#555] text-[13px] font-semibold hover:text-white transition-colors duration-200"
+              >
+                {{ item.label }}
+              </a>
             </div>
-             <div class="flex flex-col text-white">
-                <h4 class="text-[25px] p-3">Redes sociais</h4>
-                <Button variant="link" class="text-[22px] font-light text-white"> Instagram</Button>
-                <Button variant="link" class="text-[22px] font-light text-white">Facebook</Button>
- 
+          </div>
 
+          <!-- REDES -->
+          <div>
+            <p class="text-[10px] font-black tracking-[3px] uppercase text-red-600 mb-4">Redes</p>
+            <div class="flex flex-col gap-2">
+              <a
+                v-for="item in redes"
+                :key="item.label"
+                :href="item.href"
+                class="flex items-center gap-2 text-[#555] text-[13px] font-semibold hover:text-white transition-colors duration-200 group"
+              >
+                <component :is="item.icone" :size="13" class="group-hover:text-red-600 transition-colors" />
+                {{ item.label }}
+              </a>
             </div>
-            <div class="flex flex-col text-white">
-                <h4 class="text-[25px] p-3 text-center text-white">Informações </h4>
-                <Button variant="link" class="text-[22px] font-ligh text-whitet"> Registre-se no Clube
-                     </Button>
-                <Button variant="link" class="text-[22px] font-ligh text-white">Vagas</Button>
+          </div>
 
-
-
+          <!-- INFO -->
+          <div>
+            <p class="text-[10px] font-black tracking-[3px] uppercase text-red-600 mb-4">Informações</p>
+            <div class="flex flex-col gap-2">
+              <a
+                v-for="item in info"
+                :key="item.label"
+                :href="item.href"
+                class="text-[#555] text-[13px] font-semibold hover:text-white transition-colors duration-200"
+              >
+                {{ item.label }}
+              </a>
             </div>
-
-            <hr class="text-slate-50 w-full"/>
-            
+          </div>
 
         </div>
 
-        <div class="md:w-[50%] flex justify-center p-2">     
-    <iframe
-      class="w-[90%] h-[400px] rounded-xl "
-      src="https://www.google.com/maps?q=-4.2520391,-49.9427902&hl=pt-BR&z=17&output=embed"
-      style="border:0;"
-      loading="lazy"
-      allowfullscreen>
-    </iframe>
-         </div>
+      </div>
 
-         
-
-
+      <!-- mapa -->
+      <div class="flex flex-col gap-3">
+        <p class="text-[10px] font-black tracking-[3px] uppercase text-red-600">Nossa localização</p>
+        <div class="relative rounded-xl overflow-hidden border border-[#1f1f1f]">
+          <iframe
+            class="w-full h-[340px]"
+            src="https://www.google.com/maps?q=-4.2520391,-49.9427902&hl=pt-BR&z=17&output=embed"
+            style="border:0; filter: grayscale(60%) contrast(1.1);"
+            loading="lazy"
+            allowfullscreen
+          ></iframe>
         </div>
-        <div class="w-full  h-25 flex items-center pl-30 justify-between">
-            <div class="flex"><Copyright/> <p>2026 Todos os direitos reservados </p></div>
-            <div class="flex "><img src="../../assets/img/alop.png" class="w-40" alt=""></div>
-            
+      </div>
 
-         </div>
-         </div>
-    
+    </div>
+
+    <!-- barra inferior -->
+    <div class="border-t border-[#1a1a1a] px-6 md:px-10 py-5 flex items-center justify-between flex-wrap gap-4">
+      <p class="text-[#2a2a2a] text-[11px] font-bold tracking-[1px]">
+        © 2026 Alô Pará · Todos os direitos reservados
+      </p>
+      <div class="flex items-center gap-6">
+        <a href="#" class="text-[#2a2a2a] text-[11px] font-bold tracking-[1px] hover:text-[#555] transition-colors">
+          Política de privacidade
+        </a>
+        <div class="w-px h-3 bg-[#2a2a2a]" />
+        <a href="#" class="text-[#2a2a2a] text-[11px] font-bold tracking-[1px] hover:text-[#555] transition-colors">
+          Termos de uso
+        </a>
+      </div>
+    </div>
+
+  </footer>
 </template>

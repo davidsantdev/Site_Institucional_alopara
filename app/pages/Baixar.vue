@@ -18,7 +18,7 @@ import HeaderMain from '~/components/Layout/HeaderMain.vue';
 
     </div>
       <Faqs/>
-    <Footer/>
+
     </div>
 </template>
 
