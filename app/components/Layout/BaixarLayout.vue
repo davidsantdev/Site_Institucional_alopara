@@ -6,36 +6,67 @@ import Button from '../ui/button/Button.vue';
 </script>
 
 <template>
-    <div class="flex justify-between md:p-10 p-5 fundo-baixar text-center" >
-        
-        
-        <div class="text-slate-100 flex gap-10 flex-col w-[100%] md:ml-[100px] md:mt-[100px] justify-center items-center">
-            <h1 class="font-bold md:text-[90px] text-[55px] leading-none  md:w-[70%] ">Baixe o nosso app </h1>
-            
-            
-            <p class=" md:text-[19px] text-[14px] md:w-[600px] text-slate-300">O App Alô Pará traz mais praticidade para o seu dia a dia, permitindo acompanhar encartes atualizados,
-                 ofertas exclusivas e promoções todos os dias direto no celular</p>
-            <div class="flex gap-4">
+    <div class="flex justify-between  text-center" >
+      <div class="flex justify-center items-center w-[100%]">
 
-      <a href="https://play.google.com/store/apps/details?id=inovatech.mercafacil.supmercado.alo.para&hl=pt_BR">
-        <Button variant="secondary" class="md:p-8 bg-zinc-800 text-white md:text-[20px] md:h-20 h-15 flex items-center gap-3">
-          Baixar no Android
-          <img src="../../assets/img/Design sem nome.png " class="w-8" alt="">
-        </Button>
-      </a>
       
-         <a href="https://apps.apple.com/br/app/supermercado-al%C3%B4-par%C3%A1/id6737360207">
-        <Button variant="secondary" class="bg-zinc-800 text-white md:p-8 md:text-[20px] md:h-20 h-15 flex items-center gap-3">
-          Baixar no IOS
-          <img src="../../assets/img/ios.png" class="w-8" alt="">
-        </Button>
-      </a>
+        
+         <section class="relative min-h-[85vh] flex items-center justify-center overflow-hidden px-6 py-24">
+      <div class="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-red-600 opacity-[0.05] rounded-full pointer-events-none" />
+
+      <div class="relative z-10 max-w-5xl w-full flex flex-col md:flex-row items-center gap-14">
+
+        <div class="flex-1">
+          <span class="inline-block bg-red-600 text-white text-[10px] font-black tracking-[3px] uppercase px-4 py-1.5 mb-6">
+            APLICATIVO
+          </span>
+
+          <h1 class="text-white font-black text-[clamp(92px,9vw,100px)] leading-none tracking-tight mb-6">
+            Baixe<br />
+            <span class="text-red-600">o nosso</span><br />
+            aplicativo
+          </h1>
+
+          <p class="text-[#666] text-[15px] leading-relaxed max-w-md mb-10">
+            No Alô Pará, acreditamos que nosso maior patrimônio são as pessoas.
+            Se você é dedicado e quer crescer profissionalmente, venha fazer
+            parte da nossa família.
+          </p>
+
+          <div class="flex gap-4 flex-wrap">
+           
+            <a href="https://play.google.com/store/apps/details?id=inovatech.mercafacil.supmercado.alo.para&hl=pt_BR">
+              <button class="border-2 border-[#2a2a2a] text-[#888] hover:border-red-600 hover:text-white font-bold text-[13px] tracking-widest uppercase px-7 py-[14px] transition-all duration-200">
+                Baixar no Android
+              </button>
+            </a>
+
+            <a href="https://apps.apple.com/br/app/supermercado-al%C3%B4-par%C3%A1/id6737360207">
+              <button class="border-2 border-[#2a2a2a] text-[#888] hover:border-red-600 hover:text-white font-bold text-[13px] tracking-widest uppercase px-7 py-[14px] transition-all duration-200">
+                Baixar no IOS
+              </button>
+            </a>
+          </div>
+        </div>
+
+        <div class="flex-1 hidden md:flex justify-center">
+          <div class="relative">
+            <div class="absolute inset-0 rounded-[100%] h-100 bg-red-600 opacity-10 rounded-2xl translate-x-3 translate-y-3" />
+            <img
+              src="../../assets/img/celulares.png"
+              alt="Equipe Alô Pará"
+              class="relative w-[400px] object-contain"
+            />
+          </div>
+        </div>
 
       </div>
+    </section>
+    </div>
         </div>
         
 
-    </div>
+  
 </template>
 
 <style scoped>

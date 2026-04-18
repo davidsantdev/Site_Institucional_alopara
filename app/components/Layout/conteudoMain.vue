@@ -7,10 +7,10 @@ import DialogTrigger from '../ui/dialog/DialogTrigger.vue';
 </script>
 
 <template>
-  <section class="relative bg-[#111111] min-h-screen flex flex-col items-center justify-center overflow-hidden px-6 py-20">
+  <section class="relative bg-[#111111] min-h-screen flex flex-col items-center pt-15 overflow-hidden px-6 ">
 
     <!-- Círculo decorativo de fundo -->
-    <div class="absolute top-[-120px] left-1/2 -translate-x-1/2 w-[600px] h-[600px]
+    <div class="absolute top-[-180px] left-1/2 -translate-x-1/2 w-[600px] h-[600px]
       bg-red-600 opacity-[0.06] rounded-full pointer-events-none"/>
 
 

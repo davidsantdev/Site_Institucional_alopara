@@ -9,11 +9,11 @@ import HeaderMain from '~/components/Layout/HeaderMain.vue';
 
 <template>
     <div>
-    <div class="bg-[#A11A2D] ">
+    <div class="bg-[#111] ">
         <HeaderMain class="text-gray-300 "></HeaderMain>
         <BaixarLayout/>
     </div>
-    <div class="bg-[#A11A2D]">
+    <div class="bg-[#111]">
         <BaixarLayoutBottom/>
 
     </div>
@@ -22,7 +22,3 @@ import HeaderMain from '~/components/Layout/HeaderMain.vue';
     </div>
 </template>
 
-<style scoped>
-
-
-</style>

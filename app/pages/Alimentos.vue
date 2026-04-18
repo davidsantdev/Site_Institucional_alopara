@@ -16,20 +16,20 @@ import Footer from "~/components/Layout/Footer.vue";
 
 const { carrinho, adicionarCarrinho } = useCarrinho()
 
-const quantidade = Limpeza.quantidade
+const produtos = ref(Alimentos)
 
 const produtoSelecionado = ref<any>(null)
 
 const PaginacaoAtual = ref(1)
 const itensPorPagina = 10
 
-const totalPaginas = computed (()=>
-Math.ceil(Alimentos.length / itensPorPagina))
+const totalPaginas = computed(() =>
+  Math.ceil(produtos.value.length / itensPorPagina))
 
-const produtosPaginados = computed (()=>{
-  const inicio= (PaginacaoAtual.value -1) * itensPorPagina
+const produtosPaginados = computed(() => {
+  const inicio = (PaginacaoAtual.value - 1) * itensPorPagina
   const fim = inicio + itensPorPagina
-  return Alimentos.slice(inicio,fim)
+  return produtos.value.slice(inicio, fim) // <-- produtos.value
 })
 
 function irParaPagina(Pagina){
@@ -40,17 +40,21 @@ function irParaPagina(Pagina){
 
 
 
-function adicionar(){
-  return quantidade.value ++
+function aumentar(id: number) {
+  const item = produtos.value.find(p => p.id === id)
+  if (item) item.quantidade++
 }
-function diminuir(){
 
-  if(quantidade.value > 1){
-      quantidade.value --
-  }
+// diminuir
+function diminuir(id: number) {
+  const item = produtos.value.find(p => p.id === id)
+  if (item && item.quantidade > 1) item.quantidade--
 
-    
+
+  
+  
 }
+
 
 </script>
 
@@ -190,20 +194,64 @@ function diminuir(){
           </DialogTrigger>
   
   
- <DialogContent class="bg-white text-slate-900 md:w-200 w-[100%] md:h-150 h-[75%] md:mt-0 mt-[25%] ">
-   <div class="md:flex justify-between items-center gap-4 md:mx-7">
-     <div class="flex item justify-center"
-     > <img class="md:w-70 w-[50%]" :src="A.img" alt="">
-     </div> 
-     <div class="flex flex-col gap-4 text-center"> 
-      <h3 class="text-[32px] font-bold text-center"> 
-        {{ A.nome }} </h3> 
-        <p class="md:w-100 w-[90%] text-slate-500"> Clique em comprar no whatsapp e seja direcionado para o contato do nosso atacado de compras online </p>
-         <div class="flex items-center justify-center md:gap-6 md:m-3">
-           <p class="text-green-600 text-3xl font-bold"> R$ {{ A.preço2 }} </p> 
-           <p class="text-red-500 line-through"> R$ {{ A.preço1 }} </p>
-           </div>
-            <Button @click="produtoSelecionado = A; adicionarCarrinho(A)" class="bg-green-500 p-7 md:mt-10 font-bold text-[16px] " > Adicionar ao carrinho <span> <ShoppingBasket/> </span> </Button> </div> </div> </DialogContent>
+ <DialogContent    class=" bg-[#111] text-slate-900 md:w-200 w-[100%] md:h-150 h-[100%] md:mt-0  ">
+
+  <div>
+    <div class="flex justify-between absolute left-3 top-10">
+      <Button class="bg-[#fc0101] rounded-[20px] text-[16px] text-white font-light" > IMPERDÍVEL </Button>
+
+      
+
+    </div>
+    <div class="bg-white flex justify-center items-center h-70" >
+      <img class="w-50" :src="A.img" alt="">
+
+    </div>
+
+    <div class="bg-[#111] px-10 py-5">
+      <div class="flex flex-col">
+        
+
+        <h2 class="text-[#f0f0f0] font-medium text-[25px]">
+          {{ A.nome }}
+        </h2>
+
+        <h3 class="text-[50px] text-white font-semibold"> R$ {{ A.preço2 }}</h3>
+
+        <div class=" ">
+          <Button class="text-[#888] bg-[#1e1e1e] rounded-[20px] p-2 border-[1px] border-[#2a2a2a] ">{{ A.tipo }}</Button>
+
+        </div>
+
+         <div class=" mt-5 border-t border-[#222] "></div>
+         <div class="flex justify-center gap-3 mt-6">
+
+          <div class=" flex gap-2 ">
+            <button class="text-[#888] bg-[#1e1e1e] rounded-[10px] p-2 w-10 border-[1px] border-[#2a2a2a] " @click="diminuir(A.id)">-</button>
+          <Button class="text-[#888] bg-[#1e1e1e] rounded-[10px] p-7 border-[1px] border-[#2a2a2a] ">{{ A.quantidade }}</Button>
+          <button class="text-[#888] bg-[#1e1e1e] rounded-[10px] p-2 w-10 border-[1px] border-[#2a2a2a] " @click="aumentar(A.id)">+</button>
+        </div>
+
+
+
+           
+           <Button @click="produtoSelecionado = A; adicionarCarrinho(A, A.quantidade)" class="bg-[#cc1e1e] text-white p-7  font-bold text-[16px] " > Adicionar ao carrinho <span> <ShoppingBasket/> </span> </Button> 
+
+         </div>
+
+         
+        
+
+      </div>
+
+
+    </div>
+  </div>
+
+           
+          
+          
+          </DialogContent>
   
         </Dialog>
   

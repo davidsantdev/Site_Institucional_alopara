@@ -2,6 +2,7 @@
 import { ShoppingCart, User } from 'lucide-vue-next'
 import Mobilemenu from './Mobilemenu.vue'
 import { useCarrinho } from '~/data/composable/UseCarrinho'
+import { Label } from 'reka-ui'
 
 const { totalItens } = useCarrinho()
 
@@ -13,6 +14,8 @@ const navLinks = [
    { label: 'Limpeza', to: '/perfumaria' },
     { label: 'Ofertas', to: '/vinhos' }
 ]
+
+
 </script>
 
 <template>
@@ -20,14 +23,13 @@ const navLinks = [
 
     <!-- Tira superior vermelha -->
     <div class="bg-red-600 h-[34px] hidden md:flex items-center justify-center gap-8">
-      <NuxtLink
-        v-for="item in ['Compre online', 'Seja um fornecedor', 'Trabalhe conosco', 'Clube de descontos']"
-        :key="item"
-        to="/"
-        class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors"
-      >
-        {{ item }}
-      </NuxtLink>
+      
+
+
+
+      <bUtton   class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors" > COMPRE ONLINE</bUtton>
+      <bUtton @click="navigateTo('/trabalhe-conosco')"  class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors"> TRABALHE CONOSCO</bUtton>
+      <bUtton  class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors"> CLUBE DE DESCONTOS</bUtton>
     </div>
 
     <!-- Header principal -->
