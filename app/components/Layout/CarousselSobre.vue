@@ -36,15 +36,15 @@ const images = [img1, img2, img3, img4, img5]
         class="md:basis-1/2 basis-1/1 "
       >
         <div class="p-1">
-          <Card class="overflow-hidden rounded-2xl">
-            <CardContent class="p-0">
+          <div class="overflow-hidden rounded-2xl">
+            <div class="p-0">
               <img
                 :src="image"
                 class="md:w-full  md:h-70 h-40 w-420 object-cover rounded-[20px]"
                 alt="Imagem do carousel"
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </CarouselItem>
     </CarouselContent>

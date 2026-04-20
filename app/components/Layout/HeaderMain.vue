@@ -27,9 +27,9 @@ const navLinks = [
 
 
 
-      <bUtton   class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors" > COMPRE ONLINE</bUtton>
-      <bUtton @click="navigateTo('/trabalhe-conosco')"  class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors"> TRABALHE CONOSCO</bUtton>
-      <bUtton  class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors"> CLUBE DE DESCONTOS</bUtton>
+      <button   class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors" > COMPRE ONLINE</button>
+      <button @click="navigateTo('/trabalhe-conosco')"  class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors"> TRABALHE CONOSCO</button>
+      <button  class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors"> CLUBE DE DESCONTOS</button>
     </div>
 
     <!-- Header principal -->

@@ -10,6 +10,7 @@ import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue';
 
 
 
+
 </script>
 
 <template>
@@ -26,7 +27,7 @@ import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue';
   </div>
   <div class="bg-[#111111] flex flex-col justify-center items-center ">
     <CarousselSobre/>
-    <LayoutSection/>
+
 
 
     <hr class=" border-[#222] w-[90%] m-10"/>

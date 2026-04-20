@@ -4,22 +4,22 @@
 
 
 
-import alimentos from "../../data/produtosAlimentos.json"
-import { Carousel, CarouselContent, CarouselNext, CarouselPrevious } from "../ui/carousel";
-import CarouselItem from "../ui/carousel/CarouselItem.vue";
+import ALimentos from "../../data/produtosAlimentos.json"
+
 
 import Dialog from "../ui/dialog/Dialog.vue";
 import DialogTrigger from "../ui/dialog/DialogTrigger.vue";
 import DialogContent from "../ui/dialog/DialogContent.vue";
-import Limpeza from "./limpeza.vue"
 
 
 
 import { Flame, Import, PhoneCallIcon, ShoppingBasket } from "lucide-vue-next";
 import Button from "../ui/button/Button.vue";
-import Perfumaria from "./Perfumaria.vue";
+
 import { useCarrinho } from "~/data/composable/UseCarrinho";
-import Produtos from "./Produtos.vue";
+import Perfumaria from "./Perfumaria.vue";
+import Limpeza from "./limpeza.vue";
+
 
 
 
@@ -30,17 +30,17 @@ const produtoSelecionado = ref<any>(null)
  
 
 
-  const alimentosLimitados = alimentos.slice(0, 5)
+   const alimentosLimitados = ref(ALimentos.slice(0, 5))
 
 
   function aumentar(id: number) {
-  const item = produtos.value.find(p => p.id === id)
+  const item = alimentosLimitados.value.find(p => p.id === id)
   if (item) item.quantidade++
 }
 
 // diminuir
 function diminuir(id: number) {
-  const item = produtos.value.find(p => p.id === id)
+  const item = alimentosLimitados.value.find(p => p.id === id)
   if (item && item.quantidade > 1) item.quantidade--
 
 
@@ -87,33 +87,33 @@ if (produtoSelecionado.value) {
   
         <Dialog v-for="A in alimentosLimitados" :key="A.id">
   
-          <DialogTrigger as-child>
+           <DialogTrigger as-child>
   
-<div
+            <div
   class="relative border border-slate-200 bg-white rounded-2xl shadow-md hover:shadow-xl 
   transition-all duration-300 cursor-pointer md:w-[280px] w-[48%] overflow-hidden group"
 >
-
+  <!-- Badge mais vendido -->
   <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold 
     px-2 py-1 rounded-full flex items-center gap-1 shadow">
     Mais vendido <Flame :size="11"/>
   </div>
 
-
+  <!-- Botão + rápido -->
   <button 
     @click.stop="adicionarCarrinho(A, 1)" 
     class="absolute top-3 right-3 z-10 bg-green-500 hover:bg-green-600 text-white 
     w-8 h-8 rounded-full text-xl font-bold shadow transition-colors flex items-center justify-center"
   >+</button>
 
- 
+  <!-- Imagem com fundo suave -->
   <div class="flex items-center justify-center bg-slate-50 h-44 p-4 
     group-hover:bg-red-100 transition-colors duration-300">
     <img class="md:w-36 w-24 object-contain drop-shadow-md 
       group-hover:scale-105 transition-transform duration-300" :src="A.img" alt="">
   </div>
 
-
+  <!-- Infos -->
   <div class="p-4 flex flex-col gap-2">
     <h3 class="text-[13px] md:text-[15px] text-slate-800 font-semibold text-center leading-snug line-clamp-2 min-h-[2.5rem]">
       {{ A.nome }}
@@ -131,67 +131,65 @@ if (produtoSelecionado.value) {
   
           </DialogTrigger>
   
-   <DialogContent class="bg-[#111] text-slate-900 md:w-200 w-[100%] md:h-150 h-[100%]">
+  
+   <DialogContent    class=" bg-[#111] text-slate-900 md:w-200 w-[100%] md:h-150 h-[100%] md:mt-0  ">
 
-                  <div>
-                    <div class="flex justify-between absolute left-3 top-10">
-                      <Button class="bg-[#fc0101] rounded-[20px] text-[16px] text-white font-light">
-                        IMPERDÍVEL
-                      </Button>
-                    </div>
+  <div>
+    <div class="flex justify-between absolute left-3 top-10">
+      <Button class="bg-[#fc0101] rounded-[20px] text-[16px] text-white font-light" > IMPERDÍVEL </Button>
 
-                    <div class="bg-white flex justify-center items-center h-70">
-                      <img class="w-50" :src="A.img" alt="">
-                    </div>
+      
 
-                    <div class="bg-[#111] px-10 py-5">
-                      <div class="flex flex-col">
+    </div>
+    <div class="bg-white flex justify-center items-center h-70" >
+      <img class="w-50" :src="A.img" alt="">
 
-                        <h2 class="text-[#f0f0f0] font-medium text-[25px]">
-                          {{ A.nome }}
-                        </h2>
+    </div>
 
-                        <h3 class="text-[50px] text-white font-semibold">
-                          R$ {{ A.preço2 }}
-                        </h3>
+    <div class="bg-[#111] px-10 py-5">
+      <div class="flex flex-col">
+        
 
-                        <div>
-                          <Button class="text-[#888] bg-[#1e1e1e] rounded-[20px] p-2 border">
-                            {{ A.tipo }}
-                          </Button>
-                        </div>
+        <h2 class="text-[#f0f0f0] font-medium text-[25px]">
+          {{ A.nome }}
+        </h2>
 
-                        <div class="mt-5 border-t border-[#222]"></div>
+        <h3 class="text-[50px] text-white font-semibold"> R$ {{ A.preço2 }}</h3>
 
-                        <div class="flex justify-center gap-3 mt-6">
+        <div class=" ">
+          <Button class="text-[#888] bg-[#1e1e1e] rounded-[20px] p-2 border-[1px] border-[#2a2a2a] ">{{ A.tipo }}</Button>
 
-                          <div class="flex gap-2">
-                            <button class="text-[#888] bg-[#1e1e1e] rounded-[10px] p-2 w-10 border"
-                              @click="diminuir(A.id)">-</button>
+        </div>
 
-                            <Button class="text-[#888] bg-[#1e1e1e] rounded-[10px] p-7 border">
-                              {{ A.quantidade }}
-                            </Button>
+         <div class=" mt-5 border-t border-[#222] "></div>
+         <div class="flex justify-center gap-3 mt-6">
 
-                            <button class="text-[#888] bg-[#1e1e1e] rounded-[10px] p-2 w-10 border"
-                              @click="aumentar(A.id)">+</button>
-                          </div>
+          <div class=" flex gap-2 ">
+            <button class="text-[#888] bg-[#1e1e1e] rounded-[10px] p-2 w-10 border-[1px] border-[#2a2a2a] " @click="diminuir(A.id)">-</button>
+          <Button class="text-[#888] bg-[#1e1e1e] rounded-[10px] p-7 border-[1px] border-[#2a2a2a] ">{{ A.quantidade }}</Button>
+          <button class="text-[#888] bg-[#1e1e1e] rounded-[10px] p-2 w-10 border-[1px] border-[#2a2a2a] " @click="aumentar(A.id)">+</button>
+        </div>
 
-                          <Button 
-                            @click="adicionarCarrinho(A, A.quantidade)"
-                            class="bg-[#cc1e1e] text-white p-7 font-bold text-[16px]"
-                          >
-                            Adicionar ao carrinho 
-                            <span><ShoppingBasket/></span>
-                          </Button>
 
-                        </div>
 
-                      </div>
-                    </div>
-                  </div>
+           
+           <Button @click="produtoSelecionado = A; adicionarCarrinho(A, A.quantidade)" class="bg-[#cc1e1e] text-white p-7  font-bold text-[16px] " > Adicionar ao carrinho <span> <ShoppingBasket/> </span> </Button> 
 
-                </DialogContent>
+         </div>
+
+         
+        
+
+      </div>
+
+
+    </div>
+  </div>
+
+           
+          
+          
+          </DialogContent>
   
         </Dialog>
   
@@ -200,9 +198,9 @@ if (produtoSelecionado.value) {
   
         
     </div>
-    </div>
     <Limpeza/>
     <Perfumaria/>
+    </div>
 
 
     

@@ -65,7 +65,7 @@ function diminuir(id: number) {
         
         
         <div class="bg-red-500 h-[100px]  items-center flex justify-center">
-            <h3 class="text-[27px] font-bold p-5">Alimentos mais comprados do Alô Pará</h3>
+            <h3 class="text-[27px] font-bold p-5">Bebidas mais comprados do Alô Pará</h3>
             
         </div>
 
@@ -81,7 +81,7 @@ function diminuir(id: number) {
 
         
         <div >
-              <div class=" p-4 flex flex gap-1 flex-wrap">
+          <div class=" p-4 flex flex gap-1 flex-wrap">
                 <Button  @click="navigateTo('/Alimentos')" variant="link" class="text-blue-500 text-[17px] ">Alimentos</Button>
                
         <Button  @click="navigateTo('/Limpeza')" variant="link" class="text-blue-500 text-[17px] ">Limpeza</Button>
@@ -311,7 +311,7 @@ function diminuir(id: number) {
 </div>
 
  
-<Foote/>
+<Footer/>
 
     </div>
 </template>
