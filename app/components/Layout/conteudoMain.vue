@@ -7,7 +7,7 @@ import DialogTrigger from '../ui/dialog/DialogTrigger.vue';
 </script>
 
 <template>
-  <section class="relative bg-[#111111] min-h-screen flex flex-col items-center pt-15 overflow-hidden px-6 ">
+  <section class="relative bg-[#111111] min-h-screen flex flex-col items-center pt-15    overflow-hidden px-6 ">
 
     <!-- Círculo decorativo de fundo -->
     <div class="absolute top-[-180px] left-1/2 -translate-x-1/2 w-[600px] h-[600px]
@@ -29,10 +29,10 @@ import DialogTrigger from '../ui/dialog/DialogTrigger.vue';
       <span class="text-red-600">Alô Pará</span>
     </h1>
 
-    <!-- Divisor -->
 
 
-    <!-- Subtítulo -->
+
+
     <p class="text-[#888] text-[15px] text-center max-w-[440px] leading-relaxed mb-10">
       Há anos presente no dia a dia das famílias paraenses, levando
       qualidade, economia e confiança para sua mesa.

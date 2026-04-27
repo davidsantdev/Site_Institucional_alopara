@@ -11,6 +11,7 @@ function comprarWhatsapp() {
   const numero = "5594991923141"
 
   const mensagem = carrinho.value.map(item => `
+  Ola, vim pelo site
 Produto: ${item.nome}
 Quantidade: ${item.quantidade ?? 1}
 Preço: R$ ${precoItem(item)}
@@ -20,13 +21,13 @@ Preço: R$ ${precoItem(item)}
   window.open(url, "_blank")
 }
 
-// 🔥 calcula preço por item (com quantidade)
+
 function precoItem(item: any) {
   const valor = parseFloat((item.preço ?? item.preço2).toString().replace(',', '.'))
   return (valor * (item.quantidade ?? 1)).toFixed(2).replace('.', ',')
 }
 
-// 🔥 total geral
+
 const totalCarrinho = computed(() =>
   carrinho.value
     .reduce((acc, c) => {

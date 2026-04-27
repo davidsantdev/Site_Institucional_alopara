@@ -311,7 +311,7 @@ function diminuir(id: number) {
 </div>
 
  
-<Foote/>
+<Footer/>
 
     </div>
 </template>
