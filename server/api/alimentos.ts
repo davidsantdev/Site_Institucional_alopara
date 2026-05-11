@@ -3,14 +3,20 @@
 export const runtime = 'nodejs'
 
 import axios from 'axios'
+import https from 'https'
 
 // ================= CONFIG =================
 
-// 🔥 AGORA USANDO SEU IP PÚBLICO
-const BASE_URL = 'http://168.121.105.138:4664'
+// 🔥 VOLTA PRA URL ORIGINAL (HTTPS)
+const BASE_URL = 'https://aloparacim.dataciss.com.br:4665'
 
 const AUTH_URL = `${BASE_URL}/cisspoder-auth/oauth/token`
 const PRODUTOS_URL = `${BASE_URL}/cisspoder-service/get_produtos_sitemercado`
+
+// 🔥 CORREÇÃO SSL (ESSENCIAL PRA VERCEL)
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false,
+})
 
 const DEPS_ALIMENTOS = new Set([
   'MERCEARIA',
@@ -64,6 +70,7 @@ async function getToken(): Promise<string> {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       timeout: 20000,
+      httpsAgent, // 🔥 AQUI
     })
 
     const data = res.data
@@ -154,6 +161,7 @@ export default defineEventHandler(async (event) => {
           'Content-Type': 'application/json',
         },
         timeout: 25000,
+        httpsAgent, // 🔥 AQUI
       }
     )
 
@@ -171,21 +179,14 @@ export default defineEventHandler(async (event) => {
 
     let produtos = normalizarProdutos(apiProdutos)
 
-    // ================= BUSCA =================
-
     if (busca) {
-      const termos = busca
-        .toLowerCase()
-        .split(/\s+/)
-        .filter(Boolean)
+      const termos = busca.toLowerCase().split(/\s+/).filter(Boolean)
 
       produtos = produtos.filter((p) => {
         const nome = p.nome.toLowerCase()
         return termos.every((t) => nome.includes(t))
       })
     }
-
-    // ================= FILTRO =================
 
     if (tipo) {
       produtos = produtos.filter((p) =>
