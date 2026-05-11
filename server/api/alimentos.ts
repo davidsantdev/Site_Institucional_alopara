@@ -22,9 +22,8 @@ type CacheProdutos = {
 
 const CACHE_DURATION = 1000 * 60 * 60 // 1h
 const POR_PAGINA = 48
-const MAX_PAGINAS_API = 20   // Realista — ajuste conforme logs mostrarem o real
-const CONCORRENCIA = 20      // Todas as páginas de uma vez, com AbortController
-
+const MAX_PAGINAS_API = 50             // Aumentado: busca máximo possível
+const BATCH_SIZE = 10                  // Lotes paralelos para não sobrecarregar
 const AUTH_URL =
   'https://aloparacim.dataciss.com.br:4665/cisspoder-auth/oauth/token'
 const PRODUTOS_URL =
@@ -34,22 +33,16 @@ const PRODUTOS_URL =
 
 const DEPS_ALIMENTOS = new Set([
   'MERCEARIA',
+ 
+
+
+
   'FRIOS',
   'LATICINIOS',
   'CONGELADOS',
+
   'BOMBONIERE',
   'MATINAIS',
-  // Adicionados — variações comuns na API
-  'PADARIA',
-  'HORTIFRUTI',
-  'ACOUGUE',
-  'PEIXARIA',
-  'BEBIDAS',
-  'GRANEL',
-  'ROTISSERIA',
-  'ALIMENTOS',
-  'TEMPEROS',
-  'CONDIMENTOS',
 ])
 
 // ================= CACHE GLOBAL =================
@@ -93,15 +86,15 @@ async function getToken(): Promise<string> {
 
 async function fetchPagina(
   pagina: number,
-  headers: Record<string, string>,
-  signal?: AbortSignal
+  headers: Record<string, string>
 ): Promise<any[]> {
   try {
     const res = await fetch(PRODUTOS_URL, {
       method: 'POST',
       headers,
       body: JSON.stringify({ idLoja: '0001', page: pagina }),
-      signal: signal ?? AbortSignal.timeout(15_000),
+      // timeout via AbortController
+      signal: AbortSignal.timeout(15_000),
     })
 
     if (!res.ok) return []
@@ -118,47 +111,46 @@ async function fetchPagina(
   }
 }
 
-// ================= BUSCAR TODOS OS PRODUTOS (PARALELO TOTAL) =================
+// ================= BUSCAR TODOS OS PRODUTOS =================
 
 async function buscarTodosProdutos(token: string): Promise<Produto[]> {
+  // Serve do cache RAM se válido
   if (produtosCache && Date.now() - produtosCache.timestamp < CACHE_DURATION) {
     console.log(`⚡ CACHE HIT: ${produtosCache.total} produtos`)
     return produtosCache.data
   }
 
   console.log('🔄 BUSCANDO PRODUTOS DA API...')
-  const inicio = Date.now()
 
   const headers = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${token}`,
   }
 
-  // AbortController compartilhado — cancela todas quando detecta fim
-  const controller = new AbortController()
-  const { signal } = controller
+  // Detecta automaticamente quantas páginas existem com a primeira requisição
+  const primeiraRes = await fetchPagina(1, headers)
+  const totalPaginasAPI = primeiraRes.length > 0 ? MAX_PAGINAS_API : 1
 
-  // Dispara TODAS as páginas ao mesmo tempo
-  const paginas = Array.from({ length: MAX_PAGINAS_API }, (_, i) => i + 1)
+  // Busca todas as páginas restantes em lotes paralelos
+  const paginas = Array.from({ length: totalPaginasAPI - 1 }, (_, i) => i + 2)
+  const todasRespostas: any[][] = [primeiraRes]
 
-  const resultados = await Promise.all(
-    paginas.map(async (pagina) => {
-      const dados = await fetchPagina(pagina, headers, signal)
+  for (let i = 0; i < paginas.length; i += BATCH_SIZE) {
+    const lote = paginas.slice(i, i + BATCH_SIZE)
+    const resultados = await Promise.all(lote.map((p) => fetchPagina(p, headers)))
+    todasRespostas.push(...resultados)
 
-      // Se uma página veio vazia, cancela as demais (já no fim da API)
-      if (dados.length === 0 && !signal.aborted) {
-        console.log(`🏁 Fim detectado na página ${pagina}, cancelando restantes`)
-        controller.abort()
-      }
+    // Para quando uma página retorna vazia (chegou no fim)
+    if (resultados.some((r) => r.length === 0)) {
+      console.log(`🏁 Fim detectado na página ${lote[resultados.findIndex((r) => r.length === 0)]}`)
+      break
+    }
+  }
 
-      return dados
-    })
-  )
+  const todos = todasRespostas.flat()
+  console.log(`📦 TOTAL BRUTO: ${todos.length}`)
 
-  const todos = resultados.flat()
-  console.log(`📦 TOTAL BRUTO: ${todos.length} | ⏱️ ${Date.now() - inicio}ms`)
-
-  // Normaliza e deduplica com Map O(1)
+  // Normaliza e filtra com Map para deduplicação O(1)
   const ids = new Map<string, Produto>()
 
   for (const p of todos) {
@@ -167,43 +159,44 @@ async function buscarTodosProdutos(token: string): Promise<Produto[]> {
     const preco = Number(p.vlrProduto)
     if (!preco || preco <= 0) continue
 
-    const departamento = String(p.departamento || '').toUpperCase().trim()
+    const departamento = String(p.departamento || '').toUpperCase()
     const ehAlimento = DEPS_ALIMENTOS.has(departamento) ||
       [...DEPS_ALIMENTOS].some((d) => departamento.includes(d))
 
     if (!ehAlimento) continue
 
     const id = String(p.plu || p.codigoBarra || p.id || '')
-    if (!id || ids.has(id)) continue
+    if (!id) continue
 
-    ids.set(id, {
-      id,
-      nome: p.nome?.trim() || 'Produto sem nome',
-      preco,
-      preço2: preco.toFixed(2),
-      tipo: p.subcategoria?.replace(/^\d+\s/, '')?.trim()
-        || p.categoria?.trim()
-        || p.departamento?.trim()
-        || 'Alimentos',
-      img: p.imageUrl || p.imagem || '',
-      quantidade: 1,
-    })
+    // Evita duplicatas, mantém o de preço mais recente
+    if (!ids.has(id)) {
+      ids.set(id, {
+        id,
+        nome: p.nome?.trim() || 'Produto sem nome',
+        preco,
+        preço2: preco.toFixed(2),
+        tipo: p.subcategoria?.replace(/^\d+\s/, '')?.trim()
+          || p.categoria?.trim()
+          || p.departamento?.trim()
+          || 'Alimentos',
+        img: p.imageUrl || p.imagem || '',
+        quantidade: 1,
+      })
+    }
   }
 
   const produtos = Array.from(ids.values())
+
+  // Ordena por nome para listagem consistente
   produtos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
 
-  console.log(`✅ TOTAL FINAL: ${produtos.length} únicos | ⏱️ ${Date.now() - inicio}ms`)
+  console.log(`✅ TOTAL FINAL: ${produtos.length} produtos únicos`)
 
-  // Log dos departamentos encontrados para você calibrar DEPS_ALIMENTOS
-  const depsFora = new Set<string>()
-  for (const p of todos) {
-    const dep = String(p.departamento || '').toUpperCase().trim()
-    if (dep && !DEPS_ALIMENTOS.has(dep)) depsFora.add(dep)
+  produtosCache = {
+    data: produtos,
+    timestamp: Date.now(),
+    total: produtos.length,
   }
-  console.log('📋 DEPS NÃO INCLUÍDOS:', [...depsFora].slice(0, 30))
-
-  produtosCache = { data: produtos, timestamp: Date.now(), total: produtos.length }
 
   return produtos
 }
@@ -221,6 +214,7 @@ export default defineEventHandler(async (event) => {
     const token = await getToken()
     let produtos = await buscarTodosProdutos(token)
 
+    // Filtro de busca por nome
     if (busca) {
       const termos = busca.split(/\s+/).filter(Boolean)
       produtos = produtos.filter((p) => {
@@ -229,21 +223,26 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Filtro por tipo/categoria
     if (tipo) {
-      const tipoLower = tipo.toLowerCase()
-      produtos = produtos.filter((p) => p.tipo.toLowerCase().includes(tipoLower))
+      produtos = produtos.filter(
+        (p) => p.tipo.toLowerCase().includes(tipo.toLowerCase())
+      )
     }
 
+    // Paginação
     const inicio = (pagina - 1) * POR_PAGINA
     const fim = inicio + POR_PAGINA
+    const paginados = produtos.slice(inicio, fim)
 
+    // Headers de cache agressivo para CDN/browser
     setHeaders(event, {
       'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600',
       'X-Total-Produtos': String(produtos.length),
     })
 
     return {
-      produtos: produtos.slice(inicio, fim),
+      produtos: paginados,
       pagina,
       total: produtos.length,
       totalPaginas: Math.ceil(produtos.length / POR_PAGINA),
@@ -251,7 +250,15 @@ export default defineEventHandler(async (event) => {
     }
   } catch (err) {
     console.error('ERRO API:', err)
+
     setResponseStatus(event, 500)
-    return { produtos: [], pagina: 1, total: 0, totalPaginas: 0, temMais: false }
+
+    return {
+      produtos: [],
+      pagina: 1,
+      total: 0,
+      totalPaginas: 0,
+      temMais: false
+    }
   }
 })
