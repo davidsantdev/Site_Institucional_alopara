@@ -64,6 +64,7 @@
     "axios": "^1.16.0",
     "embla-carousel": "^8.6.0",
     "embla-carousel-vue": "^8.6.0",
+    "express": "^5.2.1",
     "motion-v": "^2.2.0",
     "nanoid": "^5.1.6",
     "reka-ui": "^2.5.1",
@@ -103,5 +104,8 @@
     "vue-sonner": "^2.0.9",
     "vue-tsc": "^2.2.12",
     "zod": "^3.25.76"
+  },
+  "bugs": {
+    "url": "https://github.com/dianprata/nuxt-shadcn-dashboard/issues"
   }
 }

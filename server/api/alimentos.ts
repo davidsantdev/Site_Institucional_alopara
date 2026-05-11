@@ -6,11 +6,11 @@ import axios from 'axios'
 
 // ================= CONFIG =================
 
-const AUTH_URL =
-  'https://aloparacim.dataciss.com.br:4665/cisspoder-auth/oauth/token'
+// 🔥 AGORA USANDO SEU IP PÚBLICO
+const BASE_URL = 'http://168.121.105.138:4664'
 
-const PRODUTOS_URL =
-  'https://aloparacim.dataciss.com.br:4665/cisspoder-service/get_produtos_sitemercado'
+const AUTH_URL = `${BASE_URL}/cisspoder-auth/oauth/token`
+const PRODUTOS_URL = `${BASE_URL}/cisspoder-service/get_produtos_sitemercado`
 
 const DEPS_ALIMENTOS = new Set([
   'MERCEARIA',
@@ -48,7 +48,6 @@ async function getToken(): Promise<string> {
       return tokenCache.token
     }
 
-    // ✅ CORREÇÃO AQUI (btoa -> Buffer)
     const credentials = Buffer.from(
       'cisspoder-oauth:poder7547'
     ).toString('base64')
@@ -64,7 +63,7 @@ async function getToken(): Promise<string> {
         Authorization: `Basic ${credentials}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      timeout: 15000,
+      timeout: 20000,
     })
 
     const data = res.data
@@ -154,7 +153,7 @@ export default defineEventHandler(async (event) => {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        timeout: 20000,
+        timeout: 25000,
       }
     )
 
