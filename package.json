@@ -38,7 +38,9 @@
     "node": "22.x",
     "pnpm": ">=9"
   },
+  
   "scripts": {
+    "start": "node .output/server/index.mjs",
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
@@ -108,4 +110,5 @@
   "bugs": {
     "url": "https://github.com/dianprata/nuxt-shadcn-dashboard/issues"
   }
+  
 }

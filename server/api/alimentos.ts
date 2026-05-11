@@ -1,30 +1,15 @@
-// server/api/alimentos.ts
-
 export const runtime = 'nodejs'
 
 import axios from 'axios'
-import https from 'https'
 
 // ================= CONFIG =================
 
-// 🔥 VOLTA PRA URL ORIGINAL (HTTPS)
-const BASE_URL = 'https://aloparacim.dataciss.com.br:4665'
-
-const AUTH_URL = `${BASE_URL}/cisspoder-auth/oauth/token`
-const PRODUTOS_URL = `${BASE_URL}/cisspoder-service/get_produtos_sitemercado`
-
-// 🔥 CORREÇÃO SSL (ESSENCIAL PRA VERCEL)
-const httpsAgent = new https.Agent({
-  rejectUnauthorized: false,
-})
+// 🔥 Troca pela URL do Railway após deploy
+const PROXY_URL = process.env.PROXY_URL || 'https://SEU-PROXY.up.railway.app'
 
 const DEPS_ALIMENTOS = new Set([
-  'MERCEARIA',
-  'FRIOS',
-  'LATICINIOS',
-  'CONGELADOS',
-  'BOMBONIERE',
-  'MATINAIS',
+  'MERCEARIA', 'FRIOS', 'LATICINIOS',
+  'CONGELADOS', 'BOMBONIERE', 'MATINAIS',
 ])
 
 // ================= TYPES =================
@@ -37,58 +22,6 @@ type Produto = {
   tipo: string
   img: string
   quantidade: number
-}
-
-// ================= TOKEN CACHE =================
-
-let tokenCache: {
-  token: string
-  expires: number
-} | null = null
-
-// ================= TOKEN =================
-
-async function getToken(): Promise<string> {
-  try {
-    if (tokenCache && Date.now() < tokenCache.expires) {
-      return tokenCache.token
-    }
-
-    const credentials = Buffer.from(
-      'cisspoder-oauth:poder7547'
-    ).toString('base64')
-
-    const params = new URLSearchParams({
-      grant_type: 'password',
-      username: 'EXECUTOR',
-      password: 'ex1234',
-    })
-
-    const res = await axios.post(AUTH_URL, params.toString(), {
-      headers: {
-        Authorization: `Basic ${credentials}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      timeout: 20000,
-      httpsAgent, // 🔥 AQUI
-    })
-
-    const data = res.data
-
-    if (!data?.access_token) {
-      throw new Error('Token inválido')
-    }
-
-    tokenCache = {
-      token: data.access_token,
-      expires: Date.now() + 55 * 60 * 1000,
-    }
-
-    return data.access_token
-  } catch (error: any) {
-    console.error('❌ ERRO AO GERAR TOKEN:', error?.response?.data || error)
-    throw error
-  }
 }
 
 // ================= NORMALIZAR =================
@@ -104,11 +37,9 @@ function normalizarProdutos(produtos: any[]): Produto[] {
       if (!preco || preco <= 0) continue
 
       const departamento = String(p.departamento || '').toUpperCase()
-
       const ehAlimento =
         DEPS_ALIMENTOS.has(departamento) ||
         [...DEPS_ALIMENTOS].some((d) => departamento.includes(d))
-
       if (!ehAlimento) continue
 
       const id = String(p.plu || p.codigoBarra || p.id || '')
@@ -147,45 +78,26 @@ export default defineEventHandler(async (event) => {
     const busca = String(query.busca || '')
     const tipo = String(query.tipo || '')
 
-    const token = await getToken()
-
-    const res = await axios.post(
-      PRODUTOS_URL,
-      {
-        idLoja: '0001',
-        page: pagina,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        timeout: 25000,
-        httpsAgent, // 🔥 AQUI
-      }
-    )
+    // 🔥 Chama o proxy no Railway
+    const res = await axios.get(`${PROXY_URL}/produtos`, {
+      params: { pagina },
+      timeout: 30000,
+    })
 
     const json = res.data
-
     let apiProdutos: any[] = []
 
-    if (Array.isArray(json)) {
-      apiProdutos = json
-    } else if (Array.isArray(json?.data)) {
-      apiProdutos = json.data
-    } else if (Array.isArray(json?.produtos)) {
-      apiProdutos = json.produtos
-    }
+    if (Array.isArray(json)) apiProdutos = json
+    else if (Array.isArray(json?.data)) apiProdutos = json.data
+    else if (Array.isArray(json?.produtos)) apiProdutos = json.produtos
 
     let produtos = normalizarProdutos(apiProdutos)
 
     if (busca) {
       const termos = busca.toLowerCase().split(/\s+/).filter(Boolean)
-
-      produtos = produtos.filter((p) => {
-        const nome = p.nome.toLowerCase()
-        return termos.every((t) => nome.includes(t))
-      })
+      produtos = produtos.filter((p) =>
+        termos.every((t) => p.nome.toLowerCase().includes(t))
+      )
     }
 
     if (tipo) {
