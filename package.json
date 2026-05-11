@@ -61,6 +61,7 @@
     "@unovis/ts": "^1.6.1",
     "@unovis/vue": "^1.6.1",
     "@vercel/analytics": "^1.6.1",
+    "axios": "^1.16.0",
     "embla-carousel": "^8.6.0",
     "embla-carousel-vue": "^8.6.0",
     "motion-v": "^2.2.0",

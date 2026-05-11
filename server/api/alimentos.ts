@@ -1,15 +1,10 @@
 // server/api/alimentos.ts
 
+export const runtime = 'nodejs'
 
-type Produto = {
-  id: string
-  nome: string
-  preco: number
-  preço2: string
-  tipo: string
-  img: string
-  quantidade: number
-}
+import axios from 'axios'
+
+// ================= CONFIG =================
 
 const AUTH_URL =
   'https://aloparacim.dataciss.com.br:4665/cisspoder-auth/oauth/token'
@@ -26,10 +21,26 @@ const DEPS_ALIMENTOS = new Set([
   'MATINAIS',
 ])
 
+// ================= TYPES =================
+
+type Produto = {
+  id: string
+  nome: string
+  preco: number
+  preco2: string
+  tipo: string
+  img: string
+  quantidade: number
+}
+
+// ================= TOKEN CACHE =================
+
 let tokenCache: {
   token: string
   expires: number
 } | null = null
+
+// ================= TOKEN =================
 
 async function getToken(): Promise<string> {
   if (
@@ -39,39 +50,35 @@ async function getToken(): Promise<string> {
     return tokenCache.token
   }
 
-const credentials = btoa(
-  'cisspoder-oauth:poder7547'
-)
+  const credentials = btoa(
+    'cisspoder-oauth:poder7547'
+  )
 
-  const res = await fetch(AUTH_URL, {
-    method: 'POST',
+  const params = new URLSearchParams()
 
-    headers: {
-      'Content-Type':
-        'application/x-www-form-urlencoded',
+  params.append('grant_type', 'password')
+  params.append('username', 'EXECUTOR')
+  params.append('password', 'ex1234')
 
-      Authorization: `Basic ${credentials}`,
-    },
+  const res = await axios.post(
+    AUTH_URL,
+    params,
+    {
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        'Content-Type':
+          'application/x-www-form-urlencoded',
+      },
 
-    body: new URLSearchParams({
-      grant_type: 'password',
-      username: 'EXECUTOR',
-      password: 'ex1234',
-    }),
-  })
+      timeout: 15000,
+    }
+  )
 
-  if (!res.ok) {
-    const erro = await res.text()
+  const data = res.data
 
-    console.error('ERRO TOKEN:', erro)
-
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Erro token',
-    })
+  if (!data?.access_token) {
+    throw new Error('Token inválido')
   }
-
-  const data = await res.json()
 
   tokenCache = {
     token: data.access_token,
@@ -81,147 +88,143 @@ const credentials = btoa(
   return data.access_token
 }
 
-async function buscarPagina(
-  pagina: number,
-  token: string
-) {
-  const res = await fetch(PRODUTOS_URL, {
-    method: 'POST',
+// ================= NORMALIZAR =================
 
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-
-    body: JSON.stringify({
-      idLoja: '0001',
-      page: pagina,
-    }),
-  })
-
-  if (!res.ok) {
-    const erro = await res.text()
-
-    console.error(
-      `ERRO PAGINA ${pagina}:`,
-      erro
-    )
-
-    return []
-  }
-
-  const json = await res.json()
-
-  if (Array.isArray(json)) return json
-  if (Array.isArray(json?.data))
-    return json.data
-  if (Array.isArray(json?.produtos))
-    return json.produtos
-
-  return []
-}
-
-function normalizar(
+function normalizarProdutos(
   produtos: any[]
 ): Produto[] {
   const ids = new Map<string, Produto>()
 
   for (const p of produtos) {
-    if (p.ativo !== 'S') continue
+    try {
+      if (p.ativo !== 'S') continue
 
-    const preco = Number(p.vlrProduto)
+      const preco = Number(p.vlrProduto)
 
-    if (!preco || preco <= 0) continue
+      if (!preco || preco <= 0) continue
 
-    const departamento = String(
-      p.departamento || ''
-    ).toUpperCase()
+      const departamento = String(
+        p.departamento || ''
+      ).toUpperCase()
 
-    const ehAlimento =
-      DEPS_ALIMENTOS.has(departamento) ||
-      [...DEPS_ALIMENTOS].some((d) =>
-        departamento.includes(d)
+      const ehAlimento =
+        DEPS_ALIMENTOS.has(departamento) ||
+        [...DEPS_ALIMENTOS].some((d) =>
+          departamento.includes(d)
+        )
+
+      if (!ehAlimento) continue
+
+      const id = String(
+        p.plu ||
+          p.codigoBarra ||
+          p.id ||
+          ''
       )
 
-    if (!ehAlimento) continue
+      if (!id) continue
 
-    const id = String(
-      p.plu ||
-        p.codigoBarra ||
-        p.id ||
-        ''
-    )
+      if (!ids.has(id)) {
+        ids.set(id, {
+          id,
 
-    if (!id) continue
+          nome:
+            p.nome?.trim() ||
+            'Produto sem nome',
 
-    if (!ids.has(id)) {
-      ids.set(id, {
-        id,
+          preco,
 
-        nome:
-          p.nome?.trim() ||
-          'Produto sem nome',
+          preco2: preco.toFixed(2),
 
-        preco,
+          tipo:
+            p.subcategoria
+              ?.replace(/^\d+\s/, '')
+              ?.trim() ||
+            p.categoria?.trim() ||
+            p.departamento?.trim() ||
+            'Alimentos',
 
-        preço2: preco.toFixed(2),
+          img:
+            p.imageUrl ||
+            p.imagem ||
+            '',
 
-        tipo:
-          p.subcategoria
-            ?.replace(/^\d+\s/, '')
-            ?.trim() ||
-          p.categoria?.trim() ||
-          p.departamento?.trim() ||
-          'Alimentos',
-
-        img:
-          p.imageUrl ||
-          p.imagem ||
-          '',
-
-        quantidade: 1,
-      })
+          quantidade: 1,
+        })
+      }
+    } catch (err) {
+      console.error(
+        '❌ ERRO NORMALIZANDO:',
+        err
+      )
     }
   }
 
   return Array.from(ids.values())
 }
 
+// ================= HANDLER =================
+
 export default defineEventHandler(
   async (event) => {
     try {
       const query = getQuery(event)
 
-      const pagina = Math.max(
-        1,
-        Number(query.pagina || 1)
+      const pagina = Number(
+        query.pagina || 1
       )
 
       const busca = String(
         query.busca || ''
       )
-        .toLowerCase()
-        .trim()
 
       const tipo = String(
         query.tipo || ''
-      ).trim()
+      )
 
       const token = await getToken()
 
-      // BUSCA SOMENTE UMA PÁGINA
-      const apiProdutos =
-        await buscarPagina(
-          pagina,
-          token
-        )
+      const res = await axios.post(
+        PRODUTOS_URL,
+        {
+          idLoja: '0001',
+          page: pagina,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type':
+              'application/json',
+          },
+
+          timeout: 20000,
+        }
+      )
+
+      const json = res.data
+
+      let apiProdutos: any[] = []
+
+      if (Array.isArray(json)) {
+        apiProdutos = json
+      } else if (
+        Array.isArray(json?.data)
+      ) {
+        apiProdutos = json.data
+      } else if (
+        Array.isArray(json?.produtos)
+      ) {
+        apiProdutos = json.produtos
+      }
 
       let produtos =
-        normalizar(apiProdutos)
+        normalizarProdutos(apiProdutos)
 
       // BUSCA
+
       if (busca) {
         const termos = busca
+          .toLowerCase()
           .split(/\s+/)
           .filter(Boolean)
 
@@ -235,7 +238,8 @@ export default defineEventHandler(
         })
       }
 
-      // FILTRO TIPO
+      // FILTRO
+
       if (tipo) {
         produtos = produtos.filter((p) =>
           p.tipo
@@ -256,16 +260,29 @@ export default defineEventHandler(
         temMais:
           apiProdutos.length > 0,
       }
-    } catch (err) {
-      console.error(err)
+    } catch (err: any) {
+      console.error(
+        '❌ ERRO API:',
+        err?.response?.data || err
+      )
 
       setResponseStatus(event, 500)
 
       return {
+        erro: true,
+
+        mensagem:
+          err?.message ||
+          'Erro ao carregar produtos',
+
         produtos: [],
+
         pagina: 1,
+
         total: 0,
+
         totalPaginas: 0,
+
         temMais: false,
       }
     }
