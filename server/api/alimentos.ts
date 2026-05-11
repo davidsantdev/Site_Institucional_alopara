@@ -1,7 +1,7 @@
 // server/api/alimentos.ts
 
 // ================= TIPOS =================
-
+export const runtime = 'nodejs'
 type Produto = {
   id: string
   nome: string
