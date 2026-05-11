@@ -1,7 +1,6 @@
 // server/api/alimentos.ts
 
-// ================= TIPOS =================
-export const runtime = 'nodejs'
+
 type Produto = {
   id: string
   nome: string
@@ -9,39 +8,14 @@ type Produto = {
   preço2: string
   tipo: string
   img: string
- quantidade: number
+  quantidade: number
 }
 
-type CacheProdutos = {
-  data: Produto[]
-  timestamp: number
-  total: number
-}
-
-// ================= CONFIG =================
-
-// CACHE
-const CACHE_DURATION = 1000 * 60 * 30 // 30min
-
-// PAGINAÇÃO
-const POR_PAGINA = 48
-
-// IMPORTANTE:
-// NA VERCEL NÃO EXAGERE
-const MAX_PAGINAS_API = 5
-const BATCH_SIZE = 1
-
-// TIMEOUT
-const REQUEST_TIMEOUT = 15000
-
-// URLS
 const AUTH_URL =
   'https://aloparacim.dataciss.com.br:4665/cisspoder-auth/oauth/token'
 
 const PRODUTOS_URL =
   'https://aloparacim.dataciss.com.br:4665/cisspoder-service/get_produtos_sitemercado'
-
-// ================= DEPARTAMENTOS =================
 
 const DEPS_ALIMENTOS = new Set([
   'MERCEARIA',
@@ -52,435 +26,248 @@ const DEPS_ALIMENTOS = new Set([
   'MATINAIS',
 ])
 
-// ================= CACHE =================
-
 let tokenCache: {
   token: string
   expires: number
 } | null = null
 
-let produtosCache: CacheProdutos | null = null
-
-// ================= TOKEN =================
-
 async function getToken(): Promise<string> {
-  try {
-    // CACHE TOKEN
-    if (tokenCache && Date.now() < tokenCache.expires) {
-      console.log('⚡ TOKEN CACHE HIT')
-      return tokenCache.token
-    }
-
-    // IMPORTANTE:
-    // Buffer pode quebrar na Vercel
-    const credentials = btoa('cisspoder-oauth:poder7547')
-
-    const controller = new AbortController()
-
-    const timeout = setTimeout(() => {
-      controller.abort()
-    }, REQUEST_TIMEOUT)
-
-    const res = await fetch(AUTH_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${credentials}`,
-      },
-      body: new URLSearchParams({
-        grant_type: 'password',
-        username: 'EXECUTOR',
-        password: 'ex1234',
-      }),
-      signal: controller.signal,
-    })
-
-    clearTimeout(timeout)
-
-    // LOG REAL DO ERRO
-    if (!res.ok) {
-      const erro = await res.text()
-
-      console.error('❌ ERRO TOKEN:', {
-        status: res.status,
-        erro,
-      })
-
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Erro ao autenticar API externa',
-      })
-    }
-
-    const data = await res.json()
-
-    if (!data?.access_token) {
-      console.error('❌ TOKEN INVÁLIDO:', data)
-
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Token inválido',
-      })
-    }
-
-    tokenCache = {
-      token: data.access_token,
-      expires: Date.now() + 55 * 60 * 1000,
-    }
-
-    console.log('✅ TOKEN GERADO')
-
-    return data.access_token
-  } catch (err) {
-    console.error('❌ FALHA GET TOKEN:', err)
-    throw err
+  if (
+    tokenCache &&
+    Date.now() < tokenCache.expires
+  ) {
+    return tokenCache.token
   }
+
+const credentials = btoa(
+  'cisspoder-oauth:poder7547'
+)
+
+  const res = await fetch(AUTH_URL, {
+    method: 'POST',
+
+    headers: {
+      'Content-Type':
+        'application/x-www-form-urlencoded',
+
+      Authorization: `Basic ${credentials}`,
+    },
+
+    body: new URLSearchParams({
+      grant_type: 'password',
+      username: 'EXECUTOR',
+      password: 'ex1234',
+    }),
+  })
+
+  if (!res.ok) {
+    const erro = await res.text()
+
+    console.error('ERRO TOKEN:', erro)
+
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Erro token',
+    })
+  }
+
+  const data = await res.json()
+
+  tokenCache = {
+    token: data.access_token,
+    expires: Date.now() + 55 * 60 * 1000,
+  }
+
+  return data.access_token
 }
 
-// ================= FETCH PÁGINA =================
-
-async function fetchPagina(
+async function buscarPagina(
   pagina: number,
-  headers: Record<string, string>
-): Promise<any[]> {
-  try {
-    console.log(`📄 BUSCANDO PÁGINA ${pagina}`)
-
-    const controller = new AbortController()
-
-    const timeout = setTimeout(() => {
-      controller.abort()
-    }, REQUEST_TIMEOUT)
-
-    const res = await fetch(PRODUTOS_URL, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        idLoja: '0001',
-        page: pagina,
-      }),
-      signal: controller.signal,
-    })
-
-    clearTimeout(timeout)
-
-    // LOG DETALHADO
-    if (!res.ok) {
-      const erro = await res.text()
-
-      console.error(`❌ ERRO PÁGINA ${pagina}:`, {
-        status: res.status,
-        erro,
-      })
-
-      return []
-    }
-
-    const json = await res.json()
-
-    console.log(`✅ PÁGINA ${pagina} OK`)
-
-    // FORMATO 1
-    if (Array.isArray(json)) {
-      return json
-    }
-
-    // FORMATO 2
-    if (Array.isArray(json?.data)) {
-      return json.data
-    }
-
-    // FORMATO 3
-    if (Array.isArray(json?.produtos)) {
-      return json.produtos
-    }
-
-    console.warn(`⚠️ FORMATO DESCONHECIDO PÁGINA ${pagina}`)
-
-    return []
-  } catch (err: any) {
-    console.error(`❌ ERRO FETCH PÁGINA ${pagina}:`, err?.message || err)
-
-    return []
-  }
-}
-
-// ================= BUSCAR PRODUTOS =================
-
-async function buscarTodosProdutos(
   token: string
-): Promise<Produto[]> {
-  try {
-    // CACHE
-    if (
-      produtosCache &&
-      Date.now() - produtosCache.timestamp < CACHE_DURATION
-    ) {
-      console.log(
-        `⚡ CACHE PRODUTOS HIT: ${produtosCache.total}`
-      )
+) {
+  const res = await fetch(PRODUTOS_URL, {
+    method: 'POST',
 
-      return produtosCache.data
-    }
-
-    console.log('🔄 BUSCANDO PRODUTOS...')
-
-    const headers = {
-      'Content-Type': 'application/json',
+    headers: {
       Authorization: `Bearer ${token}`,
-    }
+      'Content-Type': 'application/json',
+    },
 
-    const todasRespostas: any[][] = []
+    body: JSON.stringify({
+      idLoja: '0001',
+      page: pagina,
+    }),
+  })
 
-    // BUSCA CONTROLADA
-    for (let pagina = 1; pagina <= MAX_PAGINAS_API; pagina++) {
-      const resposta = await fetchPagina(pagina, headers)
+  if (!res.ok) {
+    const erro = await res.text()
 
-      // PARAR SE VAZIO
-      if (!resposta.length) {
-        console.log(`🏁 FIM NA PÁGINA ${pagina}`)
-        break
-      }
-
-      todasRespostas.push(resposta)
-
-      console.log(
-        `📦 Página ${pagina}: ${resposta.length} produtos`
-      )
-
-      // IMPORTANTE:
-      // evita flood na API
-      await new Promise((resolve) =>
-        setTimeout(resolve, 300)
-      )
-    }
-
-    const todos = todasRespostas.flat()
-
-    console.log(`📦 TOTAL BRUTO: ${todos.length}`)
-
-    const ids = new Map<string, Produto>()
-
-    for (const p of todos) {
-      try {
-        // SOMENTE ATIVOS
-        if (p.ativo !== 'S') continue
-
-        const preco = Number(p.vlrProduto)
-
-        // PREÇO INVÁLIDO
-        if (!preco || preco <= 0) continue
-
-        const departamento = String(
-          p.departamento || ''
-        ).toUpperCase()
-
-        const ehAlimento =
-          DEPS_ALIMENTOS.has(departamento) ||
-          [...DEPS_ALIMENTOS].some((d) =>
-            departamento.includes(d)
-          )
-
-        if (!ehAlimento) continue
-
-        const id = String(
-          p.plu ||
-            p.codigoBarra ||
-            p.id ||
-            ''
-        )
-
-        if (!id) continue
-
-        // EVITA DUPLICADOS
-        if (!ids.has(id)) {
-          ids.set(id, {
-            id,
-
-            nome:
-              p.nome?.trim() ||
-              'Produto sem nome',
-
-            preco,
-
-            preço2: preco.toFixed(2),
-
-            tipo:
-              p.subcategoria
-                ?.replace(/^\d+\s/, '')
-                ?.trim() ||
-              p.categoria?.trim() ||
-              p.departamento?.trim() ||
-              'Alimentos',
-
-            img:
-              p.imageUrl ||
-              p.imagem ||
-              '',
-
-            quantidade: 1,
-          })
-        }
-      } catch (err) {
-        console.error(
-          '❌ ERRO PROCESSANDO PRODUTO:',
-          err
-        )
-      }
-    }
-
-    const produtos = Array.from(ids.values())
-
-    // ORDENA
-    produtos.sort((a, b) =>
-      a.nome.localeCompare(b.nome, 'pt-BR')
+    console.error(
+      `ERRO PAGINA ${pagina}:`,
+      erro
     )
 
-    console.log(
-      `✅ TOTAL FINAL: ${produtos.length}`
-    )
-
-    // CACHE
-    produtosCache = {
-      data: produtos,
-      timestamp: Date.now(),
-      total: produtos.length,
-    }
-
-    return produtos
-  } catch (err) {
-    console.error('❌ ERRO BUSCAR PRODUTOS:', err)
-    throw err
+    return []
   }
+
+  const json = await res.json()
+
+  if (Array.isArray(json)) return json
+  if (Array.isArray(json?.data))
+    return json.data
+  if (Array.isArray(json?.produtos))
+    return json.produtos
+
+  return []
 }
 
-// ================= HANDLER =================
+function normalizar(
+  produtos: any[]
+): Produto[] {
+  const ids = new Map<string, Produto>()
 
-export default defineEventHandler(async (event) => {
-  try {
-    console.log('🚀 REQUEST /api/alimentos')
+  for (const p of produtos) {
+    if (p.ativo !== 'S') continue
 
-    const query = getQuery(event)
+    const preco = Number(p.vlrProduto)
 
-    const pagina = Math.max(
-      1,
-      Number(query.pagina || 1)
+    if (!preco || preco <= 0) continue
+
+    const departamento = String(
+      p.departamento || ''
+    ).toUpperCase()
+
+    const ehAlimento =
+      DEPS_ALIMENTOS.has(departamento) ||
+      [...DEPS_ALIMENTOS].some((d) =>
+        departamento.includes(d)
+      )
+
+    if (!ehAlimento) continue
+
+    const id = String(
+      p.plu ||
+        p.codigoBarra ||
+        p.id ||
+        ''
     )
 
-    const busca = String(
-      query.busca || ''
-    )
-      .toLowerCase()
-      .trim()
+    if (!id) continue
 
-    const tipo = String(
-      query.tipo || ''
-    ).trim()
+    if (!ids.has(id)) {
+      ids.set(id, {
+        id,
 
-    console.log({
-      pagina,
-      busca,
-      tipo,
-    })
+        nome:
+          p.nome?.trim() ||
+          'Produto sem nome',
 
-    // TOKEN
-    const token = await getToken()
+        preco,
 
-    // PRODUTOS
-    let produtos = await buscarTodosProdutos(
-      token
-    )
+        preço2: preco.toFixed(2),
 
-    // BUSCA
-    if (busca) {
-      const termos = busca
-        .split(/\s+/)
-        .filter(Boolean)
+        tipo:
+          p.subcategoria
+            ?.replace(/^\d+\s/, '')
+            ?.trim() ||
+          p.categoria?.trim() ||
+          p.departamento?.trim() ||
+          'Alimentos',
 
-      produtos = produtos.filter((p) => {
-        const nome = p.nome.toLowerCase()
+        img:
+          p.imageUrl ||
+          p.imagem ||
+          '',
 
-        return termos.every((t) =>
-          nome.includes(t)
-        )
+        quantidade: 1,
       })
-
-      console.log(
-        `🔎 RESULTADO BUSCA: ${produtos.length}`
-      )
-    }
-
-    // TIPO
-    if (tipo) {
-      produtos = produtos.filter((p) =>
-        p.tipo
-          .toLowerCase()
-          .includes(tipo.toLowerCase())
-      )
-
-      console.log(
-        `🏷️ RESULTADO TIPO: ${produtos.length}`
-      )
-    }
-
-    // PAGINAÇÃO
-    const inicio = (pagina - 1) * POR_PAGINA
-
-    const fim = inicio + POR_PAGINA
-
-    const paginados = produtos.slice(
-      inicio,
-      fim
-    )
-
-    // CACHE HEADERS
-    setHeaders(event, {
-      'Cache-Control':
-        'public, max-age=300, stale-while-revalidate=3600',
-
-      'X-Total-Produtos': String(
-        produtos.length
-      ),
-    })
-
-    console.log(
-      `✅ RETORNANDO ${paginados.length} PRODUTOS`
-    )
-
-    return {
-      produtos: paginados,
-
-      pagina,
-
-      total: produtos.length,
-
-      totalPaginas: Math.ceil(
-        produtos.length / POR_PAGINA
-      ),
-
-      temMais: fim < produtos.length,
-    }
-  } catch (err: any) {
-    console.error('❌ ERRO GERAL API:', err)
-
-    setResponseStatus(event, 500)
-
-    return {
-      erro: true,
-
-      mensagem:
-        err?.message ||
-        'Erro interno servidor',
-
-      produtos: [],
-
-      pagina: 1,
-
-      total: 0,
-
-      totalPaginas: 0,
-
-      temMais: false,
     }
   }
-})
+
+  return Array.from(ids.values())
+}
+
+export default defineEventHandler(
+  async (event) => {
+    try {
+      const query = getQuery(event)
+
+      const pagina = Math.max(
+        1,
+        Number(query.pagina || 1)
+      )
+
+      const busca = String(
+        query.busca || ''
+      )
+        .toLowerCase()
+        .trim()
+
+      const tipo = String(
+        query.tipo || ''
+      ).trim()
+
+      const token = await getToken()
+
+      // BUSCA SOMENTE UMA PÁGINA
+      const apiProdutos =
+        await buscarPagina(
+          pagina,
+          token
+        )
+
+      let produtos =
+        normalizar(apiProdutos)
+
+      // BUSCA
+      if (busca) {
+        const termos = busca
+          .split(/\s+/)
+          .filter(Boolean)
+
+        produtos = produtos.filter((p) => {
+          const nome =
+            p.nome.toLowerCase()
+
+          return termos.every((t) =>
+            nome.includes(t)
+          )
+        })
+      }
+
+      // FILTRO TIPO
+      if (tipo) {
+        produtos = produtos.filter((p) =>
+          p.tipo
+            .toLowerCase()
+            .includes(tipo.toLowerCase())
+        )
+      }
+
+      return {
+        produtos,
+
+        pagina,
+
+        total: produtos.length,
+
+        totalPaginas: pagina + 1,
+
+        temMais:
+          apiProdutos.length > 0,
+      }
+    } catch (err) {
+      console.error(err)
+
+      setResponseStatus(event, 500)
+
+      return {
+        produtos: [],
+        pagina: 1,
+        total: 0,
+        totalPaginas: 0,
+        temMais: false,
+      }
+    }
+  }
+)
