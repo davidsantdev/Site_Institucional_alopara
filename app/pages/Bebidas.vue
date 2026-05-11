@@ -81,8 +81,8 @@ function diminuir(id: number) {
 
         
         <div >
-          <div class=" p-4 flex flex gap-1 flex-wrap">
-                <Button  @click="navigateTo('/Alimentos')" variant="link" class="text-blue-500 text-[17px] ">Alimentos</Button>
+          <div class=" p-4 flex  gap-1 flex-wrap">
+              <Button  @click="navigateTo('/Alimentos')" variant="link" class="text-blue-500 text-[17px] ">Alimentos</Button>
                
         <Button  @click="navigateTo('/Limpeza')" variant="link" class="text-blue-500 text-[17px] ">Limpeza</Button>
         <Button  @click="navigateTo('/Perfumaria')" variant="link" class="text-blue-500 text-[17px] ">Perfumaria</Button>
@@ -120,7 +120,7 @@ function diminuir(id: number) {
     @click="PaginacaoAtual < totalPaginas && PaginacaoAtual++"
     class="px-3 py-1 bg-red-500 rounded"
   >
-    Próximo
+    Próximo 
   </button>
 
 </div>

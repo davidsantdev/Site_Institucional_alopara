@@ -18,7 +18,7 @@ import DialogTrigger from '../ui/dialog/DialogTrigger.vue';
     <!-- Badge -->
     <span class="bg-red-600 text-white text-[11px] font-bold tracking-[3px] uppercase
       px-5 py-1.5 rounded-[2px] mb-8">
-      Supermercado Alô Pará
+      VERSÂO BETA 
     </span>
 
     <!-- Título -->
