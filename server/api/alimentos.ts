@@ -1,209 +1,314 @@
 // server/api/alimentos.ts
 
-export const runtime = 'nodejs'
-
-import axios from 'axios'
-import https from 'node:https'
-
-// ================= CONFIG =================
-
-const httpsAgent = new https.Agent({ rejectUnauthorized: false })
-
-const AUTH_URL = 'https://aloparacim.dataciss.com.br:4665/cisspoder-auth/oauth/token'
-const PRODUTOS_URL = 'https://aloparacim.dataciss.com.br:4665/cisspoder-service/get_produtos_sitemercado'
-
-const DEPS_ALIMENTOS = new Set([
-  'MERCEARIA',
-  'FRIOS',
-  'LATICINIOS',
-  'CONGELADOS',
-  'BOMBONIERE',
-  'MATINAIS',
-])
-
-// ================= TYPES =================
-
-type Produto = {
-  id: string
-  nome: string
-  preco: number
-  preco2: string
-  tipo: string
-  img: string
-  quantidade: number
-}
-
-// ================= TOKEN CACHE =================
-
 let tokenCache: {
   token: string
   expires: number
 } | null = null
 
+type Produto = {
+  id: string
+  nome: string
+  preço2: string
+  tipo: string
+  img: string
+  quantidade: number
+}
+
+type CacheProdutos = {
+  data: Produto[]
+  timestamp: number
+}
+
+let produtosCache: CacheProdutos | null =
+  null
+
+const CACHE_DURATION =
+  1000 * 60 * 60 // 1h
+
+const POR_PAGINA = 40
+
+const MAX_PAGINAS_API = 20
+
+// ================= ALIMENTOS =================
+
+const DEPS_ALIMENTOS = [
+  'MERCEARIA',
+  'BEBIDAS',
+  'HORTIFRUTI',
+  'PADARIA',
+  'AUTO SERVIÇO',
+  'PAS',
+  'FRIOS',
+  'LATICINIOS',
+  'CONGELADOS',
+  'ACOUGUE',
+  'BOMBONIERE',
+  'MATINAIS'
+]
+
 // ================= TOKEN =================
 
-async function getToken(): Promise<string> {
-  try {
-    if (tokenCache && Date.now() < tokenCache.expires) {
-      return tokenCache.token
-    }
+async function getToken() {
+  if (
+    tokenCache &&
+    Date.now() < tokenCache.expires
+  ) {
+    return tokenCache.token
+  }
 
-    const credentials = Buffer.from('cisspoder-oauth:poder7547').toString('base64')
+  const credentials = Buffer.from(
+    'cisspoder-oauth:poder7547'
+  ).toString('base64')
 
-    const params = new URLSearchParams({
-      grant_type: 'password',
-      username: 'EXECUTOR',
-      password: 'ex1234',
-    })
-
-    const res = await axios.post(AUTH_URL, params.toString(), {
+  const res = await fetch(
+    'https://aloparacim.dataciss.com.br:443/cisspoder-auth/oauth/token',
+    {
+      method: 'POST',
       headers: {
-        Authorization: `Basic ${credentials}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type':
+          'application/x-www-form-urlencoded',
+        Authorization: `Basic ${credentials}`
       },
-      httpsAgent,
-      timeout: 30000,
-    })
-
-    const data = res.data
-
-    if (!data?.access_token) {
-      throw new Error('Token inválido')
+      body: new URLSearchParams({
+        grant_type: 'password',
+        username: 'EXECUTOR',
+        password: 'ex1234'
+      })
     }
+  )
 
-    tokenCache = {
-      token: data.access_token,
-      expires: Date.now() + 55 * 60 * 1000,
-    }
+  const data = await res.json()
 
-    return data.access_token
-  } catch (error: any) {
-    console.error('❌ ERRO AO GERAR TOKEN:', error?.response?.data || error)
-    throw error
-  }
-}
-
-// ================= NORMALIZAR =================
-
-function normalizarProdutos(produtos: any[]): Produto[] {
-  const ids = new Map<string, Produto>()
-
-  for (const p of produtos) {
-    try {
-      if (p.ativo !== 'S') continue
-
-      const preco = Number(p.vlrProduto)
-      if (!preco || preco <= 0) continue
-
-      const departamento = String(p.departamento || '').toUpperCase()
-
-      const ehAlimento =
-        DEPS_ALIMENTOS.has(departamento) ||
-        [...DEPS_ALIMENTOS].some((d) => departamento.includes(d))
-
-      if (!ehAlimento) continue
-
-      const id = String(p.plu || p.codigoBarra || p.id || '')
-      if (!id) continue
-
-      if (!ids.has(id)) {
-        ids.set(id, {
-          id,
-          nome: p.nome?.trim() || 'Produto sem nome',
-          preco,
-          preco2: preco.toFixed(2),
-          tipo:
-            p.subcategoria?.replace(/^\d+\s/, '')?.trim() ||
-            p.categoria?.trim() ||
-            p.departamento?.trim() ||
-            'Alimentos',
-          img: p.imageUrl || p.imagem || '',
-          quantidade: 1,
-        })
-      }
-    } catch (err) {
-      console.error('❌ ERRO NORMALIZANDO:', err)
-    }
+  tokenCache = {
+    token: data.access_token,
+    expires:
+      Date.now() + 55 * 60 * 1000
   }
 
-  return Array.from(ids.values())
+  return data.access_token
 }
 
-// ================= HANDLER =================
+// ================= BUSCAR PRODUTOS =================
 
-export default defineEventHandler(async (event) => {
-  try {
-    const query = getQuery(event)
-
-    const pagina = Number(query.pagina || 1)
-    const busca = String(query.busca || '')
-    const tipo = String(query.tipo || '')
-
-    const token = await getToken()
-
-    const res = await axios.post(
-      PRODUTOS_URL,
-      {
-        idLoja: '0001',
-        page: pagina,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        httpsAgent,
-        timeout: 25000,
-      }
+async function buscarTodosProdutos(
+  token: string
+) {
+  // cache RAM
+  if (
+    produtosCache &&
+    Date.now() -
+      produtosCache.timestamp <
+      CACHE_DURATION
+  ) {
+    console.log(
+      '⚡ CACHE:',
+      produtosCache.data.length
     )
 
-    const json = res.data
+    return produtosCache.data
+  }
 
-    let apiProdutos: any[] = []
+  console.log(
+    '🔄 BUSCANDO PAGINAS API...'
+  )
 
-    if (Array.isArray(json)) {
-      apiProdutos = json
-    } else if (Array.isArray(json?.data)) {
-      apiProdutos = json.data
-    } else if (Array.isArray(json?.produtos)) {
-      apiProdutos = json.produtos
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`
+  }
+
+  // busca páginas em paralelo
+  const requests = Array.from(
+    { length: MAX_PAGINAS_API },
+    async (_, i) => {
+      const pagina = i + 1
+
+      try {
+        const res = await fetch(
+          'https://aloparacim.dataciss.com.br:4665/cisspoder-service/get_produtos_sitemercado',
+          {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              idLoja: '0001',
+              page: pagina
+            })
+          }
+        )
+
+        const json = await res.json()
+
+        return Array.isArray(json)
+          ? json
+          : json?.data ?? []
+      } catch (err) {
+        console.error(
+          `Erro página ${pagina}`
+        )
+
+        return []
+      }
     }
+  )
 
-    let produtos = normalizarProdutos(apiProdutos)
+  const responses = await Promise.all(
+    requests
+  )
 
-    if (busca) {
-      const termos = busca.toLowerCase().split(/\s+/).filter(Boolean)
-      produtos = produtos.filter((p) =>
-        termos.every((t) => p.nome.toLowerCase().includes(t))
+  const todos = responses.flat()
+
+  console.log(
+    '📦 TOTAL BRUTO:',
+    todos.length
+  )
+
+  const produtos: Produto[] = []
+
+  const ids = new Set<string>()
+
+  for (const p of todos) {
+    // ativo
+    if (p.ativo !== 'S') continue
+
+    // preço válido
+    const preco = Number(p.vlrProduto)
+
+    if (!preco || preco <= 0)
+      continue
+
+    // departamento
+    const departamento = String(
+      p.departamento || ''
+    ).toUpperCase()
+
+    const ehAlimento =
+      DEPS_ALIMENTOS.some((dep) =>
+        departamento.includes(dep)
       )
-    }
 
-    if (tipo) {
-      produtos = produtos.filter((p) =>
-        p.tipo.toLowerCase().includes(tipo.toLowerCase())
+    if (!ehAlimento) continue
+
+    // id único
+    const id = String(
+      p.plu ||
+        p.codigoBarra ||
+        p.id ||
+        crypto.randomUUID()
+    )
+
+    // evita repetidos
+    if (ids.has(id)) continue
+
+    ids.add(id)
+
+    produtos.push({
+      id,
+
+      nome:
+        p.nome?.trim() ||
+        'Produto sem nome',
+
+      preço2: preco.toFixed(2),
+
+      tipo:
+        p.subcategoria
+          ?.replace(/^\d+\s/, '')
+          ?.trim() ||
+        p.categoria?.trim() ||
+        p.departamento?.trim() ||
+        'Alimentos',
+
+      img:
+        p.imageUrl ||
+        p.imagem ||
+        '',
+
+      quantidade: 1
+    })
+  }
+
+  console.log(
+    '✅ TOTAL FINAL:',
+    produtos.length
+  )
+
+  produtosCache = {
+    data: produtos,
+    timestamp: Date.now()
+  }
+
+  return produtos
+}
+
+// ================= API =================
+
+export default defineEventHandler(
+  async (event) => {
+    try {
+      const query = getQuery(event)
+
+      const pagina = Number(
+        query.pagina || 1
       )
-    }
 
-    return {
-      produtos,
-      pagina,
-      total: produtos.length,
-      totalPaginas: pagina + 1,
-      temMais: apiProdutos.length > 0,
-    }
-  } catch (err: any) {
-    console.error('❌ ERRO API:', err?.response?.data || err)
+      const busca = String(
+        query.busca || ''
+      ).toLowerCase()
 
-    setResponseStatus(event, 500)
+      const token = await getToken()
 
-    return {
-      erro: true,
-      mensagem: err?.message || 'Erro ao carregar produtos',
-      produtos: [],
-      pagina: 1,
-      total: 0,
-      totalPaginas: 0,
-      temMais: false,
+      let produtos =
+        await buscarTodosProdutos(token)
+
+      // busca global
+      if (busca) {
+        produtos = produtos.filter((p) =>
+          p.nome
+            .toLowerCase()
+            .includes(busca)
+        )
+      }
+
+      // paginação frontend
+      const inicio =
+        (pagina - 1) * POR_PAGINA
+
+      const fim =
+        inicio + POR_PAGINA
+
+      const paginados =
+        produtos.slice(inicio, fim)
+
+      setHeader(
+        event,
+        'Cache-Control',
+        'public, max-age=300'
+      )
+
+      return {
+        produtos: paginados,
+        pagina,
+        total: produtos.length,
+        totalPaginas: Math.ceil(
+          produtos.length /
+            POR_PAGINA
+        ),
+        temMais:
+          fim < produtos.length
+      }
+    } catch (err) {
+      console.error(
+        'ERRO API:',
+        err
+      )
+
+      return {
+        produtos: [],
+        pagina: 1,
+        total: 0,
+        totalPaginas: 0,
+        temMais: false
+      }
     }
   }
-})
+)
