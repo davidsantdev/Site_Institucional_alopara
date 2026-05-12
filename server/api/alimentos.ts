@@ -57,6 +57,9 @@ async function getToken() {
 
   const data = await res.json()
 
+  // 🔍 LOG TEMPORÁRIO
+  console.log('🔍 RESPOSTA TOKEN:', JSON.stringify(data))
+
   if (!data?.access_token) throw new Error('Token inválido')
 
   tokenCache = {
