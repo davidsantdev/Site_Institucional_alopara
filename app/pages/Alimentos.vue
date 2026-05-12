@@ -4,8 +4,7 @@ import { useCarrinho } from '~/data/composable/UseCarrinho'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
 import Footer from '~/components/Layout/Footer.vue'
 import {
-  Flame, ShoppingBasket, Search, X, ChevronUp,
-  SlidersHorizontal, ShoppingCart
+  Flame, Search, X, ChevronUp, ShoppingCart
 } from 'lucide-vue-next'
 
 // ===================== TYPES =====================
@@ -13,8 +12,7 @@ import {
 type Produto = {
   id: string
   nome: string
-  preco: number
-  preço2: string
+  preco2: string
   tipo: string
   img: string
   quantidade: number
@@ -24,19 +22,19 @@ type Produto = {
 
 const { adicionarCarrinho } = useCarrinho()
 
-const produtos      = ref<Produto[]>([])
-const carregando    = ref(false)
+const produtos       = ref<Produto[]>([])
+const carregando     = ref(false)
 const carregandoMais = ref(false)
-const erro          = ref(false)
+const erro           = ref(false)
 
-const paginaAtual   = ref(1)
-const totalPaginas  = ref(1)
-const totalProdutos = ref(0)
+const paginaAtual    = ref(1)
+const totalPaginas   = ref(1)
+const totalProdutos  = ref(0)
 
-const busca         = ref('')
-const buscaDebounce = ref('')
-const modalProduto  = ref<Produto | null>(null)
-const mostrarTopo   = ref(false)
+const busca          = ref('')
+const buscaDebounce  = ref('')
+const modalProduto   = ref<Produto | null>(null)
+const mostrarTopo    = ref(false)
 
 let timeoutBusca: ReturnType<typeof setTimeout> | null = null
 let observer: IntersectionObserver | null = null
@@ -68,7 +66,6 @@ async function buscarProdutos(pagina = 1, append = false) {
     const novos: Produto[] = res.produtos || []
 
     if (append) {
-      // Deduplicação via Set
       const existentes = new Set(produtos.value.map((p) => p.id))
       produtos.value.push(...novos.filter((p) => !existentes.has(p.id)))
     } else {
@@ -133,12 +130,9 @@ function onScroll() {
 function initObserver() {
   const el = document.getElementById('sentinel')
   if (!el) return
-
   observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting) carregarMais()
-    },
-    { rootMargin: '400px' } // pré-carrega antes do fim
+    (entries) => { if (entries[0].isIntersecting) carregarMais() },
+    { rootMargin: '400px' }
   )
   observer.observe(el)
 }
@@ -178,7 +172,6 @@ const imagemErro = (e: Event) => {
 
     <!-- ===== HERO ===== -->
     <div class="relative overflow-hidden bg-gradient-to-br from-red-600 via-red-500 to-orange-500 px-4 py-10 text-white">
-      <!-- padrão de fundo decorativo -->
       <div class="pointer-events-none absolute inset-0 opacity-10"
            style="background-image: repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%); background-size: 20px 20px;" />
 
@@ -242,15 +235,12 @@ const imagemErro = (e: Event) => {
       <!-- ===== GRID DE PRODUTOS ===== -->
       <div v-else class="mx-auto w-full max-w-7xl px-3 py-6 md:px-6">
 
-        <!-- contador + info -->
         <div class="mb-4 flex items-center justify-between">
           <p class="text-sm text-gray-500">
             <span class="font-semibold text-gray-800">{{ produtos.length.toLocaleString('pt-BR') }}</span>
             produtos carregados
             <template v-if="busca"> para "<span class="text-red-500">{{ busca }}</span>"</template>
           </p>
-
-          <!-- barra de progresso de carga -->
           <div v-if="totalPaginas > 1" class="hidden md:flex items-center gap-3 text-xs text-gray-400">
             <span>Página {{ paginaAtual }}/{{ totalPaginas }}</span>
             <div class="w-28 h-1.5 bg-gray-200 rounded-full overflow-hidden">
@@ -283,7 +273,7 @@ const imagemErro = (e: Event) => {
             @click="abrirModal(produto)"
             class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
           >
-            <!-- badge mais vendido -->
+            <!-- badge -->
             <div class="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
               <Flame :size="9" />
               Top
@@ -300,7 +290,7 @@ const imagemErro = (e: Event) => {
             <!-- imagem -->
             <div class="flex h-36 items-center justify-center bg-slate-50 p-3 group-hover:bg-red-50 transition-colors duration-200">
               <img
-                src= 'https://cosmos.bluesoft.com.br/assets/product-placeholder-ce4926921923d1e9bc66cd0e1493b49b.png'"
+                :src="produto.img || '/sem-imagem.png'"
                 :alt="produto.nome"
                 loading="lazy"
                 decoding="async"
@@ -316,7 +306,7 @@ const imagemErro = (e: Event) => {
               </p>
               <div class="mt-auto pt-1">
                 <span class="text-xl font-extrabold text-green-600 md:text-2xl">
-                  R$ {{ produto.preço2 }}
+                  R$ {{ produto.preco2 }}
                 </span>
               </div>
             </div>
@@ -331,7 +321,6 @@ const imagemErro = (e: Event) => {
           </div>
         </div>
 
-        <!-- sentinela do infinite scroll -->
         <div id="sentinel" class="h-10 mt-4" />
       </div>
     </template>
@@ -343,12 +332,9 @@ const imagemErro = (e: Event) => {
         class="fixed inset-0 z-50 flex items-end md:items-center justify-center"
         @click.self="fecharModal"
       >
-        <!-- overlay -->
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="fecharModal" />
 
-        <!-- painel -->
         <div class="relative z-10 w-full max-w-md overflow-hidden rounded-t-3xl md:rounded-3xl bg-[#111] shadow-2xl">
-          <!-- imagem -->
           <div class="flex items-center justify-center bg-white h-60 p-6 relative">
             <button
               @click="fecharModal"
@@ -364,32 +350,26 @@ const imagemErro = (e: Event) => {
             />
           </div>
 
-          <!-- detalhes -->
           <div class="px-8 py-6">
             <span class="text-xs text-gray-400 uppercase tracking-widest">{{ modalProduto.tipo }}</span>
             <h2 class="mt-1 text-xl font-semibold text-white leading-snug">{{ modalProduto.nome }}</h2>
             <p class="mt-2 text-4xl font-extrabold text-green-400">
-              R$ {{ modalProduto.preço2 }}
+              R$ {{ modalProduto.preco2 }}
             </p>
 
-            <!-- controle de quantidade -->
             <div class="mt-6 flex items-center gap-3">
               <div class="flex items-center gap-2 rounded-xl bg-[#1e1e1e] border border-[#2a2a2a] p-1">
                 <button
                   @click="diminuir(modalProduto.id)"
                   class="flex h-9 w-9 items-center justify-center rounded-lg text-white text-lg hover:bg-[#2a2a2a] transition"
-                >
-                  −
-                </button>
+                >−</button>
                 <span class="min-w-[2rem] text-center font-bold text-white text-lg">
                   {{ modalProduto.quantidade }}
                 </span>
                 <button
                   @click="aumentar(modalProduto.id)"
                   class="flex h-9 w-9 items-center justify-center rounded-lg text-white text-lg hover:bg-[#2a2a2a] transition"
-                >
-                  +
-                </button>
+                >+</button>
               </div>
 
               <button
@@ -405,7 +385,7 @@ const imagemErro = (e: Event) => {
       </div>
     </Transition>
 
-    <!-- ===== BOTÃO VOLTAR AO TOPO ===== -->
+    <!-- ===== BOTÃO TOPO ===== -->
     <Transition name="fade">
       <button
         v-if="mostrarTopo"
@@ -421,30 +401,16 @@ const imagemErro = (e: Event) => {
 </template>
 
 <style scoped>
-/* Modal entra de baixo em mobile */
 .modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.2s ease;
-}
+.modal-leave-active { transition: opacity 0.2s ease; }
 .modal-enter-active .relative,
-.modal-leave-active .relative {
-  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-}
+.modal-leave-active .relative { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
 .modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-.modal-enter-from .relative {
-  transform: translateY(40px);
-}
+.modal-leave-to { opacity: 0; }
+.modal-enter-from .relative { transform: translateY(40px); }
 
 .fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s, transform 0.2s;
-}
+.fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
 .fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: scale(0.8);
-}
+.fade-leave-to { opacity: 0; transform: scale(0.8); }
 </style>
