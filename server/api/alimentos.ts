@@ -50,14 +50,15 @@ async function getToken() {
     },
     body: new URLSearchParams({
       grant_type: 'password',
-      username: 'EXECUTOR',
-      password: 'ex1234',
+      username: '109',       // ← corrigido
+      password: '123456',    // ← corrigido
+      client_secret: 'poder7547',
+      client_id: 'cisspoder-oauth',
     }),
   })
 
   const data = await res.json()
 
-  // 🔍 LOG TEMPORÁRIO
   console.log('🔍 RESPOSTA TOKEN:', JSON.stringify(data))
 
   if (!data?.access_token) throw new Error('Token inválido')
@@ -94,9 +95,10 @@ async function buscarTodosProdutos(token: string) {
         body: JSON.stringify({ idLoja: '0001', page: pagina }),
       })
       const json = await res.json()
+      console.log(`📄 Página ${pagina}:`, Array.isArray(json) ? json.length : JSON.stringify(json).slice(0, 100))
       return Array.isArray(json) ? json : json?.data ?? []
     } catch (err) {
-      console.error(`Erro página ${pagina}`)
+      console.error(`Erro página ${pagina}:`, err)
       return []
     }
   })
@@ -126,7 +128,7 @@ async function buscarTodosProdutos(token: string) {
     produtos.push({
       id,
       nome: p.nome?.trim() || 'Produto sem nome',
-      preco2: preco.toFixed(2),      // ← sem acento, corrige hydration mismatch
+      preco2: preco.toFixed(2),
       tipo:
         p.subcategoria?.replace(/^\d+\s/, '')?.trim() ||
         p.categoria?.trim() ||
