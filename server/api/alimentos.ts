@@ -33,6 +33,13 @@ const DEPS_ALIMENTOS = [
 
 const BASE_URL = 'https://aloparacim.dataciss.com.br:443'
 
+const POSTMAN_HEADERS = {
+  'User-Agent': 'PostmanRuntime/7.54.0',
+  'Accept': '*/*',
+  'Accept-Encoding': 'gzip, deflate, br',
+  'Connection': 'keep-alive',
+}
+
 // ================= TOKEN =================
 
 async function getToken() {
@@ -45,13 +52,14 @@ async function getToken() {
   const res = await fetch(`${BASE_URL}/cisspoder-auth/oauth/token`, {
     method: 'POST',
     headers: {
+      ...POSTMAN_HEADERS,
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${credentials}`,
+      'Authorization': `Basic ${credentials}`,
     },
     body: new URLSearchParams({
       grant_type: 'password',
-      username: '109',       // ← corrigido
-      password: '123456',    // ← corrigido
+      username: '109',
+      password: '123456',
       client_secret: 'poder7547',
       client_id: 'cisspoder-oauth',
     }),
@@ -82,8 +90,9 @@ async function buscarTodosProdutos(token: string) {
   console.log('🔄 BUSCANDO PAGINAS API...')
 
   const headers = {
+    ...POSTMAN_HEADERS,
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
+    'Authorization': `Bearer ${token}`,
   }
 
   const requests = Array.from({ length: MAX_PAGINAS_API }, async (_, i) => {
