@@ -300,7 +300,7 @@ const imagemErro = (e: Event) => {
             <!-- imagem -->
             <div class="flex h-36 items-center justify-center bg-slate-50 p-3 group-hover:bg-red-50 transition-colors duration-200">
               <img
-                src= 'https://cosmos.bluesoft.com.br/assets/product-placeholder-ce4926921923d1e9bc66cd0e1493b49b.png'
+                src= 'https://cosmos.bluesoft.com.br/assets/product-placeholder-ce4926921923d1e9bc66cd0e1493b49b.png'"
                 :alt="produto.nome"
                 loading="lazy"
                 decoding="async"
