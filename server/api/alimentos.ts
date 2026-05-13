@@ -58,8 +58,8 @@ async function getToken() {
     },
     body: new URLSearchParams({
       grant_type: 'password',
-      username: '109',
-      password: '123456',
+      username: 'EXECUTOR',
+      password: 'ex1234',
       client_secret: 'poder7547',
       client_id: 'cisspoder-oauth',
     }),
