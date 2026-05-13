@@ -1,5 +1,10 @@
 // server/api/alimentos.ts
 
+let tokenCache: {
+  token: string
+  expires: number
+} | null = null
+
 type Produto = {
   id: string
   nome: string
@@ -35,10 +40,50 @@ const POSTMAN_HEADERS = {
   'Connection': 'keep-alive',
 }
 
-// ================= TOKEN FIXO (TESTE) =================
+// ================= TOKEN =================
 
 async function getToken() {
-  return '89a013b3-633b-4fb4-928e-4874af753610'
+  if (tokenCache && Date.now() < tokenCache.expires) {
+    return tokenCache.token
+  }
+
+  const res = await fetch(
+    'https://aloparacim.dataciss.com.br/cisspoder-auth/oauth/token',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+        'User-Agent': 'PostmanRuntime/7.54.0',
+      },
+
+      body: new URLSearchParams({
+        username: '109',
+        password: '123456',
+        grant_type: 'password',
+        client_secret: 'poder7547',
+        client_id: 'cisspoder-oauth',
+      }),
+    }
+  )
+
+  const text = await res.text()
+
+  console.log('STATUS TOKEN:', res.status)
+  console.log('TOKEN RAW:', text)
+
+  const data = JSON.parse(text)
+
+  if (!data?.access_token) {
+    throw new Error(`Token inválido: ${text}`)
+  }
+
+  tokenCache = {
+    token: data.access_token,
+    expires: Date.now() + 55 * 60 * 1000,
+  }
+
+  return data.access_token
 }
 
 // ================= BUSCAR PRODUTOS =================
