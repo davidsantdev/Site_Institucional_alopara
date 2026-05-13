@@ -1,10 +1,5 @@
 // server/api/alimentos.ts
 
-let tokenCache: {
-  token: string
-  expires: number
-} | null = null
-
 type Produto = {
   id: string
   nome: string
@@ -40,43 +35,10 @@ const POSTMAN_HEADERS = {
   'Connection': 'keep-alive',
 }
 
-// ================= TOKEN =================
+// ================= TOKEN FIXO (TESTE) =================
 
 async function getToken() {
-  if (tokenCache && Date.now() < tokenCache.expires) {
-    return tokenCache.token
-  }
-
-  const credentials = Buffer.from('cisspoder-oauth:poder7547').toString('base64')
-
-  const res = await fetch(`${BASE_URL}/cisspoder-auth/oauth/token`, {
-    method: 'POST',
-    headers: {
-      ...POSTMAN_HEADERS,
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': `Basic ${credentials}`,
-    },
-    body: new URLSearchParams({
-      grant_type: 'password',
-      username: 'EXECUTOR',
-      password: 'ex1234',
-      client_secret: 'poder7547',
-      client_id: 'cisspoder-oauth',
-    }),
-  })
-
-  const data = await res.json()
-
-  console.log('🔍 RESPOSTA TOKEN:', JSON.stringify(data))
-
-  if (!data?.access_token) throw new Error('Token inválido')
-
-  tokenCache = {
-    token: data.access_token,
-    expires: Date.now() + 55 * 60 * 1000,
-  }
-
-  return data.access_token
+  return '89a013b3-633b-4fb4-928e-4874af753610'
 }
 
 // ================= BUSCAR PRODUTOS =================
