@@ -1,318 +1,420 @@
-<script setup lang="ts"    >
+<script setup lang="ts">
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useCarrinho } from '~/data/composable/UseCarrinho'
+import HeaderMain from '~/components/Layout/HeaderMain.vue'
+import Footer from '~/components/Layout/Footer.vue'
+import {
+  Heart, Search, X, ChevronUp, ShoppingCart
+} from 'lucide-vue-next'
 
+// ===================== TYPES =====================
 
+type Produto = {
+  id: string
+  nome: string
+  preco2: string
+  tipo: string
+  img: string
+  quantidade: number
+}
 
+// ===================== STATE =====================
 
+const { adicionarCarrinho } = useCarrinho()
 
-import Button from "~/components/ui/button/Button.vue";
-import Perfumaria from "../data/produtosPerfumaria.json"
+const produtos       = ref<Produto[]>([])
+const carregando     = ref(false)
+const carregandoMais = ref(false)
+const erro           = ref(false)
 
-import { Flame, PhoneCallIcon, ShoppingBasket } from "lucide-vue-next";
-import HeaderMain from "~/components/Layout/HeaderMain.vue";
+const paginaAtual    = ref(1)
+const totalPaginas   = ref(1)
+const totalProdutos  = ref(0)
 
-import { useCarrinho } from "~/data/composable/UseCarrinho";
-import Limpeza from "~/components/Layout/limpeza.vue";
-import Footer from "~/components/Layout/Footer.vue";
+const busca          = ref('')
+const buscaDebounce  = ref('')
+const modalProduto   = ref<Produto | null>(null)
+const mostrarTopo    = ref(false)
 
-const { carrinho, adicionarCarrinho } = useCarrinho()
+let timeoutBusca: ReturnType<typeof setTimeout> | null = null
+let observer: IntersectionObserver | null = null
 
-const produtos = ref(Perfumaria)
+// ===================== DEBOUNCE DE BUSCA =====================
 
-const produtoSelecionado = ref<any>(null)
-
-const PaginacaoAtual = ref(1)
-const itensPorPagina = 10
-
-const totalPaginas = computed(() =>
-  Math.ceil(produtos.value.length / itensPorPagina))
-
-const produtosPaginados = computed(() => {
-  const inicio = (PaginacaoAtual.value - 1) * itensPorPagina
-  const fim = inicio + itensPorPagina
-  return produtos.value.slice(inicio, fim) // <-- produtos.value
+watch(busca, (valor) => {
+  if (timeoutBusca) clearTimeout(timeoutBusca)
+  timeoutBusca = setTimeout(async () => {
+    buscaDebounce.value = valor
+    paginaAtual.value = 1
+    produtos.value = []
+    await buscarProdutos(1, false)
+  }, 350)
 })
 
-function irParaPagina(Pagina){
-  PaginacaoAtual.value = Pagina
+// ===================== FETCH =====================
+
+async function buscarProdutos(pagina = 1, append = false) {
+  if (append) carregandoMais.value = true
+  else carregando.value = true
+  erro.value = false
+
+  try {
+    const res = await $fetch<any>('/api/higiene', {
+      query: { pagina, busca: buscaDebounce.value },
+    })
+
+    const novos: Produto[] = res.produtos || []
+
+    if (append) {
+      const existentes = new Set(produtos.value.map((p) => p.id))
+      produtos.value.push(...novos.filter((p) => !existentes.has(p.id)))
+    } else {
+      produtos.value = novos
+    }
+
+    paginaAtual.value   = res.pagina || 1
+    totalPaginas.value  = res.totalPaginas || 1
+    totalProdutos.value = res.total || 0
+  } catch (e) {
+    console.error(e)
+    if (pagina === 1) erro.value = true
+  } finally {
+    carregando.value     = false
+    carregandoMais.value = false
+  }
 }
 
-
-
-
-
-function aumentar(id: number) {
-  const item = produtos.value.find(p => p.id === id)
-  if (item) item.quantidade++
+async function carregarMais() {
+  if (carregandoMais.value || paginaAtual.value >= totalPaginas.value) return
+  await buscarProdutos(paginaAtual.value + 1, true)
 }
 
-// diminuir
-function diminuir(id: number) {
-  const item = produtos.value.find(p => p.id === id)
-  if (item && item.quantidade > 1) item.quantidade--
+// ===================== QUANTIDADE NO MODAL =====================
 
-
-  
-  
+function aumentar(id: string) {
+  if (modalProduto.value && modalProduto.value.id === id) {
+    modalProduto.value.quantidade = Math.min(modalProduto.value.quantidade + 1, 99)
+  }
 }
 
+function diminuir(id: string) {
+  if (modalProduto.value && modalProduto.value.id === id) {
+    if (modalProduto.value.quantidade > 1) modalProduto.value.quantidade--
+  }
+}
 
+// ===================== MODAL =====================
+
+function abrirModal(produto: Produto) {
+  modalProduto.value = { ...produto, quantidade: 1 }
+}
+
+function fecharModal() {
+  modalProduto.value = null
+}
+
+function adicionarDoModal() {
+  if (!modalProduto.value) return
+  adicionarCarrinho(modalProduto.value, modalProduto.value.quantidade)
+  fecharModal()
+}
+
+// ===================== SCROLL PARA TOPO =====================
+
+function scrollTopo() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function onScroll() {
+  mostrarTopo.value = window.scrollY > 600
+}
+
+// ===================== INFINITE SCROLL =====================
+
+function initObserver() {
+  const el = document.getElementById('sentinel')
+  if (!el) return
+  observer = new IntersectionObserver(
+    (entries) => { if (entries[0].isIntersecting) carregarMais() },
+    { rootMargin: '400px' }
+  )
+  observer.observe(el)
+}
+
+// ===================== INIT =====================
+
+await buscarProdutos(1)
+
+onMounted(() => {
+  initObserver()
+  window.addEventListener('scroll', onScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
+  window.removeEventListener('scroll', onScroll)
+  if (timeoutBusca) clearTimeout(timeoutBusca)
+})
+
+// ===================== COMPUTED =====================
+
+const progresso = computed(() =>
+  totalPaginas.value > 0
+    ? Math.round((paginaAtual.value / totalPaginas.value) * 100)
+    : 0
+)
+
+const imagemErro = (e: Event) => {
+  const img = e.target as HTMLImageElement
+  img.src = '/sem-imagem.png'
+}
 </script>
 
 <template>
-    <div class="bg-[#F4F4F4] flex flex-col justify-center ">
-        <HeaderMain/>
-        
-        
-        
-        <div class="bg-red-500 h-[100px]  items-center flex justify-center">
-            <h3 class="text-[27px] font-bold p-5">Perfumaria mais comprados do Alô Pará</h3>
-            
+  <div class="min-h-screen bg-[#F2F3F5] flex flex-col font-sans">
+    <HeaderMain />
+
+    <!-- ===== HERO ===== -->
+    <div class="relative overflow-hidden bg-gradient-to-br from-pink-500 via-rose-400 to-fuchsia-500 px-4 py-10 text-white">
+      <div class="pointer-events-none absolute inset-0 opacity-10"
+           style="background-image: repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%); background-size: 20px 20px;" />
+
+      <div class="relative mx-auto max-w-5xl text-center">
+        <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1 text-sm font-semibold backdrop-blur-sm">
+          <Heart :size="14" />
+          Alô Pará Supermercado
         </div>
 
+        <h1 class="mt-3 text-3xl font-extrabold tracking-tight md:text-5xl">
+          Higiene & Beleza
+        </h1>
+        <p class="mt-2 text-white/80 text-base md:text-lg">
+          {{ totalProdutos > 0 ? totalProdutos.toLocaleString('pt-BR') + ' produtos disponíveis' : 'Carregando catálogo...' }}
+        </p>
 
-
-        
-
-
-
-
-
-
-
-        
-        <div >
-       <div class=" p-4 flex flex gap-1 flex-wrap">
-                <Button  @click="navigateTo('/Alimentos')" variant="link" class="text-blue-500 text-[17px] ">Alimentos</Button>
-               
-        <Button  @click="navigateTo('/Limpeza')" variant="link" class="text-blue-500 text-[17px] ">Limpeza</Button>
-        <Button  @click="navigateTo('/Perfumaria')" variant="link" class="text-blue-500 text-[17px] ">Perfumaria</Button>
-        <Button  @click="navigateTo('/Vinhos')" variant="link" class="text-blue-500 text-[17px] ">Vinhos</Button>
-        <Button  @click="navigateTo('/Bebidas')" variant="link" class="text-blue-500 text-[17px] ">Bebidas</Button>
-
+        <!-- BUSCA -->
+        <div class="mx-auto mt-7 max-w-2xl">
+          <div class="relative">
+            <Search class="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" :size="20" />
+            <input
+              v-model="busca"
+              type="text"
+              placeholder="Buscar produtos, marcas, categorias..."
+              class="h-14 w-full rounded-2xl border-0 bg-white pl-14 pr-14 text-gray-800 shadow-xl outline-none ring-0 placeholder:text-gray-400 focus:ring-2 focus:ring-pink-300 transition text-base"
+            />
+            <button
+              v-if="busca"
+              @click="busca = ''"
+              class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:text-gray-700 transition"
+            >
+              <X :size="18" />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
+    <!-- ===== ERRO ===== -->
+    <div v-if="erro" class="flex flex-1 items-center justify-center py-32">
+      <div class="text-center">
+        <p class="text-5xl">😕</p>
+        <h2 class="mt-4 text-xl font-bold text-gray-700">Erro ao carregar produtos</h2>
+        <p class="mt-1 text-gray-500">Verifique sua conexão e tente novamente.</p>
+        <button
+          @click="buscarProdutos(1)"
+          class="mt-6 rounded-xl bg-pink-500 px-6 py-3 text-white font-bold hover:bg-pink-600 transition"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    </div>
 
+    <template v-else>
+      <!-- ===== LOADING INICIAL ===== -->
+      <div v-if="carregando" class="flex flex-1 flex-col items-center justify-center py-32 gap-4">
+        <div class="h-12 w-12 rounded-full border-4 border-pink-500 border-t-transparent animate-spin" />
+        <p class="text-gray-500 text-base">Carregando catálogo completo...</p>
+      </div>
 
-     <div class="flex justify-center gap-2 m-10 flex-wrap">
+      <!-- ===== GRID DE PRODUTOS ===== -->
+      <div v-else class="mx-auto w-full max-w-7xl px-3 py-6 md:px-6">
 
-  <!-- ANTERIOR -->
-  <button 
-    @click="PaginacaoAtual > 1 && PaginacaoAtual--"
-    class="px-3 py-1 bg-red-500 rounded"
-  >
-    Anterior
-  </button>
+        <div class="mb-4 flex items-center justify-between">
+          <p class="text-sm text-gray-500">
+            <span class="font-semibold text-gray-800">{{ produtos.length.toLocaleString('pt-BR') }}</span>
+            produtos carregados
+            <template v-if="busca"> para "<span class="text-pink-500">{{ busca }}</span>"</template>
+          </p>
+          <div v-if="totalPaginas > 1" class="hidden md:flex items-center gap-3 text-xs text-gray-400">
+            <span>Página {{ paginaAtual }}/{{ totalPaginas }}</span>
+            <div class="w-28 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                class="h-full bg-pink-500 rounded-full transition-all duration-500"
+                :style="{ width: progresso + '%' }"
+              />
+            </div>
+          </div>
+        </div>
 
-  <!-- NÚMEROS -->
-  <button
-    v-for="page in totalPaginas"
-    :key="page"
-    @click="irParaPagina(page)"
-    :class="[
-      'px-3 py-1 rounded',
-      page === PaginacaoAtual ? 'bg-red-500 text-white' : 'bg-red-400'
-    ]"
-  >
-    {{ page }}
-  </button>
+        <!-- sem resultado -->
+        <div
+          v-if="produtos.length === 0 && !carregando"
+          class="flex flex-col items-center py-24 text-gray-400"
+        >
+          <Search :size="48" class="mb-4 opacity-30" />
+          <p class="text-lg font-medium">Nenhum produto encontrado</p>
+          <p class="mt-1 text-sm">Tente outro termo de busca</p>
+        </div>
 
-  <!-- PRÓXIMO -->
-  <button 
-    @click="PaginacaoAtual < totalPaginas && PaginacaoAtual++"
-    class="px-3 py-1 bg-red-500 rounded"
-  >
-    Próximo
-  </button>
+        <!-- grid -->
+        <div
+          v-else
+          class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4"
+        >
+          <div
+            v-for="produto in produtos"
+            :key="produto.id"
+            @click="abrirModal(produto)"
+            class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+          >
+            <!-- badge -->
+            <div class="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-pink-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
+              <Heart :size="9" />
+              Top
+            </div>
 
-</div>
+            <!-- botão + rápido -->
+            <button
+              @click.stop="adicionarCarrinho(produto, 1)"
+              class="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-green-500 text-white text-base font-bold shadow hover:bg-green-600 active:scale-95 transition-all"
+            >
+              +
+            </button>
 
-        <div class="flex justify-center flex-col items-center" >
+            <!-- imagem -->
+            <div class="flex h-36 items-center justify-center bg-slate-50 p-3 group-hover:bg-pink-50 transition-colors duration-200">
+              <img
+                :src="produto.img || '/sem-imagem.png'"
+                :alt="produto.nome"
+                loading="lazy"
+                decoding="async"
+                @error="imagemErro"
+                class="h-28 w-28 object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
+              />
+            </div>
 
+            <!-- info -->
+            <div class="flex flex-1 flex-col gap-1 p-3 pt-2">
+              <p class="line-clamp-2 min-h-[2.5rem] text-[12px] font-medium leading-snug text-gray-700 md:text-[13px]">
+                {{ produto.nome }}
+              </p>
+              <div class="mt-auto pt-1">
+                <span class="text-xl font-extrabold text-green-600 md:text-2xl">
+                  R$ {{ produto.preco2 }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
+        <!-- loading mais -->
+        <div v-if="carregandoMais" class="mt-8 flex justify-center">
+          <div class="flex items-center gap-3 text-gray-500">
+            <div class="h-5 w-5 rounded-full border-2 border-pink-400 border-t-transparent animate-spin" />
+            <span class="text-sm">Carregando mais produtos...</span>
+          </div>
+        </div>
 
-  <div class="flex justify-center items-center flex-col ">
-    
-   
+        <div id="sentinel" class="h-10 mt-4" />
+      </div>
+    </template>
 
-
-    <div class="w-[100%]">
-
-
-
-
+    <!-- ===== MODAL ===== -->
+    <Transition name="modal">
       <div
-      class="relative items-center md:w-full flex justify-center md:1p-10 p-3 "
-      :opts="{ align: 'start' }"
-    >
-  
-      <div class=" flex md:gap-15 gap-1 flex-wrap  md:px-4">
-  
-  
-        <Dialog v-for="P in produtosPaginados" :key="P.id">
-  
-          <DialogTrigger as-child>
-  
-            <div
-  class="relative border border-slate-200 bg-white rounded-2xl shadow-md hover:shadow-xl 
-  transition-all duration-300 cursor-pointer md:w-[280px] w-[48%] overflow-hidden group"
->
-  <!-- Badge mais vendido -->
-  <div class="absolute top-3 left-3 z-10 bg-orange-500 text-white text-[10px] font-bold 
-    px-2 py-1 rounded-full flex items-center gap-1 shadow">
-    Mais vendido <Flame :size="11"/>
-  </div>
+        v-if="modalProduto"
+        class="fixed inset-0 z-50 flex items-end md:items-center justify-center"
+        @click.self="fecharModal"
+      >
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="fecharModal" />
 
-  <!-- Botão + rápido -->
-  <button 
-    @click.stop="adicionarCarrinho(P, 1)" 
-    class="absolute top-3 right-3 z-10 bg-green-500 hover:bg-green-600 text-white 
-    w-8 h-8 rounded-full text-xl font-bold shadow transition-colors flex items-center justify-center"
-  >+</button>
+        <div class="relative z-10 w-full max-w-md overflow-hidden rounded-t-3xl md:rounded-3xl bg-[#111] shadow-2xl">
+          <div class="flex items-center justify-center bg-white h-60 p-6 relative">
+            <button
+              @click="fecharModal"
+              class="absolute top-4 right-4 rounded-full bg-gray-100 p-2 text-gray-500 hover:bg-gray-200 transition"
+            >
+              <X :size="18" />
+            </button>
+            <img
+              :src="modalProduto.img || '/sem-imagem.png'"
+              :alt="modalProduto.nome"
+              @error="imagemErro"
+              class="h-48 object-contain drop-shadow-lg"
+            />
+          </div>
 
-  <!-- Imagem com fundo suave -->
-  <div class="flex items-center justify-center bg-slate-50 h-44 p-4 
-    group-hover:bg-red-100 transition-colors duration-300">
-    <img class="md:w-36 w-24 object-contain drop-shadow-md 
-      group-hover:scale-105 transition-transform duration-300" :src="P.img" alt="">
-  </div>
+          <div class="px-8 py-6">
+            <span class="text-xs text-gray-400 uppercase tracking-widest">{{ modalProduto.tipo }}</span>
+            <h2 class="mt-1 text-xl font-semibold text-white leading-snug">{{ modalProduto.nome }}</h2>
+            <p class="mt-2 text-4xl font-extrabold text-green-400">
+              R$ {{ modalProduto.preco2 }}
+            </p>
 
-  <!-- Infos -->
-  <div class="p-4 flex flex-col gap-2">
-    <h3 class="text-[13px] md:text-[15px] text-slate-800 font-semibold text-center leading-snug line-clamp-2 min-h-[2.5rem]">
-      {{ P.nome }}
-    </h3>
+            <div class="mt-6 flex items-center gap-3">
+              <div class="flex items-center gap-2 rounded-xl bg-[#1e1e1e] border border-[#2a2a2a] p-1">
+                <button
+                  @click="diminuir(modalProduto.id)"
+                  class="flex h-9 w-9 items-center justify-center rounded-lg text-white text-lg hover:bg-[#2a2a2a] transition"
+                >−</button>
+                <span class="min-w-[2rem] text-center font-bold text-white text-lg">
+                  {{ modalProduto.quantidade }}
+                </span>
+                <button
+                  @click="aumentar(modalProduto.id)"
+                  class="flex h-9 w-9 items-center justify-center rounded-lg text-white text-lg hover:bg-[#2a2a2a] transition"
+                >+</button>
+              </div>
 
-    <div class="flex flex-col items-center mt-1">
-      <span class="text-slate-400 text-xs line-through">R$ {{ P.preço1 }}</span>
-      <span class="text-green-600 text-2xl md:text-3xl font-extrabold leading-none">
-        R$ {{ P.preço2 }}
-      </span>
-    </div>
-  </div>
-</div>
-            
-  
-          </DialogTrigger>
-  
-  
- <DialogContent    class=" bg-[#111] text-slate-900 md:w-200 w-[100%] md:h-150 h-[100%] md:mt-0  ">
-
-  <div>
-    <div class="flex justify-between absolute left-3 top-10">
-      <Button class="bg-[#fc0101] rounded-[20px] text-[16px] text-white font-light" > IMPERDÍVEL </Button>
-
-      
-
-    </div>
-    <div class="bg-white flex justify-center items-center h-70" >
-      <img class="w-50" :src="P.img" alt="">
-
-    </div>
-
-    <div class="bg-[#111] px-10 py-5">
-      <div class="flex flex-col">
-        
-
-        <h2 class="text-[#f0f0f0] font-medium text-[25px]">
-          {{ P.nome }}
-        </h2>
-
-        <h3 class="text-[50px] text-white font-semibold"> R$ {{ P.preço2 }}</h3>
-
-        <div class=" ">
-          <Button class="text-[#888] bg-[#1e1e1e] rounded-[20px] p-2 border-[1px] border-[#2a2a2a] ">{{ P.tipo }}</Button>
-
+              <button
+                @click="adicionarDoModal"
+                class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-pink-600 px-6 py-3 text-white font-bold text-base hover:bg-pink-700 active:scale-95 transition-all shadow-lg shadow-pink-900/30"
+              >
+                <ShoppingCart :size="18" />
+                Adicionar ao carrinho
+              </button>
+            </div>
+          </div>
         </div>
-
-         <div class=" mt-5 border-t border-[#222] "></div>
-         <div class="flex justify-center gap-3 mt-6">
-
-          <div class=" flex gap-2 ">
-            <button class="text-[#888] bg-[#1e1e1e] rounded-[10px] p-2 w-10 border-[1px] border-[#2a2a2a] " @click="diminuir(P.id)">-</button>
-          <Button class="text-[#888] bg-[#1e1e1e] rounded-[10px] p-7 border-[1px] border-[#2a2a2a] ">{{ P.quantidade }}</Button>
-          <button class="text-[#888] bg-[#1e1e1e] rounded-[10px] p-2 w-10 border-[1px] border-[#2a2a2a] " @click="aumentar(P.id)">+</button>
-        </div>
-
-
-
-           
-           <Button @click="produtoSelecionado = P; adicionarCarrinho(P, P.quantidade)" class="bg-[#cc1e1e] text-white p-7  font-bold text-[16px] " > Adicionar ao carrinho <span> <ShoppingBasket/> </span> </Button> 
-
-         </div>
-
-         
-        
-
       </div>
+    </Transition>
 
+    <!-- ===== BOTÃO TOPO ===== -->
+    <Transition name="fade">
+      <button
+        v-if="mostrarTopo"
+        @click="scrollTopo"
+        class="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-pink-500 text-white shadow-xl hover:bg-pink-600 active:scale-90 transition-all"
+      >
+        <ChevronUp :size="22" />
+      </button>
+    </Transition>
 
-    </div>
+    <Footer />
   </div>
-
-           
-          
-          
-          </DialogContent>
-  
-        </Dialog>
-  
-      </div>
-
-  
-        
-    </div>
-    </div>
-</div>
-
-
-    
-    
-
-  </div>
-
-
- 
-     <div class="flex justify-center gap-2 m-10 flex-wrap">
-
-  <!-- ANTERIOR -->
-  <button 
-    @click="PaginacaoAtual > 1 && PaginacaoAtual--"
-    class="px-3 py-1 bg-red-500 rounded"
-  >
-    Anterior
-  </button>
-
-  <!-- NÚMEROS -->
-  <button
-    v-for="page in totalPaginas"
-    :key="page"
-    @click="irParaPagina(page)"
-    :class="[
-      'px-3 py-1 rounded',
-      page === PaginacaoAtual ? 'bg-red-500 text-white' : 'bg-red-400'
-    ]"
-  >
-    {{ page }}
-  </button>
-
-  <!-- PRÓXIMO -->
-  <button 
-    @click="PaginacaoAtual < totalPaginas && PaginacaoAtual++"
-    class="px-3 py-1 bg-red-500 rounded"
-  >
-    Próximo
-  </button>
-
-</div>
-
-<Footer/>
-
-
-
-</div>
-
- 
-<Footer/>
-
-    </div>
 </template>
+
+<style scoped>
+.modal-enter-active,
+.modal-leave-active { transition: opacity 0.2s ease; }
+.modal-enter-active .relative,
+.modal-leave-active .relative { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+.modal-enter-from,
+.modal-leave-to { opacity: 0; }
+.modal-enter-from .relative { transform: translateY(40px); }
+
+.fade-enter-active,
+.fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
+.fade-enter-from,
+.fade-leave-to { opacity: 0; transform: scale(0.8); }
+</style>

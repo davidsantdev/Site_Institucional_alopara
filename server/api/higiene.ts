@@ -1,0 +1,208 @@
+let tokenCache: {
+  token: string
+  expires: number
+} | null = null
+
+type Produto = {
+  id: string
+  nome: string
+  preco2: string
+  tipo: string
+  img: string
+  quantidade: number
+}
+
+type CacheProdutos = {
+  data: Produto[]
+  timestamp: number
+}
+
+let produtosCache: CacheProdutos | null = null
+
+const CACHE_DURATION = 1000 * 60 * 60 // 1h
+const POR_PAGINA = 40
+const MAX_PAGINAS_API = 20
+
+const DEPS_HIGIENE = [
+  'HIGIENE',
+  'CABELOS',
+  'PERFUMARIA',
+  'COSMETICOS',
+  'BELEZA',
+  'CUIDADOS PESSOAIS',
+  'FRALDAS',
+  'BEBE',
+]
+
+const BASE_URL = 'https://aloparacim.dataciss.com.br:443'
+
+const POSTMAN_HEADERS = {
+  'User-Agent': 'PostmanRuntime/7.54.0',
+  'Accept': '*/*',
+  'Accept-Encoding': 'gzip, deflate, br',
+  'Connection': 'keep-alive',
+}
+
+// ================= TOKEN =================
+
+async function getToken() {
+  if (tokenCache && Date.now() < tokenCache.expires) {
+    return tokenCache.token
+  }
+
+  const res = await fetch(
+    'https://aloparacim.dataciss.com.br/cisspoder-auth/oauth/token',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+        'User-Agent': 'PostmanRuntime/7.54.0',
+      },
+      body: new URLSearchParams({
+        username: '109',
+        password: '123456',
+        grant_type: 'password',
+        client_secret: 'poder7547',
+        client_id: 'cisspoder-oauth',
+      }),
+    }
+  )
+
+  const text = await res.text()
+
+  console.log('STATUS TOKEN:', res.status)
+  console.log('TOKEN RAW:', text)
+
+  const data = JSON.parse(text)
+
+  if (!data?.access_token) {
+    throw new Error(`Token inválido: ${text}`)
+  }
+
+  tokenCache = {
+    token: data.access_token,
+    expires: Date.now() + 55 * 60 * 1000,
+  }
+
+  return data.access_token
+}
+
+// ================= BUSCAR PRODUTOS =================
+
+async function buscarTodosProdutos(token: string) {
+  if (produtosCache && Date.now() - produtosCache.timestamp < CACHE_DURATION) {
+    console.log('⚡ CACHE:', produtosCache.data.length)
+    return produtosCache.data
+  }
+
+  console.log('🔄 BUSCANDO PAGINAS API...')
+
+  const headers = {
+    ...POSTMAN_HEADERS,
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  }
+
+  const requests = Array.from({ length: MAX_PAGINAS_API }, async (_, i) => {
+    const pagina = i + 1
+    try {
+      const res = await fetch(`${BASE_URL}/cisspoder-service/get_produtos_sitemercado`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ idLoja: '0001', page: pagina }),
+      })
+      const json = await res.json()
+      console.log(`📄 Página ${pagina}:`, Array.isArray(json) ? json.length : JSON.stringify(json).slice(0, 100))
+      return Array.isArray(json) ? json : json?.data ?? []
+    } catch (err) {
+      console.error(`Erro página ${pagina}:`, err)
+      return []
+    }
+  })
+
+  const responses = await Promise.all(requests)
+  const todos = responses.flat()
+
+  console.log('📦 TOTAL BRUTO:', todos.length)
+
+  const produtos: Produto[] = []
+  const ids = new Set<string>()
+
+  for (const p of todos) {
+    if (p.ativo !== 'S') continue
+
+    const preco = Number(p.vlrProduto)
+    if (!preco || preco <= 0) continue
+
+    const departamento = String(p.departamento || '').toUpperCase()
+    const ehHigiene = DEPS_HIGIENE.some((dep) => departamento.includes(dep))
+    if (!ehHigiene) continue
+
+    const id = String(p.plu || p.codigoBarra || p.id || crypto.randomUUID())
+    if (ids.has(id)) continue
+    ids.add(id)
+
+    produtos.push({
+      id,
+      nome: p.nome?.trim() || 'Produto sem nome',
+      preco2: preco.toFixed(2),
+      tipo:
+        p.subcategoria?.replace(/^\d+\s/, '')?.trim() ||
+        p.categoria?.trim() ||
+        p.departamento?.trim() ||
+        'Higiene & Beleza',
+      img: p.imageUrl || p.imagem || '',
+      quantidade: 1,
+    })
+  }
+
+  console.log('✅ TOTAL FINAL:', produtos.length)
+
+  produtosCache = { data: produtos, timestamp: Date.now() }
+
+  return produtos
+}
+
+// ================= HANDLER =================
+
+export default defineEventHandler(async (event) => {
+  try {
+    const query = getQuery(event)
+
+    const pagina = Number(query.pagina || 1)
+    const busca = String(query.busca || '').toLowerCase()
+
+    const token = await getToken()
+    let produtos = await buscarTodosProdutos(token)
+
+    if (busca) {
+      produtos = produtos.filter((p) =>
+        p.nome.toLowerCase().includes(busca)
+      )
+    }
+
+    const inicio = (pagina - 1) * POR_PAGINA
+    const fim = inicio + POR_PAGINA
+    const paginados = produtos.slice(inicio, fim)
+
+    setHeader(event, 'Cache-Control', 'public, max-age=300')
+
+    return {
+      produtos: paginados,
+      pagina,
+      total: produtos.length,
+      totalPaginas: Math.ceil(produtos.length / POR_PAGINA),
+      temMais: fim < produtos.length,
+    }
+  } catch (err) {
+    console.error('ERRO API:', err)
+    return {
+      produtos: [],
+      pagina: 1,
+      total: 0,
+      totalPaginas: 0,
+      temMais: false,
+    }
+  }
+})

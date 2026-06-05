@@ -8,16 +8,19 @@ export default defineNuxtConfig({
   css: ['~/assets/css/tailwind.css'],
 
   vite: {
+    server: {
+      allowedHosts: true
+    },
+
     plugins: [
       tailwindcss(),
-      
     ],
   },
 
   components: [
     {
       path: '~/components',
-      extensions: ['.vue'],
+      extensions: ['.vue'], 
     },
   ],
 
@@ -38,7 +41,7 @@ export default defineNuxtConfig({
   ],
 
   sitemap: {
-    siteUrl: 'https://alopara.com' // 🔁 troca depois
+    siteUrl: 'https://alopara.com'
   },
 
   robots: {
@@ -91,37 +94,95 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
 
-
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
 
-  
-        { name: 'description', content: 'Confira as melhores ofertas do Supermercado Alô Pará - PA. Promoções atualizadas todos os dias!' },
-        { name: 'keywords', content: 'supermercado, ofertas, promoções, Novo Repartimento, Alô Pará, preços baixos, comprar online' },
-        { name: 'author', content: 'Supermercado Alô Pará' },
-        { name: 'robots', content: 'index, follow' },
+        {
+          name: 'description',
+          content: 'Confira as melhores ofertas do Supermercado Alô Pará - PA. Promoções atualizadas todos os dias!'
+        },
 
+        {
+          name: 'keywords',
+          content: 'supermercado, ofertas, promoções, Novo Repartimento, Alô Pará, preços baixos, comprar online'
+        },
 
-        { property: 'og:title', content: 'Ofertas do Supermercado Alô Pará' },
-        { property: 'og:description', content: 'Veja as promoções atualizadas e economize de verdade!' },
-        { property: 'og:type', content: 'website' },
-        { property: 'og:locale', content: 'pt_BR' },
-        { property: 'og:url', content: 'https://alopara.com' },
-        { property: 'og:image', content: 'https://alopara.com/capa.jpg' },
+        {
+          name: 'author',
+          content: 'Supermercado Alô Pará'
+        },
 
-   
-        { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: 'Ofertas do Alô Pará' },
-        { name: 'twitter:description', content: 'Promoções imperdíveis toda semana!' },
-        { name: 'twitter:image', content: 'https://alopara.com/capa.jpg' },
+        {
+          name: 'robots',
+          content: 'index, follow'
+        },
 
+        {
+          property: 'og:title',
+          content: 'Ofertas do Supermercado Alô Pará'
+        },
 
-        { name: 'google', content: 'notranslate' }
+        {
+          property: 'og:description',
+          content: 'Veja as promoções atualizadas e economize de verdade!'
+        },
+
+        {
+          property: 'og:type',
+          content: 'website'
+        },
+
+        {
+          property: 'og:locale',
+          content: 'pt_BR'
+        },
+
+        {
+          property: 'og:url',
+          content: 'https://alopara.com'
+        },
+
+        {
+          property: 'og:image',
+          content: 'https://alopara.com/capa.jpg'
+        },
+
+        {
+          name: 'twitter:card',
+          content: 'summary_large_image'
+        },
+
+        {
+          name: 'twitter:title',
+          content: 'Ofertas do Alô Pará'
+        },
+
+        {
+          name: 'twitter:description',
+          content: 'Promoções imperdíveis toda semana!'
+        },
+
+        {
+          name: 'twitter:image',
+          content: 'https://alopara.com/capa.jpg'
+        },
+
+        {
+          name: 'google',
+          content: 'notranslate'
+        }
       ],
 
       link: [
-        { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+        {
+          rel: 'icon',
+          type: 'image/png',
+          href: '/favicon.png'
+        },
 
-        { rel: 'canonical', href: 'https://alopara.com' }
+        {
+          rel: 'canonical',
+          href: 'https://alopara.com'
+        }
       ],
 
       htmlAttrs: {
