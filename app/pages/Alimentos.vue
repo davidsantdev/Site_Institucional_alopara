@@ -24,7 +24,7 @@ type Produto = {
 const { adicionarCarrinho } = useCarrinho()
 
 const produtos       = ref<Produto[]>([])
-const carregando     = ref(false)
+const carregando     = ref(true)   // ← já começa true: skeleton aparece instantaneamente
 const erro           = ref(false)
 
 const paginaAtual    = ref(1)
@@ -107,6 +107,9 @@ const paginasVisiveis = computed(() => {
 })
 
 // ===================== POLLING =====================
+// Busca atualizações a cada 1.5s enquanto o cache do servidor ainda está construindo.
+// Quando o total aumenta, atualiza o contador visível sem recarregar o grid atual.
+// Quando o cache fica completo, para o polling automaticamente.
 
 function iniciarPolling() {
   if (pollingTimer) return
@@ -115,15 +118,24 @@ function iniciarPolling() {
       const res = await $fetch<any>('/api/alimentos', {
         query: { pagina: paginaAtual.value, busca: buscaDebounce.value },
       })
+
       const totalNovo = res.total || 0
+
+      // Atualiza o contador e repagina sem piscar o grid
       if (totalNovo > totalProdutos.value) {
         totalProdutos.value = totalNovo
         totalPaginas.value  = res.totalPaginas || 1
+
+        // Se estiver na página 1 e chegaram novos produtos, atualiza o grid silenciosamente
+        if (paginaAtual.value === 1 && res.produtos?.length > produtos.value.length) {
+          produtos.value = res.produtos
+        }
       }
+
       cacheCompleto.value = res.cacheCompleto ?? true
       if (cacheCompleto.value) pararPolling()
     } catch { /* silencioso */ }
-  }, 3000)
+  }, 1500)
 }
 
 function pararPolling() {
@@ -138,10 +150,12 @@ function fecharModal() { modalProduto.value = null }
 function aumentar(id: string) {
   const p = produtos.value.find((p) => p.id === id)
   if (p) p.quantidade = Math.min(p.quantidade + 1, 99)
+  if (modalProduto.value?.id === id) modalProduto.value.quantidade = Math.min(modalProduto.value.quantidade + 1, 99)
 }
 function diminuir(id: string) {
   const p = produtos.value.find((p) => p.id === id)
   if (p && p.quantidade > 1) p.quantidade--
+  if (modalProduto.value?.id === id && modalProduto.value.quantidade > 1) modalProduto.value.quantidade--
 }
 function adicionarDoModal() {
   if (!modalProduto.value) return
@@ -165,12 +179,14 @@ function imagemErro(e: Event) {
 }
 
 // ===================== INIT =====================
-
-await buscarProdutos(1)
+// ⚠️ SEM await aqui — a página renderiza imediatamente com skeleton,
+// os produtos aparecem assim que a API responder (~1-2s)
 
 onMounted(() => {
   window.addEventListener('scroll', onScroll, { passive: true })
+  buscarProdutos(1)
 })
+
 onUnmounted(() => {
   window.removeEventListener('scroll', onScroll)
   if (timeoutBusca) clearTimeout(timeoutBusca)
@@ -205,7 +221,11 @@ onUnmounted(() => {
               carregando mais...
             </span>
           </template>
-          <template v-else>Carregando catálogo...</template>
+          <template v-else-if="carregando">
+            <RefreshCw :size="14" class="animate-spin opacity-70" />
+            Carregando catálogo...
+          </template>
+          <template v-else>Catálogo disponível</template>
         </p>
 
         <!-- BUSCA -->
@@ -249,18 +269,25 @@ onUnmounted(() => {
 
       <!-- ===== SKELETON LOADING ===== -->
       <div v-if="carregando" class="mx-auto w-full max-w-7xl px-3 py-6 md:px-6">
-        <div class="mb-4 h-4 w-48 rounded bg-gray-200 animate-pulse" />
+        <!-- Barra de status skeleton -->
+        <div class="mb-4 flex items-center justify-between">
+          <div class="h-4 w-48 rounded bg-gray-200 animate-pulse" />
+          <div class="h-4 w-24 rounded bg-gray-200 animate-pulse" />
+        </div>
+        <!-- Grid skeleton com animação em onda (stagger via style) -->
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4">
           <div
             v-for="n in 40"
             :key="n"
             class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100"
+            :style="{ animationDelay: `${(n - 1) * 30}ms` }"
           >
             <div class="h-36 bg-gray-100 animate-pulse" />
             <div class="p-3 flex flex-col gap-2">
               <div class="h-3 rounded bg-gray-200 animate-pulse w-full" />
               <div class="h-3 rounded bg-gray-200 animate-pulse w-3/4" />
               <div class="h-5 rounded bg-gray-200 animate-pulse w-1/2 mt-1" />
+              <div class="h-8 rounded-xl bg-gray-100 animate-pulse mt-2" />
             </div>
           </div>
         </div>
@@ -304,7 +331,7 @@ onUnmounted(() => {
             v-for="produto in produtos"
             :key="produto.id"
             @click="abrirModal(produto)"
-            class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+            class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 animate-fadeIn"
           >
             <div class="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
               <Flame :size="9" />
@@ -469,4 +496,12 @@ onUnmounted(() => {
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; transform: scale(0.8); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease both;
+}
 </style>

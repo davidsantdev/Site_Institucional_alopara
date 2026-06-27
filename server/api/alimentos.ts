@@ -1,7 +1,8 @@
-let tokenCache: {
-  token: string
-  expires: number
-} | null = null
+import { readFile, writeFile } from 'node:fs/promises'
+import { existsSync }          from 'node:fs'
+import { join }                from 'node:path'
+
+// ── Tipos ─────────────────────────────────────────────────────────────────────
 
 type Produto = {
   id: string
@@ -18,14 +19,24 @@ type CacheProdutos = {
   completo: boolean
 }
 
-let produtosCache: CacheProdutos | null = null
-let backgroundRodando = false
+// ── Configuração ──────────────────────────────────────────────────────────────
 
-const CACHE_DURATION  = 1000 * 60 * 60 // 1h
-const POR_PAGINA      = 40
-const MAX_PAGINAS_API = 20
-const LOTE_INICIAL    = 1  // ← só 1 página para responder ~rápido (~0.3s)
-const LOTE_BACKGROUND = 6  // ← 6 páginas por rodada em background
+const CACHE_DURATION     = 1000 * 60 * 60   // 1h validade do cache em memória
+const RENOVAR_EM         = 1000 * 60 * 55   // renova proativamente 5min antes
+const POR_PAGINA         = 40
+
+const CONCORRENCIA_MIN   = 2
+const CONCORRENCIA_MAX   = 3
+const TIMEOUT_MS         = 20_000
+const MAX_RETRIES        = 3
+const DELAY_ENTRE_LOTES  = 150
+const TAMANHO_LOTE_BG    = 4
+const MAX_PAGINAS_VAZIAS = 5
+const MAX_PAGINAS_API    = 500
+const PAGINAS_INICIAIS   = 5
+
+// Arquivo de cache em disco — persiste entre reinicializações do servidor
+const CACHE_FILE = join(process.cwd(), '.cache', 'produtos.json')
 
 const DEPS_ALIMENTOS = [
   'MERCEARIA', 'BEBIDAS', 'HORTIFRUTI', 'PADARIA',
@@ -42,14 +53,45 @@ const POSTMAN_HEADERS = {
   'Connection':      'keep-alive',
 }
 
+// ── Estado em memória ─────────────────────────────────────────────────────────
+
+let tokenCache:       { token: string; expires: number } | null = null
+let produtosCache:    CacheProdutos | null = null
+let backgroundRodando = false
+let warmupFeito       = false
+let timeoutsRecentes  = 0
+
+// ================= DISCO =================
+
+async function lerCacheDisco(): Promise<CacheProdutos | null> {
+  try {
+    if (!existsSync(CACHE_FILE)) return null
+    const raw  = await readFile(CACHE_FILE, 'utf-8')
+    const data = JSON.parse(raw) as CacheProdutos
+    console.log(`💾 Cache do disco: ${data.data.length} produtos (${new Date(data.timestamp).toLocaleTimeString('pt-BR')})`)
+    return data
+  } catch {
+    return null
+  }
+}
+
+async function salvarCacheDisco(cache: CacheProdutos): Promise<void> {
+  try {
+    const { mkdir } = await import('node:fs/promises')
+    await mkdir(join(process.cwd(), '.cache'), { recursive: true })
+    await writeFile(CACHE_FILE, JSON.stringify(cache), 'utf-8')
+    console.log(`💾 Cache salvo: ${cache.data.length} produtos`)
+  } catch (err) {
+    console.error('Erro ao salvar cache em disco:', err)
+  }
+}
+
 // ================= TOKEN =================
 
-async function getToken() {
-  if (tokenCache && Date.now() < tokenCache.expires) {
-    return tokenCache.token
-  }
+async function getToken(): Promise<string> {
+  if (tokenCache && Date.now() < tokenCache.expires) return tokenCache.token
 
-  const res = await fetch(
+  const res  = await fetch(
     'https://aloparacim.dataciss.com.br/cisspoder-auth/oauth/token',
     {
       method: 'POST',
@@ -67,26 +109,48 @@ async function getToken() {
       }),
     }
   )
-
   const data = JSON.parse(await res.text())
   if (!data?.access_token) throw new Error(`Token inválido: ${JSON.stringify(data)}`)
 
-  tokenCache = {
-    token:   data.access_token,
-    expires: Date.now() + 55 * 60 * 1000,
-  }
-
+  tokenCache = { token: data.access_token, expires: Date.now() + 55 * 60 * 1000 }
   return data.access_token
 }
 
+// ================= SEMÁFORO ADAPTATIVO =================
+
+function criarSemaforo(max: number) {
+  let ativo  = 0
+  let limite = max
+  const fila: Array<() => void> = []
+
+  function adquirir(): Promise<void> {
+    return new Promise((resolve) => {
+      if (ativo < limite) { ativo++; resolve() }
+      else fila.push(() => { ativo++; resolve() })
+    })
+  }
+
+  function liberar() {
+    ativo--
+    fila.shift()?.()
+  }
+
+  function reduzir() {
+    if (limite > CONCORRENCIA_MIN) {
+      limite = CONCORRENCIA_MIN
+      console.warn(`⚠️  Semáforo reduzido para ${limite} (muitos timeouts)`)
+    }
+  }
+
+  return { adquirir, liberar, reduzir }
+}
+
+const semaforo = criarSemaforo(CONCORRENCIA_MAX)
+
 // ================= HELPERS =================
 
-/**
- * Monta a URL da imagem do CDN CISS a partir do código de barras.
- * Padrão: https://cdn.cisslive.com.br/images/{codigoBarra}_1.jpg
- * Se não houver código de barras válido, retorna string vazia
- * e o frontend usará o fallback /sem-imagem.png via @error.
- */
+function sleep(ms: number) { return new Promise((r) => setTimeout(r, ms)) }
+
 function montarImagem(codigoBarra: string | number | null | undefined): string {
   if (!codigoBarra) return ''
   const cod = String(codigoBarra).trim()
@@ -94,51 +158,56 @@ function montarImagem(codigoBarra: string | number | null | undefined): string {
   return `https://cdn.cisslive.com.br/images/${cod}_1.jpg`
 }
 
-async function buscarPagina(pagina: number, headers: Record<string, string>) {
-  try {
-    const res = await fetch(`${BASE_URL}/cisspoder-service/get_produtos_sitemercado`, {
-      method:  'POST',
-      headers,
-      body:    JSON.stringify({ idLoja: '0001', page: pagina }),
-      signal:  AbortSignal.timeout(8000),
-    })
-    const json = await res.json()
-    return Array.isArray(json) ? json : (json?.data ?? [])
-  } catch (err) {
-    console.error(`Erro página ${pagina}:`, err)
-    return []
+async function buscarPagina(pagina: number, headers: Record<string, string>): Promise<any[]> {
+  for (let tentativa = 1; tentativa <= MAX_RETRIES; tentativa++) {
+    await semaforo.adquirir()
+    try {
+      const res  = await fetch(`${BASE_URL}/cisspoder-service/get_produtos_sitemercado`, {
+        method:  'POST',
+        headers,
+        body:    JSON.stringify({ idLoja: '0001', page: pagina }),
+        signal:  AbortSignal.timeout(TIMEOUT_MS),
+      })
+      const json  = await res.json()
+      const dados = Array.isArray(json) ? json : (json?.data ?? [])
+      timeoutsRecentes = 0
+      return dados
+    } catch (err: any) {
+      const ehTimeout = err?.name === 'TimeoutError' || err?.message?.includes('timeout')
+      if (ehTimeout && ++timeoutsRecentes >= 2) semaforo.reduzir()
+
+      if (tentativa < MAX_RETRIES) {
+        await sleep(tentativa * 1500)
+      } else {
+        console.error(`❌ Pág ${pagina} desistida:`, ehTimeout ? 'timeout' : err?.message)
+        return []
+      }
+    } finally {
+      semaforo.liberar()
+    }
   }
+  return []
 }
 
 function normalizarProdutos(brutos: any[], ids: Set<string>): Produto[] {
   const result: Produto[] = []
-
   for (const p of brutos) {
     if (p.ativo !== 'S') continue
-
     const preco = Number(p.vlrProduto)
     if (!preco || preco <= 0) continue
-
     const dep = String(p.departamento || '').toUpperCase()
     if (!DEPS_ALIMENTOS.some((d) => dep.includes(d))) continue
-
     const id = String(p.plu || p.codigoBarra || p.id || crypto.randomUUID())
     if (ids.has(id)) continue
     ids.add(id)
-
-    // Prioridade de imagem:
-    // 1. imageUrl / imagem já fornecidos pela API
-    // 2. CDN CISS montado pelo código de barras (nrcodbarprod ou codigoBarra)
-    // 3. String vazia → frontend mostra /sem-imagem.png via @error
     const img =
       p.imageUrl?.trim() ||
       p.imagem?.trim() ||
       montarImagem(p.nrcodbarprod || p.codigoBarra)
-
     result.push({
       id,
-      nome:     p.nome?.trim() || 'Produto sem nome',
-      preco2:   preco.toFixed(2),
+      nome:   p.nome?.trim() || 'Produto sem nome',
+      preco2: preco.toFixed(2),
       tipo:
         p.subcategoria?.replace(/^\d+\s/, '')?.trim() ||
         p.categoria?.trim() ||
@@ -148,24 +217,19 @@ function normalizarProdutos(brutos: any[], ids: Set<string>): Produto[] {
       quantidade: 1,
     })
   }
-
   return result
 }
 
-// ================= CACHE + BACKGROUND =================
+// ================= BUSCA COMPLETA =================
 
 async function buscarTodosProdutos(token: string): Promise<Produto[]> {
-  // Cache completo e válido
+  // ── 1. Cache em memória válido → 0ms ──────────────────────────────────────
   if (produtosCache?.completo && Date.now() - produtosCache.timestamp < CACHE_DURATION) {
-    console.log('⚡ Cache completo:', produtosCache.data.length)
     return produtosCache.data
   }
 
-  // Cache parcial ainda construindo — retorna o que há
-  if (produtosCache && backgroundRodando) {
-    console.log('⚡ Cache parcial:', produtosCache.data.length)
-    return produtosCache.data
-  }
+  // ── 2. Background já rodando → retorna o que tem (memória ou disco) ───────
+  if (backgroundRodando && produtosCache) return produtosCache.data
 
   const headers = {
     ...POSTMAN_HEADERS,
@@ -173,43 +237,153 @@ async function buscarTodosProdutos(token: string): Promise<Produto[]> {
     'Authorization': `Bearer ${token}`,
   }
 
-  // ── Lote inicial: 1 página só para responder rápido ──
-  console.log('🚀 Lote inicial (1 página)...')
-  const [respostaInicial] = await Promise.all([buscarPagina(1, headers)])
-  const ids = new Set<string>()
-  const produtosIniciais = normalizarProdutos(respostaInicial, ids)
+  // ── 3. Cache de disco disponível → retorna imediatamente (~50ms) ──────────
+  //    e dispara atualização em background se o disco estiver velho
+  const disco = await lerCacheDisco()
+  if (disco && disco.data.length > 0) {
+    produtosCache = disco
 
-  console.log('✅ Lote inicial:', produtosIniciais.length)
+    const precisaAtualizar = Date.now() - disco.timestamp > RENOVAR_EM
+    if (precisaAtualizar && !backgroundRodando) {
+      console.log('🔄 Cache do disco antigo — atualizando em background...')
+      rodarBackground(headers)
+    }
+
+    return disco.data
+  }
+
+  // ── 4. Sem cache nenhum: lote inicial paralelo (primeira vez / disco limpo) ─
+  console.log(`🚀 Lote inicial (${PAGINAS_INICIAIS} páginas paralelas)...`)
+  const ids = new Set<string>()
+
+  const dadosIniciais    = await Promise.all(
+    Array.from({ length: PAGINAS_INICIAIS }, (_, i) => buscarPagina(i + 1, headers))
+  )
+  const produtosIniciais = normalizarProdutos(dadosIniciais.flat(), ids)
+  console.log('✅ Lote inicial:', produtosIniciais.length, 'produtos')
 
   produtosCache = { data: produtosIniciais, timestamp: 0, completo: false }
+  rodarBackground(headers, PAGINAS_INICIAIS + 1, ids)
 
-  // ── Background: resto das páginas em lotes de 6 ──
+  return produtosIniciais
+}
+
+// ── Background loop ───────────────────────────────────────────────────────────
+
+function rodarBackground(
+  headers: Record<string, string>,
+  paginaInicial = 1,
+  idsExistentes?: Set<string>,
+) {
+  if (backgroundRodando) return
   backgroundRodando = true
+
   ;(async () => {
     try {
-      const todos = [...produtosIniciais]
+      const ids   = idsExistentes ?? new Set((produtosCache?.data ?? []).map((p) => p.id))
+      const todos = [...(produtosCache?.data ?? [])]
 
-      for (let i = 2; i <= MAX_PAGINAS_API; i += LOTE_BACKGROUND) {
-        const qtd  = Math.min(LOTE_BACKGROUND, MAX_PAGINAS_API - i + 1)
-        const lote = Array.from({ length: qtd }, (_, j) => buscarPagina(i + j, headers))
+      let pagina        = paginaInicial
+      let paginasVazias = 0
 
+      while (pagina <= MAX_PAGINAS_API) {
+        const lote       = Array.from({ length: TAMANHO_LOTE_BG }, (_, i) => buscarPagina(pagina + i, headers))
         const resultados = await Promise.all(lote)
-        const novos = normalizarProdutos(resultados.flat(), ids)
-        todos.push(...novos)
 
-        produtosCache = { data: [...todos], timestamp: 0, completo: false }
-        console.log(`📦 Background págs ${i}–${i + qtd - 1}: +${novos.length} → ${todos.length}`)
+        let novosNoLote = 0
+        for (const dados of resultados) {
+          if (dados.length === 0) {
+            if (++paginasVazias >= MAX_PAGINAS_VAZIAS) break
+          } else {
+            paginasVazias = 0
+            const novos   = normalizarProdutos(dados, ids)
+            todos.push(...novos)
+            novosNoLote  += novos.length
+          }
+        }
+
+        if (novosNoLote > 0) {
+          produtosCache = { data: [...todos], timestamp: 0, completo: false }
+          console.log(`📦 Págs ${pagina}–${pagina + TAMANHO_LOTE_BG - 1}: +${novosNoLote} → ${todos.length} total`)
+        }
+
+        if (paginasVazias >= MAX_PAGINAS_VAZIAS) {
+          console.log(`🏁 API esgotada`)
+          break
+        }
+
+        pagina += TAMANHO_LOTE_BG
+        if (DELAY_ENTRE_LOTES > 0) await sleep(DELAY_ENTRE_LOTES)
       }
 
-      produtosCache = { data: todos, timestamp: Date.now(), completo: true }
-      console.log('🏁 Cache completo:', todos.length)
+      const cacheCompleto: CacheProdutos = { data: todos, timestamp: Date.now(), completo: true }
+      produtosCache = cacheCompleto
+      console.log('🏁 Cache completo:', todos.length, 'produtos')
+
+      // Persiste em disco para próximo boot
+      await salvarCacheDisco(cacheCompleto)
+
+      agendarRenovacao(headers)
     } finally {
       backgroundRodando = false
     }
   })()
-
-  return produtosIniciais
 }
+
+// ================= WARMUP + RENOVAÇÃO PROATIVA =================
+
+function agendarRenovacao(headers: Record<string, string>) {
+  setTimeout(async () => {
+    console.log('🔄 Renovando cache proativamente...')
+    try {
+      if (produtosCache) produtosCache = { ...produtosCache, completo: false, timestamp: 0 }
+      rodarBackground(headers, 1)
+    } catch (err) {
+      console.error('Erro na renovação proativa:', err)
+      setTimeout(() => agendarRenovacao(headers), 5 * 60 * 1000)
+    }
+  }, RENOVAR_EM)
+}
+
+async function warmupCache() {
+  if (warmupFeito || backgroundRodando) return
+  warmupFeito = true
+  console.log('🔥 Boot...')
+
+  // Carrega disco imediatamente em memória antes de qualquer request chegar
+  const disco = await lerCacheDisco()
+  if (disco && disco.data.length > 0) {
+    produtosCache = disco
+    console.log(`⚡ Memória pré-aquecida com ${disco.data.length} produtos do disco`)
+
+    if (Date.now() - disco.timestamp < RENOVAR_EM) {
+      // Cache ainda válido: apenas agenda renovação quando estiver perto de expirar
+      const tempoRestante = RENOVAR_EM - (Date.now() - disco.timestamp)
+      console.log(`⏱ Próxima renovação em ${Math.round(tempoRestante / 60000)}min`)
+      try {
+        const token = await getToken()
+        const headers = {
+          ...POSTMAN_HEADERS,
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${token}`,
+        }
+        setTimeout(() => agendarRenovacao(headers), tempoRestante)
+      } catch { /* token será obtido no próximo request */ }
+      return
+    }
+  }
+
+  // Sem disco ou disco velho: vai à API
+  try {
+    const token = await getToken()
+    await buscarTodosProdutos(token)
+  } catch (err) {
+    console.error('Erro no warmup:', err)
+    warmupFeito = false
+  }
+}
+
+warmupCache()
 
 // ================= HANDLER =================
 

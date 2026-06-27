@@ -4,7 +4,8 @@ import { useCarrinho } from '~/data/composable/UseCarrinho'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
 import Footer from '~/components/Layout/Footer.vue'
 import {
-  GlassWater, Search, X, ChevronUp, ShoppingCart
+  GlassWater, Search, X, ChevronUp, ShoppingCart,
+  RefreshCw, ChevronLeft, ChevronRight,
 } from 'lucide-vue-next'
 
 // ===================== TYPES =====================
@@ -23,13 +24,13 @@ type Produto = {
 const { adicionarCarrinho } = useCarrinho()
 
 const produtos       = ref<Produto[]>([])
-const carregando     = ref(false)
-const carregandoMais = ref(false)
+const carregando     = ref(true)   // começa true: skeleton aparece instantaneamente
 const erro           = ref(false)
 
 const paginaAtual    = ref(1)
 const totalPaginas   = ref(1)
 const totalProdutos  = ref(0)
+const cacheCompleto  = ref(false)
 
 const busca          = ref('')
 const buscaDebounce  = ref('')
@@ -37,25 +38,14 @@ const modalProduto   = ref<Produto | null>(null)
 const mostrarTopo    = ref(false)
 
 let timeoutBusca: ReturnType<typeof setTimeout> | null = null
-let observer: IntersectionObserver | null = null
+let pollingTimer: ReturnType<typeof setInterval> | null = null
 
-// ===================== DEBOUNCE DE BUSCA =====================
-
-watch(busca, (valor) => {
-  if (timeoutBusca) clearTimeout(timeoutBusca)
-  timeoutBusca = setTimeout(async () => {
-    buscaDebounce.value = valor
-    paginaAtual.value = 1
-    produtos.value = []
-    await buscarProdutos(1, false)
-  }, 350)
-})
+const FALLBACK = '/sem-imagem.png'
 
 // ===================== FETCH =====================
 
-async function buscarProdutos(pagina = 1, append = false) {
-  if (append) carregandoMais.value = true
-  else carregando.value = true
+async function buscarProdutos(pagina = 1) {
+  carregando.value = true
   erro.value = false
 
   try {
@@ -63,111 +53,145 @@ async function buscarProdutos(pagina = 1, append = false) {
       query: { pagina, busca: buscaDebounce.value },
     })
 
-    const novos: Produto[] = res.produtos || []
-
-    if (append) {
-      const existentes = new Set(produtos.value.map((p) => p.id))
-      produtos.value.push(...novos.filter((p) => !existentes.has(p.id)))
-    } else {
-      produtos.value = novos
-    }
-
-    paginaAtual.value   = res.pagina || 1
+    produtos.value      = res.produtos || []
+    paginaAtual.value   = res.pagina   || 1
     totalPaginas.value  = res.totalPaginas || 1
-    totalProdutos.value = res.total || 0
+    totalProdutos.value = res.total    || 0
+    cacheCompleto.value = res.cacheCompleto ?? true
+
+    if (!cacheCompleto.value) iniciarPolling()
+    else pararPolling()
+
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   } catch (e) {
     console.error(e)
-    if (pagina === 1) erro.value = true
+    erro.value = true
   } finally {
-    carregando.value     = false
-    carregandoMais.value = false
+    carregando.value = false
   }
 }
 
-async function carregarMais() {
-  if (carregandoMais.value || paginaAtual.value >= totalPaginas.value) return
-  await buscarProdutos(paginaAtual.value + 1, true)
+// ===================== DEBOUNCE BUSCA =====================
+
+watch(busca, (valor) => {
+  if (timeoutBusca) clearTimeout(timeoutBusca)
+  timeoutBusca = setTimeout(async () => {
+    buscaDebounce.value = valor
+    paginaAtual.value = 1
+    await buscarProdutos(1)
+  }, 350)
+})
+
+// ===================== PAGINAÇÃO =====================
+
+async function irParaPagina(p: number) {
+  if (p < 1 || p > totalPaginas.value || p === paginaAtual.value) return
+  await buscarProdutos(p)
 }
 
-// ===================== QUANTIDADE NO MODAL =====================
+const paginasVisiveis = computed(() => {
+  const total = totalPaginas.value
+  const atual = paginaAtual.value
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
 
-function aumentar(id: string) {
-  if (modalProduto.value && modalProduto.value.id === id) {
-    modalProduto.value.quantidade = Math.min(modalProduto.value.quantidade + 1, 99)
-  }
+  const inicio = Math.max(2, atual - 2)
+  const fim    = Math.min(total - 1, atual + 2)
+  const paginas: (number | '...')[] = [1]
+
+  if (inicio > 2) paginas.push('...')
+  for (let i = inicio; i <= fim; i++) paginas.push(i)
+  if (fim < total - 1) paginas.push('...')
+  paginas.push(total)
+
+  return paginas
+})
+
+// ===================== POLLING =====================
+// Busca atualizações a cada 1.5s enquanto o cache do servidor ainda está construindo.
+// Quando o total aumenta, atualiza o contador visível sem recarregar o grid atual.
+// Quando o cache fica completo, para o polling automaticamente.
+
+function iniciarPolling() {
+  if (pollingTimer) return
+  pollingTimer = setInterval(async () => {
+    try {
+      const res = await $fetch<any>('/api/bebidas', {
+        query: { pagina: paginaAtual.value, busca: buscaDebounce.value },
+      })
+
+      const totalNovo = res.total || 0
+
+      // Atualiza o contador e repagina sem piscar o grid
+      if (totalNovo > totalProdutos.value) {
+        totalProdutos.value = totalNovo
+        totalPaginas.value  = res.totalPaginas || 1
+
+        // Se estiver na página 1 e chegaram novos produtos, atualiza o grid silenciosamente
+        if (paginaAtual.value === 1 && res.produtos?.length > produtos.value.length) {
+          produtos.value = res.produtos
+        }
+      }
+
+      cacheCompleto.value = res.cacheCompleto ?? true
+      if (cacheCompleto.value) pararPolling()
+    } catch { /* silencioso */ }
+  }, 1500)
 }
 
-function diminuir(id: string) {
-  if (modalProduto.value && modalProduto.value.id === id) {
-    if (modalProduto.value.quantidade > 1) modalProduto.value.quantidade--
-  }
+function pararPolling() {
+  if (pollingTimer) { clearInterval(pollingTimer); pollingTimer = null }
 }
 
 // ===================== MODAL =====================
 
-function abrirModal(produto: Produto) {
-  modalProduto.value = { ...produto, quantidade: 1 }
-}
+function abrirModal(produto: Produto) { modalProduto.value = { ...produto } }
+function fecharModal() { modalProduto.value = null }
 
-function fecharModal() {
-  modalProduto.value = null
+function aumentar(id: string) {
+  const p = produtos.value.find((p) => p.id === id)
+  if (p) p.quantidade = Math.min(p.quantidade + 1, 99)
+  if (modalProduto.value?.id === id) modalProduto.value.quantidade = Math.min(modalProduto.value.quantidade + 1, 99)
 }
-
+function diminuir(id: string) {
+  const p = produtos.value.find((p) => p.id === id)
+  if (p && p.quantidade > 1) p.quantidade--
+  if (modalProduto.value?.id === id && modalProduto.value.quantidade > 1) modalProduto.value.quantidade--
+}
 function adicionarDoModal() {
   if (!modalProduto.value) return
   adicionarCarrinho(modalProduto.value, modalProduto.value.quantidade)
   fecharModal()
 }
 
-// ===================== SCROLL PARA TOPO =====================
+// ===================== SCROLL =====================
 
-function scrollTopo() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+function scrollTopo() { window.scrollTo({ top: 0, behavior: 'smooth' }) }
+function onScroll()   { mostrarTopo.value = window.scrollY > 600 }
+
+// ===================== IMAGEM =====================
+
+function imgSrc(url: string | undefined | null) {
+  return url?.trim() ? url : FALLBACK
 }
-
-function onScroll() {
-  mostrarTopo.value = window.scrollY > 600
-}
-
-// ===================== INFINITE SCROLL =====================
-
-function initObserver() {
-  const el = document.getElementById('sentinel')
-  if (!el) return
-  observer = new IntersectionObserver(
-    (entries) => { if (entries[0].isIntersecting) carregarMais() },
-    { rootMargin: '400px' }
-  )
-  observer.observe(el)
+function imagemErro(e: Event) {
+  const img = e.target as HTMLImageElement
+  if (img.src !== window.location.origin + FALLBACK) img.src = FALLBACK
 }
 
 // ===================== INIT =====================
-
-await buscarProdutos(1)
+// ⚠️ SEM await aqui — a página renderiza imediatamente com skeleton,
+// os produtos aparecem assim que a API responder (~1-2s)
 
 onMounted(() => {
-  initObserver()
   window.addEventListener('scroll', onScroll, { passive: true })
+  buscarProdutos(1)
 })
 
 onUnmounted(() => {
-  observer?.disconnect()
   window.removeEventListener('scroll', onScroll)
   if (timeoutBusca) clearTimeout(timeoutBusca)
+  pararPolling()
 })
-
-// ===================== COMPUTED =====================
-
-const progresso = computed(() =>
-  totalPaginas.value > 0
-    ? Math.round((paginaAtual.value / totalPaginas.value) * 100)
-    : 0
-)
-
-const imagemErro = (e: Event) => {
-  const img = e.target as HTMLImageElement
-  img.src = '/sem-imagem.png'
-}
 </script>
 
 <template>
@@ -176,20 +200,32 @@ const imagemErro = (e: Event) => {
 
     <!-- ===== HERO ===== -->
     <div class="relative overflow-hidden bg-gradient-to-br from-cyan-500 via-sky-500 to-blue-600 px-4 py-10 text-white">
-      <div class="pointer-events-none absolute inset-0 opacity-10"
-           style="background-image: repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%); background-size: 20px 20px;" />
+      <div
+        class="pointer-events-none absolute inset-0 opacity-10"
+        style="background-image:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);background-size:20px 20px;"
+      />
 
       <div class="relative mx-auto max-w-5xl text-center">
         <div class="mb-2 inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-1 text-sm font-semibold backdrop-blur-sm">
           <GlassWater :size="14" />
           Alô Pará Supermercado
         </div>
-
         <h1 class="mt-3 text-3xl font-extrabold tracking-tight md:text-5xl">
           Bebidas
         </h1>
-        <p class="mt-2 text-white/80 text-base md:text-lg">
-          {{ totalProdutos > 0 ? totalProdutos.toLocaleString('pt-BR') + ' produtos disponíveis' : 'Carregando catálogo...' }}
+        <p class="mt-2 text-white/80 text-base md:text-lg flex items-center justify-center gap-2">
+          <template v-if="totalProdutos > 0">
+            {{ totalProdutos.toLocaleString('pt-BR') }} produtos disponíveis
+            <span v-if="!cacheCompleto" class="inline-flex items-center gap-1 text-sm text-white/60">
+              <RefreshCw :size="12" class="animate-spin" />
+              carregando mais...
+            </span>
+          </template>
+          <template v-else-if="carregando">
+            <RefreshCw :size="14" class="animate-spin opacity-70" />
+            Carregando catálogo...
+          </template>
+          <template v-else>Catálogo disponível</template>
         </p>
 
         <!-- BUSCA -->
@@ -230,43 +266,63 @@ const imagemErro = (e: Event) => {
     </div>
 
     <template v-else>
-      <!-- ===== LOADING INICIAL ===== -->
-      <div v-if="carregando" class="flex flex-1 flex-col items-center justify-center py-32 gap-4">
-        <div class="h-12 w-12 rounded-full border-4 border-cyan-500 border-t-transparent animate-spin" />
-        <p class="text-gray-500 text-base">Carregando catálogo completo...</p>
+
+      <!-- ===== SKELETON LOADING ===== -->
+      <div v-if="carregando" class="mx-auto w-full max-w-7xl px-3 py-6 md:px-6">
+        <!-- Barra de status skeleton -->
+        <div class="mb-4 flex items-center justify-between">
+          <div class="h-4 w-48 rounded bg-gray-200 animate-pulse" />
+          <div class="h-4 w-24 rounded bg-gray-200 animate-pulse" />
+        </div>
+        <!-- Grid skeleton com animação em onda (stagger via style) -->
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4">
+          <div
+            v-for="n in 40"
+            :key="n"
+            class="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100"
+            :style="{ animationDelay: `${(n - 1) * 30}ms` }"
+          >
+            <div class="h-36 bg-gray-100 animate-pulse" />
+            <div class="p-3 flex flex-col gap-2">
+              <div class="h-3 rounded bg-gray-200 animate-pulse w-full" />
+              <div class="h-3 rounded bg-gray-200 animate-pulse w-3/4" />
+              <div class="h-5 rounded bg-gray-200 animate-pulse w-1/2 mt-1" />
+              <div class="h-8 rounded-xl bg-gray-100 animate-pulse mt-2" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ===== GRID DE PRODUTOS ===== -->
       <div v-else class="mx-auto w-full max-w-7xl px-3 py-6 md:px-6">
 
+        <!-- Cabeçalho da listagem -->
         <div class="mb-4 flex items-center justify-between">
-          <p class="text-sm text-gray-500">
-            <span class="font-semibold text-gray-800">{{ produtos.length.toLocaleString('pt-BR') }}</span>
-            produtos carregados
+          <p class="text-sm text-gray-500 flex items-center gap-2">
+            <span class="font-semibold text-gray-800">{{ totalProdutos.toLocaleString('pt-BR') }}</span>
+            produtos
             <template v-if="busca"> para "<span class="text-cyan-500">{{ busca }}</span>"</template>
+            <span
+              v-if="!cacheCompleto"
+              class="inline-flex items-center gap-1 rounded-full bg-cyan-100 px-2 py-0.5 text-[11px] text-cyan-600 font-medium"
+            >
+              <RefreshCw :size="10" class="animate-spin" />
+              atualizando
+            </span>
           </p>
-          <div v-if="totalPaginas > 1" class="hidden md:flex items-center gap-3 text-xs text-gray-400">
-            <span>Página {{ paginaAtual }}/{{ totalPaginas }}</span>
-            <div class="w-28 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                class="h-full bg-cyan-500 rounded-full transition-all duration-500"
-                :style="{ width: progresso + '%' }"
-              />
-            </div>
-          </div>
+          <p class="text-sm text-gray-400">
+            Página {{ paginaAtual }} de {{ totalPaginas }}
+          </p>
         </div>
 
-        <!-- sem resultado -->
-        <div
-          v-if="produtos.length === 0 && !carregando"
-          class="flex flex-col items-center py-24 text-gray-400"
-        >
+        <!-- Sem resultado -->
+        <div v-if="produtos.length === 0" class="flex flex-col items-center py-24 text-gray-400">
           <Search :size="48" class="mb-4 opacity-30" />
           <p class="text-lg font-medium">Nenhum produto encontrado</p>
           <p class="mt-1 text-sm">Tente outro termo de busca</p>
         </div>
 
-        <!-- grid -->
+        <!-- Grid -->
         <div
           v-else
           class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4"
@@ -275,26 +331,20 @@ const imagemErro = (e: Event) => {
             v-for="produto in produtos"
             :key="produto.id"
             @click="abrirModal(produto)"
-            class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+            class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 animate-fadeIn"
           >
-            <!-- badge -->
             <div class="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-full bg-cyan-500 px-2 py-0.5 text-[10px] font-bold text-white shadow">
               <GlassWater :size="9" />
               Top
             </div>
-
-            <!-- botão + rápido -->
             <button
               @click.stop="adicionarCarrinho(produto, 1)"
               class="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-green-500 text-white text-base font-bold shadow hover:bg-green-600 active:scale-95 transition-all"
-            >
-              +
-            </button>
+            >+</button>
 
-            <!-- imagem -->
             <div class="flex h-36 items-center justify-center bg-slate-50 p-3 group-hover:bg-cyan-50 transition-colors duration-200">
               <img
-                :src="produto.img || '/sem-imagem.png'"
+                :src="imgSrc(produto.img)"
                 :alt="produto.nome"
                 loading="lazy"
                 decoding="async"
@@ -303,7 +353,6 @@ const imagemErro = (e: Event) => {
               />
             </div>
 
-            <!-- info -->
             <div class="flex flex-1 flex-col gap-1 p-3 pt-2">
               <p class="line-clamp-2 min-h-[2.5rem] text-[12px] font-medium leading-snug text-gray-700 md:text-[13px]">
                 {{ produto.nome }}
@@ -317,15 +366,60 @@ const imagemErro = (e: Event) => {
           </div>
         </div>
 
-        <!-- loading mais -->
-        <div v-if="carregandoMais" class="mt-8 flex justify-center">
-          <div class="flex items-center gap-3 text-gray-500">
-            <div class="h-5 w-5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-            <span class="text-sm">Carregando mais produtos...</span>
-          </div>
-        </div>
+        <!-- ===== PAGINAÇÃO ===== -->
+        <div v-if="totalPaginas > 1" class="mt-10 flex flex-col items-center gap-3">
 
-        <div id="sentinel" class="h-10 mt-4" />
+          <div v-if="!cacheCompleto" class="flex items-center gap-2 text-xs text-cyan-500 mb-1">
+            <RefreshCw :size="11" class="animate-spin" />
+            Catálogo carregando em segundo plano — total pode aumentar
+          </div>
+
+          <div class="flex items-center gap-1">
+            <!-- Anterior -->
+            <button
+              @click="irParaPagina(paginaAtual - 1)"
+              :disabled="paginaAtual === 1"
+              class="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-cyan-50 hover:text-cyan-500 hover:border-cyan-200 disabled:opacity-30 disabled:cursor-not-allowed transition"
+            >
+              <ChevronLeft :size="16" />
+            </button>
+
+            <!-- Números -->
+            <template v-for="(p, idx) in paginasVisiveis" :key="idx">
+              <span
+                v-if="p === '...'"
+                class="flex h-9 w-9 items-center justify-center text-gray-400 text-sm select-none"
+              >…</span>
+              <button
+                v-else
+                @click="irParaPagina(p as number)"
+                :class="[
+                  'flex h-9 w-9 items-center justify-center rounded-xl text-sm font-medium transition',
+                  p === paginaAtual
+                    ? 'bg-cyan-500 text-white shadow'
+                    : 'border border-gray-200 bg-white text-gray-600 hover:bg-cyan-50 hover:text-cyan-500 hover:border-cyan-200'
+                ]"
+              >{{ p }}</button>
+            </template>
+
+            <!-- Próxima -->
+            <button
+              @click="irParaPagina(paginaAtual + 1)"
+              :disabled="paginaAtual === totalPaginas"
+              class="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-500 hover:bg-cyan-50 hover:text-cyan-500 hover:border-cyan-200 disabled:opacity-30 disabled:cursor-not-allowed transition"
+            >
+              <ChevronRight :size="16" />
+            </button>
+          </div>
+
+          <p class="text-xs text-gray-400">
+            {{ ((paginaAtual - 1) * 40 + 1).toLocaleString('pt-BR') }}
+            –
+            {{ Math.min(paginaAtual * 40, totalProdutos).toLocaleString('pt-BR') }}
+            de
+            {{ totalProdutos.toLocaleString('pt-BR') }} produtos
+          </p>
+        </div>
       </div>
     </template>
 
@@ -347,7 +441,7 @@ const imagemErro = (e: Event) => {
               <X :size="18" />
             </button>
             <img
-              :src="modalProduto.img || '/sem-imagem.png'"
+              :src="imgSrc(modalProduto.img)"
               :alt="modalProduto.nome"
               @error="imagemErro"
               class="h-48 object-contain drop-shadow-lg"
@@ -357,23 +451,13 @@ const imagemErro = (e: Event) => {
           <div class="px-8 py-6">
             <span class="text-xs text-gray-400 uppercase tracking-widest">{{ modalProduto.tipo }}</span>
             <h2 class="mt-1 text-xl font-semibold text-white leading-snug">{{ modalProduto.nome }}</h2>
-            <p class="mt-2 text-4xl font-extrabold text-green-400">
-              R$ {{ modalProduto.preco2 }}
-            </p>
+            <p class="mt-2 text-4xl font-extrabold text-green-400">R$ {{ modalProduto.preco2 }}</p>
 
             <div class="mt-6 flex items-center gap-3">
               <div class="flex items-center gap-2 rounded-xl bg-[#1e1e1e] border border-[#2a2a2a] p-1">
-                <button
-                  @click="diminuir(modalProduto.id)"
-                  class="flex h-9 w-9 items-center justify-center rounded-lg text-white text-lg hover:bg-[#2a2a2a] transition"
-                >−</button>
-                <span class="min-w-[2rem] text-center font-bold text-white text-lg">
-                  {{ modalProduto.quantidade }}
-                </span>
-                <button
-                  @click="aumentar(modalProduto.id)"
-                  class="flex h-9 w-9 items-center justify-center rounded-lg text-white text-lg hover:bg-[#2a2a2a] transition"
-                >+</button>
+                <button @click="diminuir(modalProduto.id)" class="flex h-9 w-9 items-center justify-center rounded-lg text-white text-lg hover:bg-[#2a2a2a] transition">−</button>
+                <span class="min-w-[2rem] text-center font-bold text-white text-lg">{{ modalProduto.quantidade }}</span>
+                <button @click="aumentar(modalProduto.id)" class="flex h-9 w-9 items-center justify-center rounded-lg text-white text-lg hover:bg-[#2a2a2a] transition">+</button>
               </div>
 
               <button
@@ -405,16 +489,19 @@ const imagemErro = (e: Event) => {
 </template>
 
 <style scoped>
-.modal-enter-active,
-.modal-leave-active { transition: opacity 0.2s ease; }
-.modal-enter-active .relative,
-.modal-leave-active .relative { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
-.modal-enter-from,
-.modal-leave-to { opacity: 0; }
+.modal-enter-active, .modal-leave-active { transition: opacity 0.2s ease; }
+.modal-enter-active .relative, .modal-leave-active .relative { transition: transform 0.3s cubic-bezier(0.32,0.72,0,1); }
+.modal-enter-from, .modal-leave-to { opacity: 0; }
 .modal-enter-from .relative { transform: translateY(40px); }
 
-.fade-enter-active,
-.fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
-.fade-enter-from,
-.fade-leave-to { opacity: 0; transform: scale(0.8); }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; transform: scale(0.8); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease both;
+}
 </style>
