@@ -4,11 +4,13 @@ import bebidasImg from '@/assets/img/produtos-redondo/bebidas.png'
 import limpezaImg from '@/assets/img/produtos-redondo/limpeza.png'
 import perfumariaImg from '@/assets/img/produtos-redondo/perfumaria.png'
 
+// `rota` e `desc` faltavam: os cards chamavam navigateTo(undefined),
+// então clicar numa categoria da home não levava a lugar nenhum.
 const categorias = [
-  { titulo: 'Alimentos', img: alimentosImg },
-  { titulo: 'Bebidas', img: bebidasImg },
-  { titulo: 'Limpeza', img: limpezaImg },
-  { titulo: 'Perfumaria', img: perfumariaImg },
+  { titulo: 'Alimentos', desc: 'Mercearia & hortifruti', rota: '/Alimentos', img: alimentosImg },
+  { titulo: 'Bebidas', desc: 'Sucos, cervejas & mais', rota: '/Bebidas', img: bebidasImg },
+  { titulo: 'Limpeza', desc: 'Casa & lavanderia', rota: '/Limpeza', img: limpezaImg },
+  { titulo: 'Perfumaria', desc: 'Beleza & cuidados', rota: '/Perfumaria', img: perfumariaImg },
 ]
 </script>
 
@@ -26,6 +28,8 @@ const categorias = [
       <div
         v-for="cat in categorias"
         :key="cat.rota"
+        role="link"
+        :aria-label="cat.titulo"
         @click="navigateTo(cat.rota)"
         class="group bg-[#161616] border border-[#1f1f1f] rounded-xl p-6 cursor-pointer
                flex flex-col gap-5 transition-all duration-250

@@ -1,57 +1,38 @@
 <script setup lang="ts">
-
-const categorias = [
-  {titulo:"Tudo o que você precisa, na palma da sua mão", descricao:"Tudo o que você precisa, na palma da sua mão", num:"01."},
-  {titulo:"Vantagens", descricao:"Tenha acesso aos encartes, descontos em tempo real, Mais praticidade e rapidez nas suas compras, Ofertas exclusivas para quem usa o app e muito mais", num:"02."},
-  {titulo:"Como baixar?", descricao:"É rápido, fácil e gratuito: basta acessar a Play Store ou App Store, buscar por Alô Pará, instalar e começar a economizar. Tenha o mercado na palma da sua mão!", num:"03."}
-
+const passos = [
+  { num: '01', titulo: 'Tudo na palma da mão', desc: 'Encartes, ofertas e lista de compras — tudo em um só lugar, direto no seu celular.' },
+  { num: '02', titulo: 'Vantagens exclusivas', desc: 'Descontos em tempo real, economizômetro e promoções exclusivas para quem usa o app.' },
+  { num: '03', titulo: 'Como baixar?', desc: 'Acesse a Play Store ou App Store, busque por "Alô Pará", instale e comece a economizar.' },
 ]
-
 </script>
 
 <template>
-    <div class="border-t p-10 border-[#1a1a1a]">
+  <div class="border-t border-[#1a1a1a] px-6 md:px-10 py-20">
+    <div class="max-w-5xl mx-auto">
       <div class="flex items-center gap-4 mb-12">
-          <span class="text-red-600 text-[10px] font-black tracking-[4px] uppercase">O que você está perdendo</span>
-          <div class="flex-1 h-px bg-[#1f1f1f]" />
-        </div>
-
-      
-      <div class="flex gap-3 flex-wrap justify-center ">
-        
-        
-            <div
-        v-for="cat in categorias"
-        :key="cat.rota"
-       
-        class="group bg-[#161616] border border-[#1f1f1f] rounded-xl p-6 cursor-pointer
-               flex flex-col gap-5 transition-all duration-250
-               hover:border-red-600 hover:bg-[#1a0d0d] hover:-translate-y-1"
-              
-      >
-      <span class="text-[20px] font-black tracking-[3px] text-red-600 uppercase">{{ cat.num }}</span>
-   
- 
-       
-
-        <!-- texto -->
-        <div class="flex flex-col gap-1.5 w-100">
-          <h3 class="text-white text-[28px] font-extrabold tracking-tight">{{ cat.titulo }}</h3>
-          <p class="text-[#888888]  text-[21px] font-semibold tracking-wide uppercase">{{ cat.descricao }}</p>
-        </div>
-
-       
+        <span class="text-red-600 text-[10px] font-black tracking-[4px] uppercase">O que você está perdendo</span>
+        <div class="flex-1 h-px bg-[#1f1f1f]" />
       </div>
 
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div
+          v-for="passo in passos"
+          :key="passo.num"
+          class="bg-[#161616] border border-[#1f1f1f] rounded-xl p-7 flex flex-col gap-5 hover:border-red-600 transition-colors duration-300 group"
+        >
+          <span class="text-[11px] font-black tracking-[3px] text-red-600 uppercase">{{ passo.num }}</span>
+
+          <div>
+            <h3 class="text-white text-[20px] font-black tracking-tight mb-2">
+              {{ passo.titulo }}
+            </h3>
+            <div class="w-6 h-0.5 bg-red-600 mb-4 transition-all duration-300 group-hover:w-12" />
+            <p class="text-[#555] text-[13px] leading-relaxed">
+              {{ passo.desc }}
+            </p>
+          </div>
+        </div>
       </div>
-
-
-   
-
-
-</div>
-           
-
-   
+    </div>
+  </div>
 </template>
-

@@ -37,16 +37,24 @@ export default defineNuxtConfig({
 
     // 🔥 SEO
     '@nuxtjs/sitemap',
-    '@nuxtjs/robots'
+    '@nuxtjs/robots',
+
+    // Toasts (feedback ao adicionar no carrinho)
+    'vue-sonner/nuxt',
   ],
 
-  sitemap: {
-    siteUrl: 'https://alopara.com'
+  // A URL canônica do site é lida daqui pelo @nuxtjs/sitemap (via nuxt-site-config).
+  // Antes estava em `sitemap.siteUrl`, chave que a v7 não reconhece — era ignorada
+  // em silêncio e o sitemap saía sem host absoluto.
+  site: {
+    url: 'https://alopara.com',
+    name: 'Alô Pará Supermercado'
   },
 
+  // @nuxtjs/robots v5 usa `groups`, não `rules` (a chave antiga também era ignorada).
   robots: {
-    rules: [
-      { userAgent: '*', allow: '/' }
+    groups: [
+      { userAgent: ['*'], allow: ['/'], disallow: ['/api/'] }
     ]
   },
 
@@ -72,8 +80,15 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    '/components': { redirect: '/components/accordion' },
-    '/settings': { redirect: '/settings/profile' },
+    // Páginas estáticas: geradas no build, servidas do CDN sem tocar o servidor.
+    '/': { prerender: true },
+    '/trabalhe-conosco': { prerender: true },
+    '/Baixar': { prerender: true },
+
+    // As rotas de produto definem seu próprio Cache-Control conforme o estado do
+    // catálogo (ver server/utils/rotaCategoria.ts) — aqui só garantimos que o
+    // Nitro não as prerenderize nem as trate como estáticas.
+    '/api/**': { cache: false },
   },
 
   imports: {

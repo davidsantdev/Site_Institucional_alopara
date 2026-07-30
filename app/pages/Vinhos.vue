@@ -32,8 +32,8 @@ const produtosPaginados = computed(() => {
   return produtos.value.slice(inicio, fim) // <-- produtos.value
 })
 
-function irParaPagina(Pagina){
-  PaginacaoAtual.value = Pagina
+function irParaPagina(pagina: number) {
+  PaginacaoAtual.value = pagina
 }
 
 
@@ -181,10 +181,10 @@ function diminuir(id: number) {
       {{ V.nome }}
     </h3>
 
+    <!-- os dados têm apenas `preço`; preço1/preço2 não existiam e renderizavam "R$ " vazio -->
     <div class="flex flex-col items-center mt-1">
-      <span class="text-slate-400 text-xs line-through">R$ {{ V.preço1 }}</span>
       <span class="text-green-600 text-2xl md:text-3xl font-extrabold leading-none">
-        R$ {{ V.preço2 }}
+        R$ {{ V.preço }}
       </span>
     </div>
   </div>
@@ -216,7 +216,7 @@ function diminuir(id: number) {
           {{ V.nome }}
         </h2>
 
-        <h3 class="text-[50px] text-white font-semibold"> R$ {{ V.preço2 }}</h3>
+        <h3 class="text-[50px] text-white font-semibold"> R$ {{ V.preço }}</h3>
 
         <div class=" ">
           <Button class="text-[#888] bg-[#1e1e1e] rounded-[20px] p-2 border-[1px] border-[#2a2a2a] ">{{ V.tipo }}</Button>

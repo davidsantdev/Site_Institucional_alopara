@@ -119,8 +119,8 @@ if (produtoSelecionado.value) {
       {{ A.nome }}
     </h3>
 
+    <!-- não existe preço "de" nos dados: exibia um "R$ " riscado e vazio -->
     <div class="flex flex-col items-center mt-1">
-      <span class="text-slate-400 text-xs line-through">R$ {{ A.preço1 }}</span>
       <span class="text-green-600 text-2xl md:text-3xl font-extrabold leading-none">
         R$ {{ A.preço2 }}
       </span>

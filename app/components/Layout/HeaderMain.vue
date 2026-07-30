@@ -1,40 +1,40 @@
 <script setup lang="ts">
-import { ShoppingCart, User } from 'lucide-vue-next'
-import Mobilemenu from './Mobilemenu.vue'
+import { ShoppingCart } from 'lucide-vue-next'
 import { useCarrinho } from '~/data/composable/UseCarrinho'
-import { Label } from 'reka-ui'
+import Mobilemenu from './Mobilemenu.vue'
 
 const { totalItens } = useCarrinho()
 
 const navLinks = [
   { label: 'Alimentos', to: '/alimentos' },
- 
   { label: 'Bebidas', to: '/bebidas' },
   { label: 'Limpeza', to: '/limpeza' },
-   { label: 'Perfumaria', to: '/perfumaria' },
-    { label: 'Ofertas', to: '/vinhos' }
+  { label: 'Perfumaria', to: '/perfumaria' },
 ]
-
-
 </script>
 
 <template>
   <div class="w-full sticky top-0 z-50 bg-[#111111]">
-
     <!-- Tira superior vermelha -->
     <div class="bg-red-600 h-[34px] hidden md:flex items-center justify-center gap-8">
-      
-
-
-
-      <button   class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors" > COMPRE ONLINE</button>
-      <button @click="navigateTo('/trabalhe-conosco')"  class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors"> TRABALHE CONOSCO</button>
-      <button  class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors"> CLUBE DE DESCONTOS</button>
+      <button type="button" class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors" @click="navigateTo('/')">
+        COMPRE ONLINE
+      </button>
+      <button type="button" class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors" @click="navigateTo('/trabalhe-conosco')">
+        TRABALHE CONOSCO
+      </button>
+      <a
+        href="https://cadastramento-alopara.mercafacil.com/home"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-white/80 hover:text-white text-[10px] font-bold tracking-[2px] uppercase transition-colors"
+      >
+        CLUBE DE DESCONTOS
+      </a>
     </div>
 
     <!-- Header principal -->
     <div class="flex items-center justify-between px-6 lg:px-10 h-[72px] border-b border-[#1f1f1f]">
-
       <!-- Logo -->
       <NuxtLink to="/" class="flex flex-col gap-0.5 shrink-0">
         <span class="text-[26px] font-black text-white leading-none tracking-tight">
@@ -43,14 +43,8 @@ const navLinks = [
         <span class="text-[9px] font-bold tracking-[4px] uppercase text-[#444]">Supermercado</span>
       </NuxtLink>
 
- 
-     
-
       <!-- Ações -->
       <div class="flex items-center gap-2">
-
-        <!-- Conta (desktop) -->
-    
         <!-- Carrinho -->
         <NuxtLink
           to="/Carrinho"
@@ -85,12 +79,11 @@ const navLinks = [
       </NuxtLink>
 
       <div class="ml-auto flex items-center gap-2">
-        <div class="w-1.5 h-1.5 bg-red-600 rounded-full"></div>
+        <div class="w-1.5 h-1.5 bg-red-600 rounded-full" />
         <NuxtLink to="/Baixar" class="text-[10px] font-bold tracking-[2px] uppercase text-[#333] hover:text-[#555] transition-colors">
           Baixar app
         </NuxtLink>
       </div>
     </div>
-
   </div>
 </template>

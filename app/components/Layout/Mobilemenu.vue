@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Home, Download, User2, Tag, ShoppingBasket, Wine, Sparkles, X, Menu } from 'lucide-vue-next'
+import { Download, Home, Menu, ShoppingBasket, Sparkles, Tag, User2, X } from 'lucide-vue-next'
 import { ref } from 'vue'
 
 const aberto = ref(false)
@@ -14,14 +14,14 @@ const navPrincipal = [
 const categorias = [
   { label: 'Alimentos', rota: '/Alimentos', icone: ShoppingBasket },
   { label: 'Bebidas', rota: '/Bebidas', icone: ShoppingBasket },
-  { label: 'Vinhos', rota: '/Vinhos', icone: Wine },
   { label: 'Limpeza', rota: '/Limpeza', icone: ShoppingBasket },
   { label: 'Perfumaria', rota: '/Perfumaria', icone: Sparkles },
 ]
 
-function ir(rota: string) {
+function ir(rota?: string) {
   aberto.value = false
-  navigateTo(rota)
+  if (rota)
+    navigateTo(rota)
 }
 </script>
 
@@ -29,8 +29,8 @@ function ir(rota: string) {
   <div>
     <!-- botão hambúrguer -->
     <button
-      @click="aberto = true"
       class="flex items-center justify-center w-10 h-10 rounded-lg border border-[#2a2a2a] bg-[#161616] text-white hover:border-red-600 transition-colors duration-200"
+      @click="aberto = true"
     >
       <Menu :size="20" />
     </button>
@@ -39,8 +39,8 @@ function ir(rota: string) {
     <Transition name="fade">
       <div
         v-if="aberto"
-        @click="aberto = false"
         class="fixed inset-0 bg-black/70 z-40"
+        @click="aberto = false"
       />
     </Transition>
 
@@ -56,11 +56,13 @@ function ir(rota: string) {
             <p class="text-white text-[18px] font-black leading-none">
               <span class="text-red-600">Alô</span> Pará
             </p>
-            <p class="text-[#444] text-[9px] font-bold tracking-[3px] uppercase mt-0.5">Supermercado</p>
+            <p class="text-[#444] text-[9px] font-bold tracking-[3px] uppercase mt-0.5">
+              Supermercado
+            </p>
           </div>
           <button
-            @click="aberto = false"
             class="w-8 h-8 flex items-center justify-center rounded-lg border border-[#2a2a2a] text-[#555] hover:border-red-600 hover:text-white transition-all duration-200"
+            @click="aberto = false"
           >
             <X :size="16" />
           </button>
@@ -69,14 +71,13 @@ function ir(rota: string) {
         <!-- nav principal -->
         <div class="flex flex-col px-3 pt-4 gap-0.5">
           <template v-for="item in navPrincipal" :key="item.label">
-
             <!-- LINK EXTERNO -->
             <a
               v-if="item.href"
               :href="item.href"
               target="_blank"
-              @click="aberto = false"
               class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#888] hover:text-white hover:bg-[#1a1a1a] transition-all duration-150 group"
+              @click="aberto = false"
             >
               <component :is="item.icone" :size="16" class="text-[#333] group-hover:text-red-600 transition-colors shrink-0" />
               <span class="text-[14px] font-semibold">{{ item.label }}</span>
@@ -85,13 +86,12 @@ function ir(rota: string) {
             <!-- LINK INTERNO -->
             <button
               v-else
-              @click="ir(item.rota)"
               class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#888] hover:text-white hover:bg-[#1a1a1a] transition-all duration-150 w-full text-left group"
+              @click="ir(item.rota)"
             >
               <component :is="item.icone" :size="16" class="text-[#333] group-hover:text-red-600 transition-colors shrink-0" />
               <span class="text-[14px] font-semibold">{{ item.label }}</span>
             </button>
-
           </template>
         </div>
 
@@ -105,8 +105,8 @@ function ir(rota: string) {
           <button
             v-for="cat in categorias"
             :key="cat.rota"
-            @click="ir(cat.rota)"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#888] hover:text-white hover:bg-[#1a1a1a] transition-all duration-150 w-full text-left group"
+            @click="ir(cat.rota)"
           >
             <component :is="cat.icone" :size="16" class="text-[#333] group-hover:text-red-600 transition-colors shrink-0" />
             <span class="text-[14px] font-semibold">{{ cat.label }}</span>

@@ -1,23 +1,33 @@
 import { computed, watch } from 'vue'
+import { toast } from 'vue-sonner'
 
 export function useCarrinho() {
   const carrinho = useState<any[]>('carrinho', () => [])
 
-  if (process.client && carrinho.value.length === 0) {
-    const salvo = localStorage.getItem('carrinho')
-    if (salvo) {
-      carrinho.value = JSON.parse(salvo)
+  if (import.meta.client && carrinho.value.length === 0) {
+    try {
+      const salvo = localStorage.getItem('carrinho')
+      if (salvo)
+        carrinho.value = JSON.parse(salvo)
+    }
+    catch {
+      // localStorage indisponível (modo privado, cookies bloqueados) — segue com carrinho vazio.
     }
   }
 
   watch(
     carrinho,
     () => {
-      if (process.client) {
-        localStorage.setItem('carrinho', JSON.stringify(carrinho.value))
+      if (import.meta.client) {
+        try {
+          localStorage.setItem('carrinho', JSON.stringify(carrinho.value))
+        }
+        catch {
+          // Sem storage disponível: o carrinho continua funcionando na sessão atual.
+        }
       }
     },
-    { deep: true }
+    { deep: true },
   )
 
   const totalItens = computed(() => {
@@ -31,14 +41,27 @@ export function useCarrinho() {
     const existente = carrinho.value.find((p: any) => p.nome === produto.nome)
     if (existente) {
       existente.quantidade += quantidade
-    } else {
+    }
+    else {
       carrinho.value.push({ ...produto, quantidade })
     }
+
+    toast.success('Adicionado ao carrinho', {
+      description: produto.nome,
+    })
   }
 
   function removeItem(nome: string) {
     carrinho.value = carrinho.value.filter((p: any) => p.nome !== nome)
+    toast('Item removido do carrinho')
   }
 
-  return { carrinho, adicionarCarrinho, removeItem, totalItens }
+  function esvaziarCarrinho() {
+    if (carrinho.value.length === 0)
+      return
+    carrinho.value = []
+    toast('Carrinho esvaziado')
+  }
+
+  return { carrinho, adicionarCarrinho, removeItem, esvaziarCarrinho, totalItens }
 }
