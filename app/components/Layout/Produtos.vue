@@ -18,37 +18,28 @@ function Adega() {
 </script>
 
 <template>
-    <div class="bg-[#F4F4F4]  md:p-10 pt-10 select-none ">
-
-
-        <div class="flex gap-10 ml-[10%]">
-             <button
-    @click="promo"
-    :class="[
-      'text-[22px] pb-2 transition-all',
-      Alimen
-        ? 'border-b-6 border-red-600 text-red-600'
-        : 'text-slate-900 hover:text-red-500'
-    ]"
-  >
-    Os melhores produtos
-  </button>
-          <button
-    @click="Adega"
-    :class="[
-      'text-[22px] pb-2 transition-all',
-      Vinh
-        ? 'border-b-6 border-red-600 text-red-600'
-        : 'text-slate-900 hover:text-red-500'
-    ]"
-  >
-    Bebidas
-  </button>
-        </div>
-
-        <Alimentos v-show="Alimen"/>
-        
-        <Vinho v-show="Vinh"></Vinho>
+  <div class="pt-16 pb-4 select-none">
+    <!-- abas -->
+    <div class="w-full max-w-6xl mx-auto px-4 md:px-6 flex gap-8 border-b border-[#1f1f1f] mb-10">
+      <button
+        type="button"
+        class="pb-4 -mb-px text-[12px] md:text-[13px] font-black tracking-[2px] uppercase border-b-2 transition-colors"
+        :class="Alimen ? 'border-red-600 text-white' : 'border-transparent text-[#555] hover:text-[#999]'"
+        @click="promo"
+      >
+        Os melhores produtos
+      </button>
+      <button
+        type="button"
+        class="pb-4 -mb-px text-[12px] md:text-[13px] font-black tracking-[2px] uppercase border-b-2 transition-colors"
+        :class="Vinh ? 'border-red-600 text-white' : 'border-transparent text-[#555] hover:text-[#999]'"
+        @click="Adega"
+      >
+        Bebidas
+      </button>
     </div>
-</template>
 
+    <Alimentos v-show="Alimen" />
+    <Vinho v-show="Vinh" />
+  </div>
+</template>

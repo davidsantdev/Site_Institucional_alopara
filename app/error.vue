@@ -18,21 +18,21 @@ function tentarNovamente() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#F2F3F5] flex flex-col font-sans">
+  <div class="min-h-screen bg-[#111111] flex flex-col font-sans">
     <HeaderMain />
 
     <main class="flex flex-1 items-center justify-center px-4 py-24">
       <div class="text-center max-w-md">
-        <p class="text-8xl font-black text-gray-200 leading-none">
+        <p class="text-8xl font-black text-[#1f1f1f] leading-none">
           {{ e404 ? '404' : error.statusCode }}
         </p>
 
-        <ShoppingBasket :size="40" class="mx-auto -mt-8 text-red-500" />
+        <ShoppingBasket :size="40" class="mx-auto -mt-8 text-red-600" />
 
-        <h1 class="mt-6 text-2xl font-bold text-gray-800">
+        <h1 class="mt-6 text-2xl font-black text-white tracking-tight">
           {{ e404 ? 'Essa página saiu de linha' : 'Algo deu errado' }}
         </h1>
-        <p class="mt-2 text-gray-500">
+        <p class="mt-2 text-[#666]">
           {{ e404
             ? 'O produto ou a página que você procura não existe ou foi movida.'
             : 'Não conseguimos carregar essa página agora. Tente novamente em instantes.' }}
@@ -41,7 +41,7 @@ function tentarNovamente() {
         <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             type="button"
-            class="flex items-center gap-2 rounded-xl bg-red-500 px-6 py-3 text-white font-bold hover:bg-red-600 active:scale-95 transition-all"
+            class="flex items-center gap-2 rounded-xl bg-red-600 px-6 py-3 text-white font-bold hover:bg-red-700 active:scale-95 transition-all shadow-lg shadow-red-900/30"
             @click="tentarNovamente"
           >
             <Home :size="18" />
@@ -50,7 +50,7 @@ function tentarNovamente() {
           <button
             v-if="!e404"
             type="button"
-            class="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3 text-gray-600 font-bold hover:bg-gray-50 active:scale-95 transition-all"
+            class="flex items-center gap-2 rounded-xl border border-[#2a2a2a] bg-[#161616] px-6 py-3 text-[#ccc] font-bold hover:border-[#3a3a3a] hover:text-white active:scale-95 transition-all"
             @click="() => $router.go(0)"
           >
             <RotateCcw :size="18" />

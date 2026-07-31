@@ -8,7 +8,7 @@ import DialogTrigger from '../ui/dialog/DialogTrigger.vue'
 const nome = ref('')
 const numero = ref('')
 const mensagem = ref('')
-const numeroCV = '559492268984'
+const numeroCV = '5594992268984'
 
 function enviar() {
   const texto = `Olá! Me chamo *${nome.value}* e gostaria de enviar meu currículo.\n\n${mensagem.value}\n\n📱 Contato: ${numero.value}`

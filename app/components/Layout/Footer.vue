@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Instagram, MessageCircle } from 'lucide-vue-next'
+import DialogPoliticaPrivacidade from './DialogPoliticaPrivacidade.vue'
+import DialogTermosUso from './DialogTermosUso.vue'
 import Faqs from './Faqs.vue'
 
 const contato = [
@@ -121,13 +123,13 @@ const info = [
         © 2026 Alô Pará · Todos os direitos reservados
       </p>
       <div class="flex items-center gap-6">
-        <a href="#" class="text-[#2a2a2a] text-[11px] font-bold tracking-[1px] hover:text-[#555] transition-colors">
-          Política de privacidade
-        </a>
+        <DialogPoliticaPrivacidade />
         <div class="w-px h-3 bg-[#2a2a2a]" />
-        <a href="#" class="text-[#2a2a2a] text-[11px] font-bold tracking-[1px] hover:text-[#555] transition-colors">
-          Termos de uso
-        </a>
+        <DialogTermosUso />
+        <div class="w-px h-3 bg-[#2a2a2a]" />
+        <span class="text-[#2a2a2a] text-[11px] font-bold tracking-[1px] select-none">
+          Coded by David S.
+        </span>
       </div>
     </div>
   </footer>

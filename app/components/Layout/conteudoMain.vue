@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import Button from '../ui/button/Button.vue';
-import Dialog from '../ui/dialog/Dialog.vue';
-import DialogContent from '../ui/dialog/DialogContent.vue';
-import DialogHeader from '../ui/dialog/DialogHeader.vue';
-import DialogTrigger from '../ui/dialog/DialogTrigger.vue';
+import DialogContato from './DialogContato.vue';
 </script>
 
 <template>
@@ -40,29 +36,7 @@ import DialogTrigger from '../ui/dialog/DialogTrigger.vue';
     <!-- Botões -->
     <div class="flex gap-4 flex-wrap justify-center">
 
-      <Dialog>
-        <DialogTrigger as-child>
-          <button class="bg-red-600 hover:bg-red-500 active:scale-[0.98] transition-all
-            text-white font-bold text-sm tracking-widest uppercase
-            px-8 py-[14px] rounded-[4px]">
-            Entre em contato
-          </button>
-        </DialogTrigger>
-
-        <DialogContent class="flex flex-col items-center text-center">
-          <DialogHeader>
-            <h2 class="text-[28px] font-extrabold text-center mb-1">Contato</h2>
-            <p class="text-slate-500 text-sm">Escolha o departamento desejado</p>
-          </DialogHeader>
-          <div class="flex flex-col w-full gap-3 mt-4">
-            <Button variant="outline" class="p-6 text-[16px] font-semibold hover:border-red-500 hover:text-red-600 transition-colors">Atacado</Button>
-            <Button variant="outline" class="p-6 text-[16px] font-semibold hover:border-red-500 hover:text-red-600 transition-colors">Financeiro</Button>
-            <Button variant="outline" class="p-6 text-[16px] font-semibold hover:border-red-500 hover:text-red-600 transition-colors">Recursos Humanos</Button>
-            <Button variant="outline" class="p-6 text-[16px] font-semibold hover:border-red-500 hover:text-red-600 transition-colors">Seja um fornecedor</Button>
-            <Button variant="outline" class="p-6 text-[16px] font-semibold hover:border-red-500 hover:text-red-600 transition-colors">Suporte</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DialogContato />
 
       <a href="#Sobre">
         <button class="bg-transparent hover:bg-red-600 active:scale-[0.98] transition-all

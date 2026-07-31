@@ -129,7 +129,7 @@ const diferenciais = [
 
               <!-- WHATSAPP -->
               <a
-                href="https://wa.me/559492268984"
+                href="https://wa.me/5594992268984"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="flex items-center gap-4 bg-[#161616] border border-[#1f1f1f] rounded-xl px-5 py-4 hover:border-red-600 transition-colors duration-200 group"
