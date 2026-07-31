@@ -4,9 +4,11 @@ import BaixarLayoutBottom from '~/components/Layout/baixarLayoutBottom.vue'
 import Footer from '~/components/Layout/Footer.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
 
-useHead({
+useSeoMeta({
   title: 'Baixar App | Alô Pará',
-  meta: [{ name: 'description', content: 'Baixe o aplicativo do Supermercado Alô Pará e tenha ofertas, encartes e economia direto no seu celular.' }],
+  description: 'Baixe o aplicativo do Supermercado Alô Pará e tenha ofertas, encartes e economia direto no seu celular.',
+  ogTitle: 'Baixe o app do Alô Pará',
+  ogDescription: 'Ofertas exclusivas, encartes digitais e economizômetro direto no seu celular.',
 })
 </script>
 

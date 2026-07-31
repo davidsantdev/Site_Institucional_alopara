@@ -16,6 +16,13 @@ import Footer from "~/components/Layout/Footer.vue";
 
 const { carrinho, adicionarCarrinho } = useCarrinho()
 
+useSeoMeta({
+  title: 'Vinhos | Alô Pará',
+  description: 'Confira nossa seleção de vinhos no Supermercado Alô Pará, em Novo Repartimento - PA.',
+  ogTitle: 'Vinhos | Alô Pará',
+  ogDescription: 'Confira nossa seleção de vinhos no Supermercado Alô Pará.',
+})
+
 const produtos = ref(Vinho)
 
 const produtoSelecionado = ref<any>(null)

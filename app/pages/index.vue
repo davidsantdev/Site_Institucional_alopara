@@ -6,9 +6,11 @@ import HeaderMain from '~/components/Layout/HeaderMain.vue'
 import MainlayoutSecundary from '~/components/Layout/MainlayoutSecundary.vue'
 import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue'
 
-useHead({
-  title: 'Alô Pará | Você no coração da gente',
-  meta: [{ name: 'description', content: 'Confira as melhores ofertas do Supermercado Alô Pará. Promoções atualizadas todos os dias!' }],
+useSeoMeta({
+  title: 'Alô Pará | Supermercado em Novo Repartimento - PA',
+  description: 'Supermercado Alô Pará em Novo Repartimento - PA. Ofertas atualizadas todos os dias em alimentos, bebidas, limpeza e perfumaria. Compre online.',
+  ogTitle: 'Supermercado Alô Pará',
+  ogDescription: 'Ofertas atualizadas todos os dias. Alimentos, bebidas, limpeza e perfumaria com o melhor preço em Novo Repartimento - PA.',
 })
 </script>
 

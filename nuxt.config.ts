@@ -9,7 +9,7 @@ export default defineNuxtConfig({
 
   vite: {
     server: {
-      allowedHosts: true
+      allowedHosts: true,
     },
 
     plugins: [
@@ -20,7 +20,7 @@ export default defineNuxtConfig({
   components: [
     {
       path: '~/components',
-      extensions: ['.vue'], 
+      extensions: ['.vue'],
     },
   ],
 
@@ -48,14 +48,20 @@ export default defineNuxtConfig({
   // em silêncio e o sitemap saía sem host absoluto.
   site: {
     url: 'https://alopara.com',
-    name: 'Alô Pará Supermercado'
+    name: 'Alô Pará Supermercado',
+  },
+
+  // Carrinho é por sessão do usuário (localStorage) — não tem valor de busca
+  // e ainda dilui o crawl budget se ficar listado ao lado das páginas reais.
+  sitemap: {
+    exclude: ['/Carrinho'],
   },
 
   // @nuxtjs/robots v5 usa `groups`, não `rules` (a chave antiga também era ignorada).
   robots: {
     groups: [
-      { userAgent: ['*'], allow: ['/'], disallow: ['/api/'] }
-    ]
+      { userAgent: ['*'], allow: ['/'], disallow: ['/api/'] },
+    ],
   },
 
   shadcn: {
@@ -96,115 +102,61 @@ export default defineNuxtConfig({
   },
 
   lucide: {
-    namePrefix: 'Icon'
+    namePrefix: 'Icon',
   },
 
   compatibilityDate: '2024-12-14',
 
   app: {
     head: {
-
-      title: 'Alô Pará | Você no coração da gente ',
+      // Título/descrição/OG por página sobrescrevem isto via useHead/useSeoMeta
+      // (dedupe automático pelo unhead — ver app/app.vue e cada página).
+      // Cada página já inclui "| Alô Pará" no próprio título, então NÃO usamos
+      // titleTemplate aqui — duplicaria o sufixo.
+      title: 'Supermercado Alô Pará em Novo Repartimento - PA',
 
       meta: [
         { charset: 'utf-8' },
-
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
 
         {
           name: 'description',
-          content: 'Confira as melhores ofertas do Supermercado Alô Pará - PA. Promoções atualizadas todos os dias!'
+          content: 'Supermercado Alô Pará em Novo Repartimento - PA. Ofertas atualizadas todos os dias em alimentos, bebidas, limpeza e perfumaria. Compre online.',
         },
 
         {
           name: 'keywords',
-          content: 'supermercado, ofertas, promoções, Novo Repartimento, Alô Pará, preços baixos, comprar online'
+          content: 'supermercado, Alô Pará, alo para, supermercado Novo Repartimento, Novo Repartimento PA, ofertas, promoções, preços baixos, comprar online',
         },
 
-        {
-          name: 'author',
-          content: 'Supermercado Alô Pará'
-        },
+        { name: 'author', content: 'Supermercado Alô Pará' },
+        { name: 'robots', content: 'index, follow' },
 
-        {
-          name: 'robots',
-          content: 'index, follow'
-        },
+        // og:title / og:description / og:url ficam a cargo de cada página
+        // (useSeoMeta) — só o que é igual em todo lugar mora aqui.
+        { property: 'og:type', content: 'website' },
+        { property: 'og:locale', content: 'pt_BR' },
+        { property: 'og:site_name', content: 'Supermercado Alô Pará' },
+        { property: 'og:image', content: 'https://alopara.com/og-image.png' },
+        { property: 'og:image:width', content: '1920' },
+        { property: 'og:image:height', content: '1080' },
+        { property: 'og:image:alt', content: 'Equipe do Supermercado Alô Pará' },
 
-        {
-          property: 'og:title',
-          content: 'Ofertas do Supermercado Alô Pará'
-        },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:image', content: 'https://alopara.com/og-image.png' },
 
-        {
-          property: 'og:description',
-          content: 'Veja as promoções atualizadas e economize de verdade!'
-        },
-
-        {
-          property: 'og:type',
-          content: 'website'
-        },
-
-        {
-          property: 'og:locale',
-          content: 'pt_BR'
-        },
-
-        {
-          property: 'og:url',
-          content: 'https://alopara.com'
-        },
-
-        {
-          property: 'og:image',
-          content: 'https://alopara.com/capa.jpg'
-        },
-
-        {
-          name: 'twitter:card',
-          content: 'summary_large_image'
-        },
-
-        {
-          name: 'twitter:title',
-          content: 'Ofertas do Alô Pará'
-        },
-
-        {
-          name: 'twitter:description',
-          content: 'Promoções imperdíveis toda semana!'
-        },
-
-        {
-          name: 'twitter:image',
-          content: 'https://alopara.com/capa.jpg'
-        },
-
-        {
-          name: 'google',
-          content: 'notranslate'
-        }
+        { name: 'google', content: 'notranslate' },
       ],
 
       link: [
-        {
-          rel: 'icon',
-          type: 'image/png',
-          href: '/favicon.png'
-        },
-
-        {
-          rel: 'canonical',
-          href: 'https://alopara.com'
-        }
+        { rel: 'icon', type: 'image/png', href: '/favicon.png' },
       ],
 
       htmlAttrs: {
         lang: 'pt-BR',
-        translate: 'no'
-      }
-    }
-  }
+        translate: 'no',
+      },
+    },
+  },
 
 })

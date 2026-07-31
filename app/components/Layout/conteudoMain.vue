@@ -28,10 +28,9 @@ import DialogTrigger from '../ui/dialog/DialogTrigger.vue';
     <h1 class="text-white font-black text-[clamp(52px,10vw,96px)] leading-none tracking-tight text-center">
       <span class="text-red-600">Alô Pará</span>
     </h1>
-
-
-
-
+    <p class="text-[#555] text-sm font-semibold tracking-[2px] uppercase mt-3">
+      Supermercado em Novo Repartimento - PA
+    </p>
 
     <p class="text-[#888] text-[15px] text-center max-w-[440px] leading-relaxed mb-10">
       Há anos presente no dia a dia das famílias paraenses, levando

@@ -5,7 +5,10 @@ import Footer from '~/components/Layout/Footer.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
 import { useCarrinho } from '~/data/composable/UseCarrinho'
 
-useHead({ title: 'Meu Carrinho | Alô Pará' })
+useSeoMeta({
+  title: 'Meu Carrinho | Alô Pará',
+  robots: 'noindex, follow',
+})
 
 const { carrinho, removeItem, esvaziarCarrinho, totalItens } = useCarrinho()
 

@@ -51,9 +51,14 @@ const {
   limparFiltros,
 } = useCatalogo(props.endpoint)
 
-useHead({
-  title: `${props.titulo} | Alô Pará`,
-  meta: [{ name: 'description', content: props.descricao ?? `${props.titulo} no Supermercado Alô Pará.` }],
+const tituloPagina = `${props.titulo} | Alô Pará`
+const descricaoPagina = props.descricao ?? `${props.titulo} no Supermercado Alô Pará, em Novo Repartimento - PA.`
+
+useSeoMeta({
+  title: tituloPagina,
+  description: descricaoPagina,
+  ogTitle: tituloPagina,
+  ogDescription: descricaoPagina,
 })
 
 // ═════════════ MODAL ═════════════
