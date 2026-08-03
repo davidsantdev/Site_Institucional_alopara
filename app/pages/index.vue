@@ -22,7 +22,7 @@ useSeoMeta({
     <div class="bg-[#111111] flex flex-col justify-center items-center">
       <CarousselSobre />
       <hr class="border-[#222] w-[90%] m-10">
-      <ProdutosRedondo class="m-20" />
+      <ProdutosRedondo />
     </div>
 
     <div class="bg-[#111111]">
