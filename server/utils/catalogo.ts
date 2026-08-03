@@ -663,6 +663,11 @@ export function consultar(
     filtrados.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
   }
 
+  // Produtos com imagem vêm primeiro; sem imagem caem para o fim, mas continuam
+  // aparecendo (nunca são descartados). Array.sort é estável, então isto só
+  // separa em dois blocos sem embaralhar a ordenação já aplicada acima.
+  filtrados.sort((a, b) => (a.img ? 0 : 1) - (b.img ? 0 : 1))
+
   const paginaSegura = Math.max(1, pagina)
   const inicio = (paginaSegura - 1) * porPagina
 
