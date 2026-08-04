@@ -37,6 +37,13 @@ export interface Produto {
   quantidade: number
   /** Bitmask das categorias às quais o produto pertence (ver CAT). */
   cat: number
+  /**
+   * `img` veio de `imageUrl`/`imagem` (a própria CISS mandou) e não de
+   * `montarImagem()`, que só ADIVINHA uma URL a partir do código de barras e
+   * frequentemente quebra (cai no ícone de caixa). Só isto conta como "tem
+   * imagem de verdade" para efeito de ordenação — ver `consultar()`.
+   */
+  imagemReal: boolean
 }
 
 export interface Catalogo {
@@ -373,6 +380,8 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
       continue
     vistos.add(id)
 
+    const imagemApi = p.imageUrl?.trim() || p.imagem?.trim() || ''
+
     destino.push({
       id,
       nome: p.nome?.trim() || 'Produto sem nome',
@@ -382,7 +391,8 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
         || p.categoria?.trim()
         || p.departamento?.trim()
         || 'Geral',
-      img: p.imageUrl?.trim() || p.imagem?.trim() || montarImagem(p.nrcodbarprod || p.codigoBarra),
+      img: imagemApi || montarImagem(p.nrcodbarprod || p.codigoBarra),
+      imagemReal: Boolean(imagemApi),
       quantidade: 1,
       cat,
     })
@@ -663,10 +673,11 @@ export function consultar(
     filtrados.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
   }
 
-  // Produtos com imagem vêm primeiro; sem imagem caem para o fim, mas continuam
-  // aparecendo (nunca são descartados). Array.sort é estável, então isto só
+  // Produtos com imagem de verdade da CISS vêm primeiro; o resto (URL
+  // adivinhada por montarImagem() ou nenhuma) cai para o fim, mas continua
+  // aparecendo — nunca é descartado. Array.sort é estável, então isto só
   // separa em dois blocos sem embaralhar a ordenação já aplicada acima.
-  filtrados.sort((a, b) => (a.img ? 0 : 1) - (b.img ? 0 : 1))
+  filtrados.sort((a, b) => (a.imagemReal ? 0 : 1) - (b.imagemReal ? 0 : 1))
 
   const paginaSegura = Math.max(1, pagina)
   const inicio = (paginaSegura - 1) * porPagina
