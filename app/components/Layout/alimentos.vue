@@ -119,7 +119,7 @@ function diminuir(id: string) {
                   aria-label="Diminuir quantidade"
                   class="flex h-9 w-9 items-center justify-center rounded-lg text-white text-lg hover:bg-[#2a2a2a] transition"
                   @click="diminuir(A.id)"
-                >
+                > 
                   −
                 </button>
                 <span class="min-w-8 text-center font-bold text-white">{{ A.quantidade }}</span>

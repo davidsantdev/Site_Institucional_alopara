@@ -37,10 +37,7 @@ const navLinks = [
     <div class="flex items-center justify-between px-6 lg:px-10 h-[72px] border-b border-[#1f1f1f]">
       <!-- Logo -->
       <NuxtLink to="/" class="flex flex-col gap-0.5 shrink-0">
-        <span class="text-[26px] font-black text-white leading-none tracking-tight">
-          <span class="text-red-600">Alô</span> Pará
-        </span>
-        <span class="text-[9px] font-bold tracking-[4px] uppercase text-[#444]">Supermercado</span>
+       <img class="w-35" src="/gg.png">
       </NuxtLink>
 
       <!-- Ações -->
