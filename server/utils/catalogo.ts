@@ -38,10 +38,10 @@ export interface Produto {
   /** Bitmask das categorias às quais o produto pertence (ver CAT). */
   cat: number
   /**
-   * `img` veio de `imageUrl`/`imagem` (a própria CISS mandou) e não de
-   * `montarImagem()`, que só ADIVINHA uma URL a partir do código de barras e
-   * frequentemente quebra (cai no ícone de caixa). Só isto conta como "tem
-   * imagem de verdade" para efeito de ordenação — ver `consultar()`.
+   * true = imagem confirmada (veio de imageUrl/imagem da CISS, ou a URL
+   * chutada por `montarImagem()` foi checada no CDN e existe de verdade).
+   * A CISS nunca preenche imageUrl/imagem na prática — então isto depende
+   * de `validarImagens()` ter rodado. Usado para ordenar em `consultar()`.
    */
   imagemReal: boolean
 }
@@ -94,6 +94,13 @@ const TOKEN_TTL_MS = 50 * 60_000
 /** Páginas simultâneas. Baixo de propósito: a origem é frágil. */
 const CONCORRENCIA = 2
 const TIMEOUT_MS = 25_000
+/**
+ * A CISS nunca preenche imageUrl/imagem — toda foto é um CHUTE (montarImagem,
+ * a partir do código de barras) que às vezes não existe no CDN. O CDN é um
+ * blob storage (Azure), não a origem frágil, então aguenta bem mais concorrência.
+ */
+const CONCORRENCIA_IMAGENS = 60
+const TIMEOUT_IMAGEM_MS = 6_000
 /** 2 tentativas, não 3 — retry agressivo era parte do problema. */
 const MAX_TENTATIVAS = 2
 const DELAY_ENTRE_LOTES = 300
@@ -328,6 +335,45 @@ function montarImagem(codigo: string | number | null | undefined): string {
   return `https://cdn.cisslive.com.br/images/${cod}_1.jpg`
 }
 
+async function imagemExiste(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, {
+      method: 'HEAD',
+      signal: AbortSignal.timeout(TIMEOUT_IMAGEM_MS),
+    })
+    return res.ok
+  }
+  catch {
+    return false
+  }
+}
+
+/**
+ * Confere no CDN, com um teto de concorrência, quais imagens chutadas por
+ * `montarImagem()` realmente existem. Sem isto `imagemReal` fica sempre falso
+ * (a API nunca manda imageUrl/imagem) e a ordenação "imagem primeiro" não tem
+ * efeito nenhum — só reordena produtos que já não têm imagem.
+ */
+async function validarImagens(produtos: Produto[]): Promise<void> {
+  const pendentes = produtos.filter(p => p.img && !p.imagemReal)
+  if (pendentes.length === 0)
+    return
+
+  log(`[catálogo] 🖼️ validando ${pendentes.length} imagens no CDN...`)
+
+  let indice = 0
+  async function trabalhador() {
+    while (indice < pendentes.length) {
+      const p = pendentes[indice++]!
+      p.imagemReal = await imagemExiste(p.img)
+    }
+  }
+  await Promise.all(Array.from({ length: CONCORRENCIA_IMAGENS }, trabalhador))
+
+  const validas = pendentes.filter(p => p.imagemReal).length
+  log(`[catálogo] 🖼️ ${validas}/${pendentes.length} imagens confirmadas no CDN`)
+}
+
 /** Resultado de uma página: `null` distingue falha de página legitimamente vazia. */
 async function buscarPagina(pagina: number, headers: Record<string, string>): Promise<any[] | null> {
   for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
@@ -495,6 +541,10 @@ async function varrer(): Promise<void> {
     console.warn(`[catálogo] ⚠️ varredura parcial: ${produtos.length} produtos`)
     return
   }
+
+  // Roda depois da varredura completa (não bloqueia a resposta a ninguém —
+  // quem já está sendo servido continua vendo o catálogo anterior até aqui).
+  await validarImagens(produtos)
 
   const agora = Date.now()
   publicar(produtos, agora, true)
