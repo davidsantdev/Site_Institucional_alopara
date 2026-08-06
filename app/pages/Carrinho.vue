@@ -42,6 +42,16 @@ function diminuir(item: any) {
 }
 
 function comprarWhatsapp() {
+  // Esta é a conversão real do site — o clique que vira pedido de verdade.
+  // Fica registrada como evento custom no GA4 (não é "purchase" porque a venda
+  // só se confirma depois, na conversa do WhatsApp).
+  const { gtag } = useGtag()
+  gtag('event', 'finalizar_whatsapp', {
+    value: Number(totalCarrinho.value.replace(',', '.')) || 0,
+    currency: 'BRL',
+    quantidade_itens: carrinho.value.length,
+  })
+
   const mensagem = [
     ...carrinho.value.map(item =>
       `Olá, vim pelo site\nProduto: ${item.nome}\nQuantidade: ${item.quantidade ?? 1}\nPreço: R$ ${precoItem(item)}`,

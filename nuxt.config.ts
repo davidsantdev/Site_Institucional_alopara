@@ -1,3 +1,4 @@
+import process from 'node:process'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -41,7 +42,17 @@ export default defineNuxtConfig({
 
     // Toasts (feedback ao adicionar no carrinho)
     'vue-sonner/nuxt',
+
+    // Analytics — mede visitas, navegação por página e o clique em "Finalizar no WhatsApp".
+    'nuxt-gtag',
   ],
+
+  // ID público (não é segredo — todo GA4 expõe o measurement ID no HTML da página).
+  // Override via NUXT_PUBLIC_GTAG_ID só se precisar apontar pra outra propriedade
+  // (ex.: sandbox de teste) sem mexer no código.
+  gtag: {
+    id: process.env.NUXT_PUBLIC_GTAG_ID ?? 'G-TWY1RG29N2',
+  },
 
   // A URL canônica do site é lida daqui pelo @nuxtjs/sitemap (via nuxt-site-config).
   // Antes estava em `sitemap.siteUrl`, chave que a v7 não reconhece — era ignorada
