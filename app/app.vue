@@ -5,7 +5,7 @@
 // /Alimentos, /Bebidas etc. Fica aqui (não em cada página) porque precisa
 // de exatamente uma fonte de verdade, senão o unhead registra duas tags
 // <link rel="canonical"> e a duplicata confunde o rastreador.
-const SITE_URL = 'https://alopara.com'
+const SITE_URL = 'https://alopara.com.br'
 const route = useRoute()
 
 useHead({

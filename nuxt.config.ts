@@ -58,7 +58,7 @@ export default defineNuxtConfig({
   // Antes estava em `sitemap.siteUrl`, chave que a v7 não reconhece — era ignorada
   // em silêncio e o sitemap saía sem host absoluto.
   site: {
-    url: 'https://alopara.com',
+    url: 'https://alopara.com.br',
     name: 'Alô Pará Supermercado',
   },
 
@@ -148,13 +148,13 @@ export default defineNuxtConfig({
         { property: 'og:type', content: 'website' },
         { property: 'og:locale', content: 'pt_BR' },
         { property: 'og:site_name', content: 'Supermercado Alô Pará' },
-        { property: 'og:image', content: 'https://alopara.com/og-image.png' },
+        { property: 'og:image', content: 'https://alopara.com.br/og-image.png' },
         { property: 'og:image:width', content: '1920' },
         { property: 'og:image:height', content: '1080' },
         { property: 'og:image:alt', content: 'Equipe do Supermercado Alô Pará' },
 
         { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:image', content: 'https://alopara.com/og-image.png' },
+        { name: 'twitter:image', content: 'https://alopara.com.br/og-image.png' },
 
         { name: 'google', content: 'notranslate' },
       ],
