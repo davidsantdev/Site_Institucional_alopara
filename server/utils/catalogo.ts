@@ -101,6 +101,21 @@ const TIMEOUT_MS = 25_000
  */
 const CONCORRENCIA_IMAGENS = 60
 const TIMEOUT_IMAGEM_MS = 6_000
+
+/**
+ * Cosmos (Bluesoft) — segunda fonte de imagem, só para o que sobra depois do
+ * CDN da CISS. Sem token definido, o enriquecimento simplesmente não roda
+ * (é opcional). O plano Basic dá só 25 consultas/dia — muito pouco perto dos
+ * milhares de produtos sem imagem — então cada código de barras só é
+ * consultado UMA vez na vida (resultado fica em .cache/cosmos.json para
+ * sempre) e o orçamento diário sobrevive a restart do processo.
+ */
+const COSMOS_TOKEN = process.env.COSMOS_TOKEN ?? ''
+const COSMOS_URL = 'https://cosmos.bluesoft.com.br/api/gtins'
+const COSMOS_LIMITE_DIARIO = Number(process.env.COSMOS_LIMITE_DIARIO ?? 25)
+const COSMOS_TIMEOUT_MS = 10_000
+/** Sem pressa nenhuma com só 25/dia — dá pra ser educado com a API deles. */
+const COSMOS_DELAY_MS = 1_500
 /** 2 tentativas, não 3 — retry agressivo era parte do problema. */
 const MAX_TENTATIVAS = 2
 const DELAY_ENTRE_LOTES = 300
@@ -116,6 +131,7 @@ const PAGINAS_INICIAIS = 4
 
 const CACHE_DIR = join(process.cwd(), '.cache')
 const CACHE_FILE = join(CACHE_DIR, 'catalogo.json')
+const COSMOS_CACHE_FILE = join(CACHE_DIR, 'cosmos.json')
 
 const HEADERS_BASE = {
   'User-Agent': 'PostmanRuntime/7.54.0',
@@ -242,6 +258,26 @@ const estado: Estado = g[CHAVE] ??= {
   proximaTentativa: 0,
 }
 
+/** Resultado de UM código de barras no Cosmos — guardado para sempre, nunca reconsultado. */
+interface ResultadoCosmos {
+  status: 'ok' | 'sem-foto' | 'nao-encontrado'
+  thumbnail?: string
+  checkedAt: number
+}
+
+interface EstadoCosmos {
+  resultados: Record<string, ResultadoCosmos>
+  orcamento: { dia: string, usados: number }
+  carregado: boolean
+}
+
+const CHAVE_COSMOS = Symbol.for('alopara.catalogo.cosmos')
+const estadoCosmos: EstadoCosmos = g[CHAVE_COSMOS] ??= {
+  resultados: {},
+  orcamento: { dia: '', usados: 0 },
+  carregado: false,
+}
+
 function publicar(produtos: Produto[], atualizadoEm: number, completo: boolean) {
   // Substituição atômica: produtos e índice trocam juntos, sempre coerentes.
   estado.catalogo = {
@@ -282,6 +318,38 @@ async function salvarDisco(catalogo: CatalogoDisco): Promise<void> {
   }
   catch (err) {
     console.error('[catálogo] erro ao salvar em disco:', err)
+  }
+}
+
+/** Carrega uma vez por processo — chamadas seguintes são no-op (evita reler o arquivo a cada varredura). */
+async function lerCosmosDisco(): Promise<void> {
+  if (estadoCosmos.carregado)
+    return
+  estadoCosmos.carregado = true
+  try {
+    if (!existsSync(COSMOS_CACHE_FILE))
+      return
+    const dados = JSON.parse(await readFile(COSMOS_CACHE_FILE, 'utf-8'))
+    if (dados?.resultados)
+      estadoCosmos.resultados = dados.resultados
+    if (dados?.orcamento)
+      estadoCosmos.orcamento = dados.orcamento
+  }
+  catch {
+    // Cache ausente ou corrompido: segue com estado vazio — o pior caso é
+    // reconsultar códigos já vistos, não travar a varredura.
+  }
+}
+
+async function salvarCosmosDisco(): Promise<void> {
+  try {
+    await mkdir(CACHE_DIR, { recursive: true })
+    const tmp = `${COSMOS_CACHE_FILE}.tmp`
+    await writeFile(tmp, JSON.stringify({ resultados: estadoCosmos.resultados, orcamento: estadoCosmos.orcamento }), 'utf-8')
+    await rename(tmp, COSMOS_CACHE_FILE)
+  }
+  catch (err) {
+    console.error('[cosmos] erro ao salvar cache em disco:', err)
   }
 }
 
@@ -372,6 +440,123 @@ async function validarImagens(produtos: Produto[]): Promise<void> {
 
   const validas = pendentes.filter(p => p.imagemReal).length
   log(`[catálogo] 🖼️ ${validas}/${pendentes.length} imagens confirmadas no CDN`)
+}
+
+/** Extrai o código de barras da URL chutada por `montarImagem()` — é a única fonte que temos dele aqui. */
+function extrairCodigoDaImagem(img: string): string | null {
+  const m = img.match(/\/images\/(\d+)_1\.jpg$/)
+  return m ? m[1] : null
+}
+
+/** Uma consulta ao Cosmos. `'limite'` = bateu 429 (para tudo por hoje). `'erro'` = falha pontual (não conta orçamento, tenta de novo depois). */
+async function buscarCosmos(gtin: string): Promise<ResultadoCosmos | 'limite' | 'erro'> {
+  try {
+    const res = await fetch(`${COSMOS_URL}/${gtin}.json`, {
+      headers: {
+        'X-Cosmos-Token': COSMOS_TOKEN,
+        'User-Agent': 'Cosmos-API-Request',
+        'Content-Type': 'application/json',
+      },
+      signal: AbortSignal.timeout(COSMOS_TIMEOUT_MS),
+    })
+
+    if (res.status === 429)
+      return 'limite'
+    if (!res.ok)
+      return { status: 'nao-encontrado', checkedAt: Date.now() }
+
+    const json: any = await res.json()
+    return json.thumbnail
+      ? { status: 'ok', thumbnail: json.thumbnail, checkedAt: Date.now() }
+      : { status: 'sem-foto', checkedAt: Date.now() }
+  }
+  catch {
+    return 'erro'
+  }
+}
+
+/**
+ * Segunda fonte de imagem — só entra pros produtos que sobraram sem imagem
+ * depois do CDN da CISS. Com só 25 consultas/dia (plano Basic), o desenho é:
+ *
+ *  1) Reaplica de graça (sem gastar orçamento) qualquer imagem já descoberta
+ *     num ciclo anterior — o resultado de cada código de barras é permanente.
+ *  2) Gasta o orçamento do dia só em código NUNCA consultado antes.
+ *
+ * Em ~8 mil produtos sem imagem, isso enriquece aos poucos ao longo de meses,
+ * não de uma vez — é o preço do plano gratuito/básico, não um bug.
+ */
+async function enriquecerComCosmos(produtos: Produto[]): Promise<void> {
+  if (!COSMOS_TOKEN)
+    return
+
+  await lerCosmosDisco()
+
+  const hoje = new Date().toISOString().slice(0, 10)
+  if (estadoCosmos.orcamento.dia !== hoje)
+    estadoCosmos.orcamento = { dia: hoje, usados: 0 }
+
+  const semImagem = produtos.filter(p => p.img && !p.imagemReal)
+
+  // 1) Reaproveita o que já foi descoberto antes — não custa nada.
+  let doCache = 0
+  for (const p of semImagem) {
+    const codigo = extrairCodigoDaImagem(p.img)
+    const resultado = codigo ? estadoCosmos.resultados[codigo] : undefined
+    if (resultado?.status === 'ok' && resultado.thumbnail) {
+      p.img = resultado.thumbnail
+      p.imagemReal = true
+      doCache++
+    }
+  }
+  if (doCache > 0)
+    log(`[cosmos] 🖼️ ${doCache} produto(s) reaproveitado(s) do cache (sem gastar orçamento)`)
+
+  // 2) Só o que nunca foi consultado, até o orçamento do dia acabar.
+  const restante = COSMOS_LIMITE_DIARIO - estadoCosmos.orcamento.usados
+  if (restante <= 0)
+    return
+
+  const pendentes: { produto: Produto, codigo: string }[] = []
+  for (const p of semImagem) {
+    if (p.imagemReal || pendentes.length >= restante)
+      continue
+    const codigo = extrairCodigoDaImagem(p.img)
+    if (!codigo || estadoCosmos.resultados[codigo])
+      continue
+    pendentes.push({ produto: p, codigo })
+  }
+  if (pendentes.length === 0)
+    return
+
+  log(`[cosmos] 🔎 consultando ${pendentes.length} produto(s) novo(s) (orçamento: ${restante}/${COSMOS_LIMITE_DIARIO})`)
+
+  let novos = 0
+  for (const { produto, codigo } of pendentes) {
+    const r = await buscarCosmos(codigo)
+
+    if (r === 'limite') {
+      log('[cosmos] ⛔ limite diário atingido na origem — parando por hoje')
+      estadoCosmos.orcamento.usados = COSMOS_LIMITE_DIARIO
+      break
+    }
+    if (r === 'erro')
+      continue // falha pontual: não consome orçamento, tenta de novo no próximo ciclo
+
+    estadoCosmos.resultados[codigo] = r
+    estadoCosmos.orcamento.usados++
+
+    if (r.status === 'ok' && r.thumbnail) {
+      produto.img = r.thumbnail
+      produto.imagemReal = true
+      novos++
+    }
+
+    await sleep(COSMOS_DELAY_MS)
+  }
+
+  log(`[cosmos] ✅ ${novos} imagem(ns) nova(s) encontrada(s) hoje`)
+  await salvarCosmosDisco()
 }
 
 /** Resultado de uma página: `null` distingue falha de página legitimamente vazia. */
@@ -545,6 +730,8 @@ async function varrer(): Promise<void> {
   // Roda depois da varredura completa (não bloqueia a resposta a ninguém —
   // quem já está sendo servido continua vendo o catálogo anterior até aqui).
   await validarImagens(produtos)
+  // Segunda fonte de imagem, só pro que sobrou sem foto — ver enriquecerComCosmos().
+  await enriquecerComCosmos(produtos)
 
   const agora = Date.now()
   publicar(produtos, agora, true)
