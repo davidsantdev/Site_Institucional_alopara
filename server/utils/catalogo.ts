@@ -374,11 +374,73 @@ function aplicarOverrides(produtos: Produto[]): void {
   }
 }
 
+/**
+ * Produto removido do site pelo admin — some das rotas públicas, mas
+ * continua existindo (a CISS é quem manda de verdade; isto não apaga nada
+ * de lá, só esconde na vitrine). `consultar()` filtra por isto; o admin
+ * pesquisa com `incluirOcultos: true` pra conseguir restaurar depois.
+ */
+const OCULTOS_FILE = join(DATA_DIR, 'ocultos.json')
+
+interface EstadoOcultos {
+  /** Chave: Produto.id. Valor: quando foi ocultado (só pra referência). */
+  dados: Record<string, number>
+  carregado: boolean
+}
+
+const CHAVE_OCULTOS = Symbol.for('alopara.catalogo.ocultos')
+const estadoOcultos: EstadoOcultos = g[CHAVE_OCULTOS] ??= {
+  dados: {},
+  carregado: false,
+}
+
+async function carregarOcultos(): Promise<void> {
+  if (estadoOcultos.carregado)
+    return
+  estadoOcultos.carregado = true
+  try {
+    if (!existsSync(OCULTOS_FILE))
+      return
+    const dados = JSON.parse(await readFile(OCULTOS_FILE, 'utf-8'))
+    if (dados && typeof dados === 'object')
+      estadoOcultos.dados = dados
+  }
+  catch {
+    // Arquivo ausente ou corrompido: segue com zero ocultos em vez de travar o site.
+  }
+}
+
+async function salvarOcultosDisco(): Promise<void> {
+  await mkdir(DATA_DIR, { recursive: true })
+  const tmp = `${OCULTOS_FILE}.tmp`
+  await writeFile(tmp, JSON.stringify(estadoOcultos.dados), 'utf-8')
+  await rename(tmp, OCULTOS_FILE)
+}
+
+/** Oculta (ou restaura) um produto do site. Some/reaparece na hora, sem esperar varredura. */
+export async function ocultarProduto(produtoId: string, oculto: boolean): Promise<void> {
+  await carregarOcultos()
+
+  if (oculto)
+    estadoOcultos.dados[produtoId] = Date.now()
+  else
+    delete estadoOcultos.dados[produtoId]
+
+  await salvarOcultosDisco()
+}
+
+export function produtoEstaOculto(produtoId: string): boolean {
+  return produtoId in estadoOcultos.dados
+}
+
 async function publicar(produtos: Produto[], atualizadoEm: number, completo: boolean) {
   // Roda antes de qualquer varredura terminar: garante que a foto escolhida
   // pelo admin nunca é perdida quando o catálogo é reconstruído do zero.
   await carregarOverrides()
   aplicarOverrides(produtos)
+  // Só carrega — a filtragem em si acontece em consultar(), não aqui, porque
+  // o admin precisa continuar enxergando (e restaurando) produto oculto.
+  await carregarOcultos()
 
   // Substituição atômica: produtos e índice trocam juntos, sempre coerentes.
   estado.catalogo = {
@@ -964,7 +1026,7 @@ export function consultar(
   busca: string,
   pagina: number,
   porPagina: number,
-  opcoes: { tipo?: string, ordenar?: Ordenacao } = {},
+  opcoes: { tipo?: string, ordenar?: Ordenacao, incluirOcultos?: boolean } = {},
 ): Resultado {
   // `null` = catálogo inteiro; array = união de categorias.
   const mascara = categoria === null
@@ -987,6 +1049,9 @@ export function consultar(
       continue
     // Índice pré-computado: evita um toLowerCase() por item, por requisição.
     if (termo && !indice[i]!.includes(termo))
+      continue
+    // Produto removido pelo admin: só o próprio painel enxerga (pra poder restaurar).
+    if (!opcoes.incluirOcultos && produtoEstaOculto(p.id))
       continue
     base.push(p)
     contagemTipos.set(p.tipo, (contagemTipos.get(p.tipo) ?? 0) + 1)

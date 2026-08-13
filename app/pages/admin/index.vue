@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogOut, Search, Trash2, Upload } from 'lucide-vue-next'
+import { Eye, EyeOff, LogOut, Search, Trash2, Upload } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { imagemErro, imgSrc } from '~/composables/useCatalogo'
@@ -58,6 +58,7 @@ interface ProdutoAdmin {
   preco2: string
   tipo: string
   img: string
+  oculto: boolean
 }
 
 const busca = ref('')
@@ -130,6 +131,24 @@ async function removerImagem(produto: ProdutoAdmin) {
   }
   catch {
     toast.error('Erro ao remover imagem')
+  }
+  finally {
+    enviando.value[produto.id] = false
+  }
+}
+
+// ═════════════ REMOVER/RESTAURAR PRODUTO DO SITE ═════════════
+
+async function alternarOculto(produto: ProdutoAdmin) {
+  enviando.value[produto.id] = true
+  try {
+    const metodo = produto.oculto ? 'DELETE' : 'POST'
+    await $fetch(`/api/admin/produtos/${produto.id}/ocultar`, { method: metodo })
+    produto.oculto = !produto.oculto
+    toast.success(produto.oculto ? 'Removido do site' : 'Produto restaurado', { description: produto.nome })
+  }
+  catch {
+    toast.error('Erro ao atualizar o produto')
   }
   finally {
     enviando.value[produto.id] = false
@@ -221,7 +240,8 @@ onMounted(verificarSessao)
         <div
           v-for="p in produtos"
           :key="p.id"
-          class="flex items-center gap-4 rounded-xl border border-[#1f1f1f] bg-[#161616] p-3"
+          class="flex items-center gap-4 rounded-xl border border-[#1f1f1f] bg-[#161616] p-3 transition-opacity"
+          :class="{ 'opacity-50': p.oculto }"
         >
           <img
             :src="imgSrc(p.img)"
@@ -231,9 +251,17 @@ onMounted(verificarSessao)
           >
 
           <div class="min-w-0 flex-1">
-            <p class="truncate text-sm font-semibold">
-              {{ p.nome }}
-            </p>
+            <div class="flex items-center gap-2">
+              <p class="truncate text-sm font-semibold">
+                {{ p.nome }}
+              </p>
+              <span
+                v-if="p.oculto"
+                class="shrink-0 rounded-full border border-red-900 bg-red-950/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-400"
+              >
+                Removido do site
+              </span>
+            </div>
             <p class="text-xs text-[#666]">
               {{ p.tipo }} · R$ {{ p.preco2 }}
             </p>
@@ -260,6 +288,21 @@ onMounted(verificarSessao)
             @click="removerImagem(p)"
           >
             <Trash2 :size="14" />
+          </button>
+
+          <button
+            :title="p.oculto ? 'Restaurar produto no site' : 'Remover produto do site'"
+            class="shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold transition disabled:opacity-40"
+            :class="p.oculto
+              ? 'border-[#2a2a2a] text-[#ccc] hover:border-emerald-600 hover:text-emerald-400'
+              : 'border-[#2a2a2a] text-[#ccc] hover:border-red-600 hover:text-red-500'"
+            :disabled="enviando[p.id]"
+            @click="alternarOculto(p)"
+          >
+            <span class="flex items-center gap-1.5">
+              <component :is="p.oculto ? Eye : EyeOff" :size="14" />
+              {{ p.oculto ? 'Restaurar' : 'Remover' }}
+            </span>
           </button>
         </div>
       </div>
