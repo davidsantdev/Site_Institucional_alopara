@@ -133,6 +133,16 @@ const CACHE_DIR = join(process.cwd(), '.cache')
 const CACHE_FILE = join(CACHE_DIR, 'catalogo.json')
 const COSMOS_CACHE_FILE = join(CACHE_DIR, 'cosmos.json')
 
+/**
+ * `.data` é separado de `.cache` de propósito: tudo em `.cache` é regenerável
+ * (a gente já mandou apagar `.cache/catalogo.json` várias vezes pra forçar uma
+ * varredura nova). `.data` guarda escolha humana (foto que o admin escolheu) —
+ * isso NUNCA pode ser apagado por engano do mesmo jeito.
+ */
+const DATA_DIR = join(process.cwd(), '.data')
+const OVERRIDES_FILE = join(DATA_DIR, 'overrides.json')
+export const UPLOADS_DIR = join(DATA_DIR, 'uploads')
+
 const HEADERS_BASE = {
   'User-Agent': 'PostmanRuntime/7.54.0',
   'Accept': '*/*',
@@ -278,7 +288,98 @@ const estadoCosmos: EstadoCosmos = g[CHAVE_COSMOS] ??= {
   carregado: false,
 }
 
-function publicar(produtos: Produto[], atualizadoEm: number, completo: boolean) {
+/** Foto escolhida à mão pelo admin — vale para sempre, até alguém trocar de novo. */
+interface Override {
+  imagem: string
+  atualizadoEm: number
+}
+
+interface EstadoOverrides {
+  /** Chave: Produto.id (mesmo identificador usado pra deduplicar na varredura). */
+  dados: Record<string, Override>
+  carregado: boolean
+}
+
+const CHAVE_OVERRIDES = Symbol.for('alopara.catalogo.overrides')
+const estadoOverrides: EstadoOverrides = g[CHAVE_OVERRIDES] ??= {
+  dados: {},
+  carregado: false,
+}
+
+async function carregarOverrides(): Promise<void> {
+  if (estadoOverrides.carregado)
+    return
+  estadoOverrides.carregado = true
+  try {
+    if (!existsSync(OVERRIDES_FILE))
+      return
+    const dados = JSON.parse(await readFile(OVERRIDES_FILE, 'utf-8'))
+    if (dados && typeof dados === 'object')
+      estadoOverrides.dados = dados
+  }
+  catch {
+    // Arquivo ausente ou corrompido: segue com zero overrides em vez de travar o site.
+  }
+}
+
+async function salvarOverridesDisco(): Promise<void> {
+  await mkdir(DATA_DIR, { recursive: true })
+  const tmp = `${OVERRIDES_FILE}.tmp`
+  await writeFile(tmp, JSON.stringify(estadoOverrides.dados), 'utf-8')
+  await rename(tmp, OVERRIDES_FILE)
+}
+
+/**
+ * Define a foto de um produto escolhida à mão pelo admin — ou remove (imagem
+ * vazia), voltando a valer o que a automação (CDN/Cosmos) decidir sozinha.
+ * Aplica no catálogo já publicado NA HORA (não espera a próxima varredura de
+ * 6h) e persiste em disco pra sobreviver a qualquer varredura futura.
+ */
+export async function definirOverrideImagem(produtoId: string, imagem: string): Promise<void> {
+  await carregarOverrides()
+
+  if (imagem)
+    estadoOverrides.dados[produtoId] = { imagem, atualizadoEm: Date.now() }
+  else
+    delete estadoOverrides.dados[produtoId]
+
+  await salvarOverridesDisco()
+
+  const produto = estado.catalogo.produtos.find(p => p.id === produtoId)
+  if (produto) {
+    if (imagem) {
+      produto.img = imagem
+      produto.imagemReal = true
+    }
+    else {
+      // Removendo o override: o arquivo enviado já foi apagado do disco (ver
+      // rota de DELETE), então manter a URL antiga aqui mostraria imagem
+      // quebrada. Cai pro "sem imagem" até a próxima varredura re-descobrir
+      // a foto automática (não vale reprocessar CDN/Cosmos só por causa disto).
+      produto.img = ''
+      produto.imagemReal = false
+    }
+  }
+}
+
+function aplicarOverrides(produtos: Produto[]): void {
+  if (Object.keys(estadoOverrides.dados).length === 0)
+    return
+  for (const p of produtos) {
+    const ov = estadoOverrides.dados[p.id]
+    if (ov) {
+      p.img = ov.imagem
+      p.imagemReal = true
+    }
+  }
+}
+
+async function publicar(produtos: Produto[], atualizadoEm: number, completo: boolean) {
+  // Roda antes de qualquer varredura terminar: garante que a foto escolhida
+  // pelo admin nunca é perdida quando o catálogo é reconstruído do zero.
+  await carregarOverrides()
+  aplicarOverrides(produtos)
+
   // Substituição atômica: produtos e índice trocam juntos, sempre coerentes.
   estado.catalogo = {
     produtos,
@@ -445,7 +546,7 @@ async function validarImagens(produtos: Produto[]): Promise<void> {
 /** Extrai o código de barras da URL chutada por `montarImagem()` — é a única fonte que temos dele aqui. */
 function extrairCodigoDaImagem(img: string): string | null {
   const m = img.match(/\/images\/(\d+)_1\.jpg$/)
-  return m ? m[1] : null
+  return m?.[1] ?? null
 }
 
 /** Uma consulta ao Cosmos. `'limite'` = bateu 429 (para tudo por hoje). `'erro'` = falha pontual (não conta orçamento, tenta de novo depois). */
@@ -697,7 +798,7 @@ async function varrer(): Promise<void> {
     // Publica parcial só na construção inicial — assim a página já mostra produtos
     // enquanto carrega, sem nunca regredir um catálogo que já está completo.
     if (novosNoLote > 0 && !revalidando) {
-      publicar([...produtos], 0, false)
+      await publicar([...produtos], 0, false)
     }
 
     if (vazias >= MAX_PAGINAS_VAZIAS) {
@@ -714,7 +815,7 @@ async function varrer(): Promise<void> {
     // e tenta de novo no próximo TTL, em vez de degradar o site.
     console.warn('[catálogo] mantendo cache anterior (varredura parcial trouxe menos produtos)')
     if (revalidando)
-      publicar(anterior.produtos, anterior.atualizadoEm, true)
+      await publicar(anterior.produtos, anterior.atualizadoEm, true)
     return
   }
 
@@ -722,7 +823,7 @@ async function varrer(): Promise<void> {
     // Varredura parcial: serve o que deu, mas NÃO carimba como fresca — senão o
     // catálogo quebrado ficaria congelado pelo TTL inteiro (6h). O cooldown de
     // getCatalogo() é quem controla o ritmo das novas tentativas.
-    publicar(produtos, 0, false)
+    await publicar(produtos, 0, false)
     console.warn(`[catálogo] ⚠️ varredura parcial: ${produtos.length} produtos`)
     return
   }
@@ -734,7 +835,7 @@ async function varrer(): Promise<void> {
   await enriquecerComCosmos(produtos)
 
   const agora = Date.now()
-  publicar(produtos, agora, true)
+  await publicar(produtos, agora, true)
   estado.proximaTentativa = 0
   log(`[catálogo] ✅ ${produtos.length} produtos`)
 
@@ -777,7 +878,7 @@ async function primeiroLote(): Promise<void> {
     }
 
     if (produtos.length)
-      publicar(produtos, 0, false)
+      await publicar(produtos, 0, false)
   }
   catch (err) {
     console.error('[catálogo] erro no lote inicial:', err)
@@ -797,7 +898,7 @@ export async function getCatalogo(): Promise<Catalogo> {
   estado.bootEmVoo ??= (async () => {
     const disco = await lerDisco()
     if (disco) {
-      publicar(disco.produtos, disco.atualizadoEm, disco.completo)
+      await publicar(disco.produtos, disco.atualizadoEm, disco.completo)
       const idade = Math.round((Date.now() - disco.atualizadoEm) / 60_000)
       log(`[catálogo] ⚡ ${disco.produtos.length} produtos do disco (${idade}min atrás)`)
     }

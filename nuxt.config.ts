@@ -69,9 +69,11 @@ export default defineNuxtConfig({
   },
 
   // @nuxtjs/robots v5 usa `groups`, não `rules` (a chave antiga também era ignorada).
+  // /admin e /uploads também ficam fora — a página do admin já manda noindex
+  // por conta própria (useSeoMeta), isto aqui é a segunda camada.
   robots: {
     groups: [
-      { userAgent: ['*'], allow: ['/'], disallow: ['/api/'] },
+      { userAgent: ['*'], allow: ['/'], disallow: ['/api/', '/admin/', '/uploads/'] },
     ],
   },
 
@@ -106,6 +108,10 @@ export default defineNuxtConfig({
     // catálogo (ver server/utils/rotaCategoria.ts) — aqui só garantimos que o
     // Nitro não as prerenderize nem as trate como estáticas.
     '/api/**': { cache: false },
+
+    // Painel de admin: depende de sessão (cookie) — nunca pode ser prerenderizado
+    // nem cacheado, ou uma pessoa veria a tela logada de outra.
+    '/admin/**': { cache: false, prerender: false },
   },
 
   imports: {
