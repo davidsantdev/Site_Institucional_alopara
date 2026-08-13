@@ -119,9 +119,18 @@ const COSMOS_DELAY_MS = 1_500
 /** 2 tentativas, não 3 — retry agressivo era parte do problema. */
 const MAX_TENTATIVAS = 2
 const DELAY_ENTRE_LOTES = 300
-const MAX_PAGINAS = 600
+/**
+ * Teto de páginas e paciência com página vazia — sobem sem tocar em
+ * concorrência/timeout/delay (é isso que mantém a origem frágil respirando).
+ * Antes (4 vazias seguidas / 600 páginas) parava bem antes do catálogo
+ * realmente acabar sempre que a CISS devolvia um vazio "no meio do caminho"
+ * em vez de só no fim de verdade — aumentar isto é puro ganho de cobertura
+ * dentro das MESMAS categorias, não muda o que conta como Alimentos/Bebidas/
+ * Limpeza/Perfumaria.
+ */
+const MAX_PAGINAS = 1500
 /** Páginas vazias consecutivas até considerar o catálogo esgotado. */
-const MAX_PAGINAS_VAZIAS = 4
+const MAX_PAGINAS_VAZIAS = 15
 /** Disjuntor: aborta a varredura em vez de martelar uma origem que já caiu. */
 const MAX_FALHAS_SEGUIDAS = 8
 /** Espera mínima entre tentativas de varredura depois de uma falha. */
