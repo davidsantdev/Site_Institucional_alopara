@@ -165,14 +165,14 @@ const HEADERS_BASE = {
 
 const DEPS_ALIMENTOS = [
   'MERCEARIA',
-  'BEBIDAS',
-  'HORTIFRUTI',
+
+
   'PADARIA',
-  'PAS',
+
   'FRIOS',
   'LATICINIOS',
   'CONGELADOS',
-  'ACOUGUE',
+
   'BOMBONIERE',
   'MATINAIS',
 ]

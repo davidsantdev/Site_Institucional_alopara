@@ -139,7 +139,7 @@ function diminuir(id: string) {
                 @click="produtoSelecionado = A; adicionarCarrinho(A, A.quantidade)"
               >
                 <ShoppingBasket :size="18" />
-                Adicionar ao carrinho
+                Adicionar ao carrinho 
               </button>
             </div>
           </div>
