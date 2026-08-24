@@ -1,6 +1,20 @@
 <script setup lang="ts">
-import { Eye, EyeOff, LogOut, Search, Trash2, Upload } from 'lucide-vue-next'
-import { onMounted, ref } from 'vue'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Eye,
+  EyeOff,
+  ImageOff,
+  LogOut,
+  Package,
+  PencilLine,
+  Search,
+  Sparkles,
+  Trash2,
+  Upload,
+} from 'lucide-vue-next'
+import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { imagemErro, imgSrc } from '~/composables/useCatalogo'
 
@@ -23,6 +37,8 @@ async function verificarSessao() {
   try {
     const r = await $fetch<{ autenticado: boolean }>('/api/admin/sessao')
     tela.value = r.autenticado ? 'painel' : 'login'
+    if (r.autenticado)
+      carregarStats()
   }
   catch {
     tela.value = 'login'
@@ -36,6 +52,7 @@ async function entrar() {
     await $fetch('/api/admin/login', { method: 'POST', body: { senha: senha.value } })
     senha.value = ''
     tela.value = 'painel'
+    carregarStats()
   }
   catch (e: any) {
     erroLogin.value = e?.data?.statusMessage || 'Não foi possível entrar'
@@ -50,7 +67,63 @@ async function sair() {
   tela.value = 'login'
 }
 
-// ═════════════ BUSCA ═════════════
+// ═════════════ ESTATÍSTICAS (dashboard) ═════════════
+
+interface Estatisticas {
+  total: number
+  semImagem: number
+  ocultos: number
+  overridesManuais: number
+  porCategoria: Record<'alimentos' | 'bebidas' | 'limpeza' | 'perfumaria', number>
+  catalogo: { atualizadoEm: number, completo: boolean, idadeMin: number }
+  cosmos: { habilitado: boolean, usadosHoje: number, limiteDiario: number }
+}
+
+const stats = ref<Estatisticas | null>(null)
+const carregandoStats = ref(false)
+
+const LABEL_CATEGORIA: Record<string, string> = {
+  alimentos: 'Alimentos',
+  bebidas: 'Bebidas',
+  limpeza: 'Limpeza',
+  perfumaria: 'Perfumaria',
+}
+
+async function carregarStats() {
+  carregandoStats.value = true
+  try {
+    stats.value = await $fetch<Estatisticas>('/api/admin/estatisticas')
+  }
+  catch {
+    toast.error('Erro ao carregar estatísticas')
+  }
+  finally {
+    carregandoStats.value = false
+  }
+}
+
+function formatarNumero(n: number) {
+  return n.toLocaleString('pt-BR')
+}
+
+function formatarIdade(min: number) {
+  if (min < 0)
+    return 'nunca'
+  if (min < 60)
+    return `${min}min atrás`
+  const horas = Math.floor(min / 60)
+  if (horas < 24)
+    return `${horas}h atrás`
+  return `${Math.floor(horas / 24)}d atrás`
+}
+
+const percentualSemImagem = computed(() => {
+  if (!stats.value || stats.value.total === 0)
+    return 0
+  return Math.round((stats.value.semImagem / stats.value.total) * 100)
+})
+
+// ═════════════ BUSCA / FILTROS RÁPIDOS ═════════════
 
 interface ProdutoAdmin {
   id: string
@@ -58,23 +131,37 @@ interface ProdutoAdmin {
   preco2: string
   tipo: string
   img: string
+  imagemReal: boolean
   oculto: boolean
 }
 
+type Filtro = '' | 'sem-imagem' | 'ocultos'
+
 const busca = ref('')
+const filtro = ref<Filtro>('')
 const produtos = ref<ProdutoAdmin[]>([])
 const buscando = ref(false)
+const paginaAtual = ref(1)
+const totalPaginas = ref(1)
+const totalResultados = ref(0)
 let timeoutBusca: ReturnType<typeof setTimeout> | null = null
 
-async function executarBusca() {
-  if (!busca.value.trim()) {
+async function executarBusca(pagina = 1) {
+  if (!busca.value.trim() && !filtro.value) {
     produtos.value = []
+    totalResultados.value = 0
+    totalPaginas.value = 1
     return
   }
   buscando.value = true
   try {
-    const r = await $fetch<{ produtos: ProdutoAdmin[] }>('/api/admin/produtos', { query: { busca: busca.value } })
+    const r = await $fetch<{ produtos: ProdutoAdmin[], total: number, pagina: number, totalPaginas: number }>('/api/admin/produtos', {
+      query: { busca: busca.value, filtro: filtro.value || undefined, pagina },
+    })
     produtos.value = r.produtos
+    totalResultados.value = r.total
+    totalPaginas.value = r.totalPaginas
+    paginaAtual.value = r.pagina
   }
   catch {
     toast.error('Erro ao buscar produtos')
@@ -87,8 +174,25 @@ async function executarBusca() {
 function aoDigitarBusca() {
   if (timeoutBusca)
     clearTimeout(timeoutBusca)
-  timeoutBusca = setTimeout(executarBusca, 400)
+  timeoutBusca = setTimeout(() => {
+    filtro.value = '' // digitar texto sai do modo "filtro rápido"
+    executarBusca(1)
+  }, 400)
 }
+
+function alternarFiltro(novo: Filtro) {
+  filtro.value = filtro.value === novo ? '' : novo
+  busca.value = ''
+  executarBusca(1)
+}
+
+function irParaPagina(p: number) {
+  if (p < 1 || p > totalPaginas.value || buscando.value)
+    return
+  executarBusca(p)
+}
+
+const modoAtivo = computed(() => busca.value.trim() ? 'busca' : filtro.value || null)
 
 // ═════════════ IMAGEM POR PRODUTO ═════════════
 
@@ -104,7 +208,9 @@ async function enviarImagem(produto: ProdutoAdmin, arquivo: File) {
       body: form,
     })
     produto.img = r.imagem
+    produto.imagemReal = true
     toast.success('Imagem atualizada', { description: produto.nome })
+    carregarStats()
   }
   catch (e: any) {
     toast.error(e?.data?.statusMessage || 'Erro ao enviar imagem')
@@ -127,7 +233,8 @@ async function removerImagem(produto: ProdutoAdmin) {
   try {
     await $fetch(`/api/admin/produtos/${produto.id}/imagem`, { method: 'DELETE' })
     toast.success('Imagem removida — voltou ao automático', { description: produto.nome })
-    await executarBusca() // recarrega pra refletir a imagem automática atual
+    await executarBusca(paginaAtual.value) // recarrega pra refletir a imagem automática atual
+    carregarStats()
   }
   catch {
     toast.error('Erro ao remover imagem')
@@ -146,6 +253,10 @@ async function alternarOculto(produto: ProdutoAdmin) {
     await $fetch(`/api/admin/produtos/${produto.id}/ocultar`, { method: metodo })
     produto.oculto = !produto.oculto
     toast.success(produto.oculto ? 'Removido do site' : 'Produto restaurado', { description: produto.nome })
+    // No modo "ocultos" o produto some da lista assim que é restaurado — recarrega a página atual.
+    if (filtro.value === 'ocultos')
+      await executarBusca(paginaAtual.value)
+    carregarStats()
   }
   catch {
     toast.error('Erro ao atualizar o produto')
@@ -200,14 +311,14 @@ onMounted(verificarSessao)
     </div>
 
     <!-- painel -->
-    <div v-else class="mx-auto max-w-5xl px-4 py-8">
+    <div v-else class="mx-auto max-w-6xl px-4 py-8">
       <div class="mb-8 flex items-center justify-between">
         <div>
           <h1 class="text-xl font-black">
             <span class="text-red-600">Alô</span> Pará — Admin
           </h1>
           <p class="text-sm text-[#666]">
-            Editar foto de produto
+            Dashboard do catálogo
           </p>
         </div>
         <button
@@ -218,7 +329,94 @@ onMounted(verificarSessao)
         </button>
       </div>
 
-      <div class="relative mb-6">
+      <!-- ═══ STATS ═══ -->
+      <p v-if="carregandoStats && !stats" class="mb-6 text-sm text-[#555]">
+        Carregando estatísticas...
+      </p>
+
+      <div v-else-if="stats" class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <!-- total -->
+        <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4">
+          <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+            <Package :size="13" /> Produtos
+          </div>
+          <p class="text-2xl font-black text-white">
+            {{ formatarNumero(stats.total) }}
+          </p>
+        </div>
+
+        <!-- sem imagem (clicável) -->
+        <button
+          type="button"
+          class="rounded-xl border p-4 text-left transition"
+          :class="filtro === 'sem-imagem' ? 'border-amber-500 bg-amber-500/10' : 'border-[#1f1f1f] bg-[#161616] hover:border-amber-500/60'"
+          @click="alternarFiltro('sem-imagem')"
+        >
+          <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+            <ImageOff :size="13" /> Sem imagem
+          </div>
+          <p class="text-2xl font-black text-amber-400">
+            {{ formatarNumero(stats.semImagem) }}
+            <span class="text-xs font-bold text-[#555]">({{ percentualSemImagem }}%)</span>
+          </p>
+        </button>
+
+        <!-- ocultos (clicável) -->
+        <button
+          type="button"
+          class="rounded-xl border p-4 text-left transition"
+          :class="filtro === 'ocultos' ? 'border-red-600 bg-red-600/10' : 'border-[#1f1f1f] bg-[#161616] hover:border-red-600/60'"
+          @click="alternarFiltro('ocultos')"
+        >
+          <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+            <EyeOff :size="13" /> Ocultos
+          </div>
+          <p class="text-2xl font-black text-red-400">
+            {{ formatarNumero(stats.ocultos) }}
+          </p>
+        </button>
+
+        <!-- fotos manuais -->
+        <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4">
+          <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+            <PencilLine :size="13" /> Fotos manuais
+          </div>
+          <p class="text-2xl font-black text-white">
+            {{ formatarNumero(stats.overridesManuais) }}
+          </p>
+        </div>
+
+        <!-- catálogo -->
+        <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4" :title="stats.catalogo.atualizadoEm ? new Date(stats.catalogo.atualizadoEm).toLocaleString('pt-BR') : ''">
+          <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+            <Clock :size="13" /> Catálogo
+          </div>
+          <p class="text-sm font-black leading-tight" :class="stats.catalogo.completo ? 'text-white' : 'text-amber-400'">
+            {{ stats.catalogo.completo ? formatarIdade(stats.catalogo.idadeMin) : 'Construindo...' }}
+          </p>
+        </div>
+
+        <!-- cosmos -->
+        <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4">
+          <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+            <Sparkles :size="13" /> Cosmos hoje
+          </div>
+          <p class="text-sm font-black leading-tight text-white">
+            {{ stats.cosmos.habilitado ? `${stats.cosmos.usadosHoje}/${stats.cosmos.limiteDiario}` : 'Desativado' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- categorias -->
+      <div v-if="stats" class="mb-8 flex flex-wrap gap-4 px-1 text-xs text-[#666]">
+        <span v-for="(total, cat) in stats.porCategoria" :key="cat">
+          <span class="font-semibold text-[#999]">{{ LABEL_CATEGORIA[cat] }}</span>
+          · {{ formatarNumero(total) }}
+        </span>
+      </div>
+
+      <!-- ═══ BUSCA ═══ -->
+      <div class="relative mb-4">
         <Search class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#555]" :size="18" />
         <input
           v-model="busca"
@@ -229,10 +427,18 @@ onMounted(verificarSessao)
         >
       </div>
 
+      <div v-if="modoAtivo" class="mb-4 flex items-center justify-between text-xs text-[#666]">
+        <span>
+          <span class="font-bold text-[#ccc]">{{ formatarNumero(totalResultados) }}</span>
+          {{ totalResultados === 1 ? 'produto encontrado' : 'produtos encontrados' }}
+        </span>
+        <span v-if="totalPaginas > 1">Página {{ paginaAtual }} de {{ totalPaginas }}</span>
+      </div>
+
       <p v-if="buscando" class="text-sm text-[#555]">
         Buscando...
       </p>
-      <p v-else-if="busca && produtos.length === 0" class="text-sm text-[#555]">
+      <p v-else-if="modoAtivo && produtos.length === 0" class="text-sm text-[#555]">
         Nenhum produto encontrado.
       </p>
 
@@ -255,6 +461,12 @@ onMounted(verificarSessao)
               <p class="truncate text-sm font-semibold">
                 {{ p.nome }}
               </p>
+              <span
+                v-if="!p.imagemReal"
+                class="shrink-0 rounded-full border border-amber-800 bg-amber-950/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-400"
+              >
+                Sem imagem
+              </span>
               <span
                 v-if="p.oculto"
                 class="shrink-0 rounded-full border border-red-900 bg-red-950/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-400"
@@ -305,6 +517,27 @@ onMounted(verificarSessao)
             </span>
           </button>
         </div>
+      </div>
+
+      <!-- paginação -->
+      <div v-if="totalPaginas > 1" class="mt-6 flex items-center justify-center gap-2">
+        <button
+          type="button"
+          class="flex h-9 w-9 items-center justify-center rounded-lg border border-[#2a2a2a] text-[#888] transition hover:border-red-600 hover:text-white disabled:opacity-30"
+          :disabled="paginaAtual <= 1 || buscando"
+          @click="irParaPagina(paginaAtual - 1)"
+        >
+          <ChevronLeft :size="16" />
+        </button>
+        <span class="px-2 text-sm text-[#888]">{{ paginaAtual }} / {{ totalPaginas }}</span>
+        <button
+          type="button"
+          class="flex h-9 w-9 items-center justify-center rounded-lg border border-[#2a2a2a] text-[#888] transition hover:border-red-600 hover:text-white disabled:opacity-30"
+          :disabled="paginaAtual >= totalPaginas || buscando"
+          @click="irParaPagina(paginaAtual + 1)"
+        >
+          <ChevronRight :size="16" />
+        </button>
       </div>
     </div>
   </div>

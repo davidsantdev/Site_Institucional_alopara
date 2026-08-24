@@ -166,7 +166,6 @@ const HEADERS_BASE = {
 const DEPS_ALIMENTOS = [
   'MERCEARIA',
 
-
   'PADARIA',
 
   'FRIOS',
@@ -1035,7 +1034,7 @@ export function consultar(
   busca: string,
   pagina: number,
   porPagina: number,
-  opcoes: { tipo?: string, ordenar?: Ordenacao, incluirOcultos?: boolean } = {},
+  opcoes: { tipo?: string, ordenar?: Ordenacao, incluirOcultos?: boolean, somenteOcultos?: boolean, semImagem?: boolean } = {},
 ): Resultado {
   // `null` = catálogo inteiro; array = união de categorias.
   const mascara = categoria === null
@@ -1059,9 +1058,22 @@ export function consultar(
     // Índice pré-computado: evita um toLowerCase() por item, por requisição.
     if (termo && !indice[i]!.includes(termo))
       continue
-    // Produto removido pelo admin: só o próprio painel enxerga (pra poder restaurar).
-    if (!opcoes.incluirOcultos && produtoEstaOculto(p.id))
+
+    const oculto = produtoEstaOculto(p.id)
+    if (opcoes.somenteOcultos) {
+      // Modo "só ocultos" (painel de admin, pra listar o que já foi removido): inverte a regra normal.
+      if (!oculto)
+        continue
+    }
+    else if (!opcoes.incluirOcultos && oculto) {
+      // Produto removido pelo admin: só o próprio painel enxerga (pra poder restaurar).
       continue
+    }
+
+    // Modo "sem imagem" (painel de admin, pra achar o que falta enriquecer).
+    if (opcoes.semImagem && p.imagemReal)
+      continue
+
     base.push(p)
     contagemTipos.set(p.tipo, (contagemTipos.get(p.tipo) ?? 0) + 1)
   }
@@ -1102,5 +1114,61 @@ export function consultar(
     temMais: inicio + porPagina < filtrados.length,
     cacheCompleto: catalogo.completo,
     tipos,
+  }
+}
+
+// ═══════════════════════ ESTATÍSTICAS (dashboard do /admin) ═══════════════════════
+
+export interface Estatisticas {
+  total: number
+  semImagem: number
+  ocultos: number
+  overridesManuais: number
+  porCategoria: Record<Categoria, number>
+  catalogo: { atualizadoEm: number, completo: boolean, idadeMin: number }
+  cosmos: { habilitado: boolean, usadosHoje: number, limiteDiario: number }
+}
+
+/**
+ * Números pro dashboard do painel de admin. Lê só o catálogo já publicado em
+ * memória — nunca dispara varredura nova nem consulta a Cosmos (isso ficaria
+ * caro rápido, já que o painel pode ser recarregado a qualquer hora).
+ */
+export async function obterEstatisticas(): Promise<Estatisticas> {
+  const catalogo = await getCatalogo()
+  await carregarOcultos()
+  await carregarOverrides()
+  await lerCosmosDisco()
+
+  let semImagem = 0
+  const porCategoria: Record<Categoria, number> = { alimentos: 0, bebidas: 0, limpeza: 0, perfumaria: 0 }
+  for (const p of catalogo.produtos) {
+    if (!p.imagemReal)
+      semImagem++
+    for (const chave of Object.keys(CAT) as Categoria[]) {
+      if (p.cat & CAT[chave])
+        porCategoria[chave]++
+    }
+  }
+
+  const hoje = new Date().toISOString().slice(0, 10)
+  const usadosHoje = estadoCosmos.orcamento.dia === hoje ? estadoCosmos.orcamento.usados : 0
+
+  return {
+    total: catalogo.produtos.length,
+    semImagem,
+    ocultos: Object.keys(estadoOcultos.dados).length,
+    overridesManuais: Object.keys(estadoOverrides.dados).length,
+    porCategoria,
+    catalogo: {
+      atualizadoEm: catalogo.atualizadoEm,
+      completo: catalogo.completo,
+      idadeMin: catalogo.atualizadoEm ? Math.round((Date.now() - catalogo.atualizadoEm) / 60_000) : -1,
+    },
+    cosmos: {
+      habilitado: Boolean(COSMOS_TOKEN),
+      usadosHoje,
+      limiteDiario: COSMOS_LIMITE_DIARIO,
+    },
   }
 }
