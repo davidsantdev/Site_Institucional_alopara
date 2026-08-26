@@ -73,7 +73,7 @@ async function sair() {
 interface Estatisticas {
   total: number
   semImagem: number
-  semEstoqueFiltrados: number
+  semEstoque: number
   ocultos: number
   overridesManuais: number
   porCategoria: Record<'alimentos' | 'bebidas' | 'limpeza' | 'perfumaria', number>
@@ -134,10 +134,11 @@ interface ProdutoAdmin {
   tipo: string
   img: string
   imagemReal: boolean
+  semEstoque: boolean
   oculto: boolean
 }
 
-type Filtro = '' | 'sem-imagem' | 'ocultos'
+type Filtro = '' | 'sem-imagem' | 'ocultos' | 'sem-estoque'
 
 const busca = ref('')
 const filtro = ref<Filtro>('')
@@ -363,15 +364,21 @@ onMounted(verificarSessao)
           </p>
         </button>
 
-        <!-- sem estoque (filtrado direto na varredura — não fica na base pra restaurar) -->
-        <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4" title="Produtos com saldo de estoque zero ou negativo na CISS — nem chegam a entrar no catálogo, então não têm como restaurar por aqui.">
+        <!-- sem estoque (clicável — inclui quem tem saldo ≤0 na CISS E quem nem informa o campo) -->
+        <button
+          type="button"
+          class="rounded-xl border p-4 text-left transition"
+          :class="filtro === 'sem-estoque' ? 'border-orange-500 bg-orange-500/10' : 'border-[#1f1f1f] bg-[#161616] hover:border-orange-500/60'"
+          title="Escondidos do site público: saldo de estoque ≤0 na CISS, ou o campo nem veio preenchido."
+          @click="alternarFiltro('sem-estoque')"
+        >
           <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
             <PackageX :size="13" /> Sem estoque
           </div>
           <p class="text-2xl font-black text-orange-400">
-            {{ formatarNumero(stats.semEstoqueFiltrados) }}
+            {{ formatarNumero(stats.semEstoque) }}
           </p>
-        </div>
+        </button>
 
         <!-- ocultos (clicável) -->
         <button
@@ -478,6 +485,12 @@ onMounted(verificarSessao)
                 class="shrink-0 rounded-full border border-amber-800 bg-amber-950/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-400"
               >
                 Sem imagem
+              </span>
+              <span
+                v-if="p.semEstoque"
+                class="shrink-0 rounded-full border border-orange-800 bg-orange-950/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-400"
+              >
+                Sem estoque
               </span>
               <span
                 v-if="p.oculto"

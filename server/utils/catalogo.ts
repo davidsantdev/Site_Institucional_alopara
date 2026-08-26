@@ -44,6 +44,11 @@ export interface Produto {
    * de `validarImagens()` ter rodado. Usado para ordenar em `consultar()`.
    */
   imagemReal: boolean
+  /**
+   * true = saldo de estoque na CISS é ≤0 OU o campo nem veio (ver `normalizar()`).
+   * `consultar()` filtra por isto nas rotas públicas — o admin vê/busca mesmo assim.
+   */
+  semEstoque: boolean
 }
 
 export interface Catalogo {
@@ -262,8 +267,6 @@ interface Estado {
   bootEmVoo: Promise<void> | null
   /** Timestamp antes do qual nenhuma nova varredura é permitida (cooldown de falha). */
   proximaTentativa: number
-  /** Quantos produtos a última varredura completa descartou por saldo de estoque ≤ 0. */
-  semEstoqueUltimaVarredura: number
 }
 
 const CHAVE = Symbol.for('alopara.catalogo.estado')
@@ -276,7 +279,6 @@ const estado: Estado = g[CHAVE] ??= {
   varreduraEmVoo: null,
   bootEmVoo: null,
   proximaTentativa: 0,
-  semEstoqueUltimaVarredura: 0,
 }
 
 /** Resultado de UM código de barras no Cosmos — guardado para sempre, nunca reconsultado. */
@@ -775,19 +777,6 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
     if (!preco || preco <= 0)
       continue
 
-    // Sem estoque = não tem pra vender. Só filtra quando a CISS manda o campo
-    // preenchido (~74% dos produtos, no teste que fizemos) — quando falta,
-    // mantém o produto visível em vez de esconder à toa por falta de dado.
-    // Valor pode vir negativo (venda além do saldo, contagem desatualizada
-    // etc.) — trata igual a zero, é a mesma coisa na prática: não tem.
-    if (p.qtdEstoqueAtual !== undefined && p.qtdEstoqueAtual !== null && p.qtdEstoqueAtual !== '') {
-      const estoque = Number.parseFloat(p.qtdEstoqueAtual)
-      if (!Number.isNaN(estoque) && estoque <= 0) {
-        estado.semEstoqueUltimaVarredura++
-        continue
-      }
-    }
-
     const cat = classificar(p)
     // Produto que não cai em nenhuma categoria não é armazenado — economiza memória e disco.
     if (cat === 0)
@@ -799,6 +788,18 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
     vistos.add(id)
 
     const imagemApi = p.imageUrl?.trim() || p.imagem?.trim() || ''
+
+    // Sem estoque = não tem pra vender. Trata como sem estoque tanto o valor
+    // ≤0 quanto a AUSÊNCIA do campo (a CISS não manda `qtdEstoqueAtual` pra
+    // ~26% dos produtos, no teste que fizemos — decisão consciente aqui é
+    // "na dúvida, esconde": já pegamos produto real fora de estoque assim que
+    // não tinha o campo preenchido). Continua no catálogo (não descarta) pra
+    // o admin poder ver, buscar e corrigir na mão quando a CISS errar.
+    const estoqueBruto = p.qtdEstoqueAtual
+    const estoque = estoqueBruto !== undefined && estoqueBruto !== null && estoqueBruto !== ''
+      ? Number.parseFloat(estoqueBruto)
+      : Number.NaN
+    const semEstoque = !(estoque > 0)
 
     destino.push({
       id,
@@ -813,6 +814,7 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
       imagemReal: Boolean(imagemApi),
       quantidade: 1,
       cat,
+      semEstoque,
     })
     novos++
   }
@@ -847,7 +849,6 @@ async function varrer(): Promise<void> {
   let vazias = 0
   let falhasSeguidas = 0
   let abortada = false
-  estado.semEstoqueUltimaVarredura = 0
 
   log('[catálogo] 🚀 iniciando varredura única...')
 
@@ -924,7 +925,8 @@ async function varrer(): Promise<void> {
   const agora = Date.now()
   await publicar(produtos, agora, true)
   estado.proximaTentativa = 0
-  log(`[catálogo] ✅ ${produtos.length} produtos (${estado.semEstoqueUltimaVarredura} sem estoque filtrados)`)
+  const semEstoque = produtos.filter(p => p.semEstoque).length
+  log(`[catálogo] ✅ ${produtos.length} produtos (${semEstoque} sem estoque, escondidos do site público)`)
 
   await salvarDisco({ produtos, atualizadoEm: agora, completo: true })
 }
@@ -1051,7 +1053,17 @@ export function consultar(
   busca: string,
   pagina: number,
   porPagina: number,
-  opcoes: { tipo?: string, ordenar?: Ordenacao, incluirOcultos?: boolean, somenteOcultos?: boolean, semImagem?: boolean } = {},
+  opcoes: {
+    tipo?: string
+    ordenar?: Ordenacao
+    incluirOcultos?: boolean
+    somenteOcultos?: boolean
+    semImagem?: boolean
+    /** Inclui produtos sem estoque no resultado — só o painel de admin usa isto. */
+    incluirSemEstoque?: boolean
+    /** Modo "só sem estoque" (painel de admin, pra listar o que a varredura escondeu). */
+    somenteSemEstoque?: boolean
+  } = {},
 ): Resultado {
   // `null` = catálogo inteiro; array = união de categorias.
   const mascara = categoria === null
@@ -1084,6 +1096,15 @@ export function consultar(
     }
     else if (!opcoes.incluirOcultos && oculto) {
       // Produto removido pelo admin: só o próprio painel enxerga (pra poder restaurar).
+      continue
+    }
+
+    if (opcoes.somenteSemEstoque) {
+      if (!p.semEstoque)
+        continue
+    }
+    else if (!opcoes.incluirSemEstoque && p.semEstoque) {
+      // Sem estoque na CISS: nunca aparece nas rotas públicas — só o admin, de propósito.
       continue
     }
 
@@ -1139,7 +1160,7 @@ export function consultar(
 export interface Estatisticas {
   total: number
   semImagem: number
-  semEstoqueFiltrados: number
+  semEstoque: number
   ocultos: number
   overridesManuais: number
   porCategoria: Record<Categoria, number>
@@ -1159,10 +1180,13 @@ export async function obterEstatisticas(): Promise<Estatisticas> {
   await lerCosmosDisco()
 
   let semImagem = 0
+  let semEstoque = 0
   const porCategoria: Record<Categoria, number> = { alimentos: 0, bebidas: 0, limpeza: 0, perfumaria: 0 }
   for (const p of catalogo.produtos) {
     if (!p.imagemReal)
       semImagem++
+    if (p.semEstoque)
+      semEstoque++
     for (const chave of Object.keys(CAT) as Categoria[]) {
       if (p.cat & CAT[chave])
         porCategoria[chave]++
@@ -1175,7 +1199,7 @@ export async function obterEstatisticas(): Promise<Estatisticas> {
   return {
     total: catalogo.produtos.length,
     semImagem,
-    semEstoqueFiltrados: estado.semEstoqueUltimaVarredura,
+    semEstoque,
     ocultos: Object.keys(estadoOcultos.dados).length,
     overridesManuais: Object.keys(estadoOverrides.dados).length,
     porCategoria,

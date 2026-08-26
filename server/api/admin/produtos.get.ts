@@ -4,7 +4,7 @@ import { consultar, getCatalogo, produtoEstaOculto } from '../../utils/catalogo'
 
 const POR_PAGINA = 30
 
-const FILTROS_VALIDOS = ['sem-imagem', 'ocultos'] as const
+const FILTROS_VALIDOS = ['sem-imagem', 'ocultos', 'sem-estoque'] as const
 type Filtro = typeof FILTROS_VALIDOS[number]
 
 function lerFiltro(valor: unknown): Filtro | undefined {
@@ -31,7 +31,9 @@ export default defineEventHandler(async (event) => {
   const catalogo = await getCatalogo()
   const resultado = consultar(catalogo, null, busca, pagina, POR_PAGINA, {
     incluirOcultos: true,
+    incluirSemEstoque: true,
     somenteOcultos: filtro === 'ocultos',
+    somenteSemEstoque: filtro === 'sem-estoque',
     semImagem: filtro === 'sem-imagem',
   })
 
