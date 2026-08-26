@@ -8,6 +8,7 @@ import {
   ImageOff,
   LogOut,
   Package,
+  PackageX,
   PencilLine,
   Search,
   Sparkles,
@@ -72,6 +73,7 @@ async function sair() {
 interface Estatisticas {
   total: number
   semImagem: number
+  semEstoqueFiltrados: number
   ocultos: number
   overridesManuais: number
   porCategoria: Record<'alimentos' | 'bebidas' | 'limpeza' | 'perfumaria', number>
@@ -334,7 +336,7 @@ onMounted(verificarSessao)
         Carregando estatísticas...
       </p>
 
-      <div v-else-if="stats" class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div v-else-if="stats" class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         <!-- total -->
         <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4">
           <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
@@ -360,6 +362,16 @@ onMounted(verificarSessao)
             <span class="text-xs font-bold text-[#555]">({{ percentualSemImagem }}%)</span>
           </p>
         </button>
+
+        <!-- sem estoque (filtrado direto na varredura — não fica na base pra restaurar) -->
+        <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4" title="Produtos com saldo de estoque zero ou negativo na CISS — nem chegam a entrar no catálogo, então não têm como restaurar por aqui.">
+          <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+            <PackageX :size="13" /> Sem estoque
+          </div>
+          <p class="text-2xl font-black text-orange-400">
+            {{ formatarNumero(stats.semEstoqueFiltrados) }}
+          </p>
+        </div>
 
         <!-- ocultos (clicável) -->
         <button

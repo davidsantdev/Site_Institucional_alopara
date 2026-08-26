@@ -262,6 +262,8 @@ interface Estado {
   bootEmVoo: Promise<void> | null
   /** Timestamp antes do qual nenhuma nova varredura é permitida (cooldown de falha). */
   proximaTentativa: number
+  /** Quantos produtos a última varredura completa descartou por saldo de estoque ≤ 0. */
+  semEstoqueUltimaVarredura: number
 }
 
 const CHAVE = Symbol.for('alopara.catalogo.estado')
@@ -274,6 +276,7 @@ const estado: Estado = g[CHAVE] ??= {
   varreduraEmVoo: null,
   bootEmVoo: null,
   proximaTentativa: 0,
+  semEstoqueUltimaVarredura: 0,
 }
 
 /** Resultado de UM código de barras no Cosmos — guardado para sempre, nunca reconsultado. */
@@ -772,6 +775,19 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
     if (!preco || preco <= 0)
       continue
 
+    // Sem estoque = não tem pra vender. Só filtra quando a CISS manda o campo
+    // preenchido (~74% dos produtos, no teste que fizemos) — quando falta,
+    // mantém o produto visível em vez de esconder à toa por falta de dado.
+    // Valor pode vir negativo (venda além do saldo, contagem desatualizada
+    // etc.) — trata igual a zero, é a mesma coisa na prática: não tem.
+    if (p.qtdEstoqueAtual !== undefined && p.qtdEstoqueAtual !== null && p.qtdEstoqueAtual !== '') {
+      const estoque = Number.parseFloat(p.qtdEstoqueAtual)
+      if (!Number.isNaN(estoque) && estoque <= 0) {
+        estado.semEstoqueUltimaVarredura++
+        continue
+      }
+    }
+
     const cat = classificar(p)
     // Produto que não cai em nenhuma categoria não é armazenado — economiza memória e disco.
     if (cat === 0)
@@ -831,6 +847,7 @@ async function varrer(): Promise<void> {
   let vazias = 0
   let falhasSeguidas = 0
   let abortada = false
+  estado.semEstoqueUltimaVarredura = 0
 
   log('[catálogo] 🚀 iniciando varredura única...')
 
@@ -907,7 +924,7 @@ async function varrer(): Promise<void> {
   const agora = Date.now()
   await publicar(produtos, agora, true)
   estado.proximaTentativa = 0
-  log(`[catálogo] ✅ ${produtos.length} produtos`)
+  log(`[catálogo] ✅ ${produtos.length} produtos (${estado.semEstoqueUltimaVarredura} sem estoque filtrados)`)
 
   await salvarDisco({ produtos, atualizadoEm: agora, completo: true })
 }
@@ -1122,6 +1139,7 @@ export function consultar(
 export interface Estatisticas {
   total: number
   semImagem: number
+  semEstoqueFiltrados: number
   ocultos: number
   overridesManuais: number
   porCategoria: Record<Categoria, number>
@@ -1157,6 +1175,7 @@ export async function obterEstatisticas(): Promise<Estatisticas> {
   return {
     total: catalogo.produtos.length,
     semImagem,
+    semEstoqueFiltrados: estado.semEstoqueUltimaVarredura,
     ocultos: Object.keys(estadoOcultos.dados).length,
     overridesManuais: Object.keys(estadoOverrides.dados).length,
     porCategoria,
