@@ -11,7 +11,7 @@ import { ChevronLeft, ChevronRight, ChevronUp, ListFilter, RefreshCw, Search, Sh
 import { onMounted, onUnmounted, ref } from 'vue'
 import Footer from '~/components/Layout/Footer.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
-import { imagemErro, imgSrc, OPCOES_ORDENACAO, useCatalogo } from '~/composables/useCatalogo'
+import { imagemErro, imgSrc, OPCOES_ORDENACAO, percentualDesconto, useCatalogo } from '~/composables/useCatalogo'
 import { useCarrinho } from '~/data/composable/UseCarrinho'
 
 const props = defineProps<{
@@ -349,6 +349,13 @@ onUnmounted(() => {
             class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-[#161616] border border-[#1f1f1f] hover:border-[#3a3a3a] hover:-translate-y-0.5 transition-all duration-200 animate-fadeIn"
             @click="abrirModal(produto)"
           >
+            <span
+              v-if="produto.emPromocao"
+              class="absolute left-2 top-2 z-10 rounded-full bg-red-600 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white shadow"
+            >
+              -{{ percentualDesconto(produto.precoOriginal, produto.preco2) }}%
+            </span>
+
             <button
               type="button"
               :aria-label="`Adicionar ${produto.nome} ao carrinho`"
@@ -376,6 +383,9 @@ onUnmounted(() => {
                 {{ produto.nome }}
               </p>
               <div class="mt-auto pt-1">
+                <span v-if="produto.emPromocao" class="block text-xs font-medium text-[#666] line-through">
+                  R$ {{ produto.precoOriginal }}
+                </span>
                 <span class="text-xl font-extrabold text-green-400 md:text-2xl">
                   R$ {{ produto.preco2 }}
                 </span>
@@ -472,9 +482,14 @@ onUnmounted(() => {
             <h2 class="mt-1 text-xl font-semibold text-white leading-snug">
               {{ modalProduto.nome }}
             </h2>
-            <p class="mt-2 text-4xl font-extrabold text-green-400">
-              R$ {{ modalProduto.preco2 }}
-            </p>
+            <div class="mt-2 flex items-center gap-2">
+              <p class="text-4xl font-extrabold text-green-400">
+                R$ {{ modalProduto.preco2 }}
+              </p>
+              <span v-if="modalProduto.emPromocao" class="text-base font-medium text-[#666] line-through">
+                R$ {{ modalProduto.precoOriginal }}
+              </span>
+            </div>
 
             <div class="mt-6 flex items-center gap-3">
               <div class="flex items-center gap-2 rounded-xl bg-[#1e1e1e] border border-[#2a2a2a] p-1">

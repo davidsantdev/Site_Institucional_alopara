@@ -31,7 +31,15 @@ const log = (msg: string) => console.log(msg)
 export interface Produto {
   id: string
   nome: string
+  /** Preço de venda de verdade — já é o promocional quando `emPromocao` é true. */
   preco2: string
+  /**
+   * Preço "de", pra riscar na tela. Igual a `preco2` quando não há promoção
+   * (assim o front nunca precisa tratar campo ausente).
+   */
+  precoOriginal: string
+  /** true quando a CISS manda `vlrPromocao` válido (>0 e menor que o preço normal). */
+  emPromocao: boolean
   tipo: string
   img: string
   quantidade: number
@@ -801,10 +809,21 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
       : Number.NaN
     const semEstoque = !(estoque > 0)
 
+    // Promoção: `vlrPromocao` só vale quando preenchido, numérico e menor que
+    // o preço normal — o resto (vazio, igual, maior, lixo) é tratado como
+    // "sem promoção" em vez de arriscar mostrar preço errado.
+    const promoBruta = p.vlrPromocao
+    const promo = promoBruta !== undefined && promoBruta !== null && promoBruta !== ''
+      ? Number.parseFloat(promoBruta)
+      : Number.NaN
+    const emPromocao = promo > 0 && promo < preco
+
     destino.push({
       id,
       nome: p.nome?.trim() || 'Produto sem nome',
-      preco2: preco.toFixed(2),
+      preco2: (emPromocao ? promo : preco).toFixed(2),
+      precoOriginal: preco.toFixed(2),
+      emPromocao,
       tipo:
         p.subcategoria?.replace(/^\d+\s/, '')?.trim()
         || p.categoria?.trim()
@@ -941,6 +960,20 @@ function varrerUmaVez(): Promise<void> {
     .finally(() => { estado.varreduraEmVoo = null })
 
   return estado.varreduraEmVoo
+}
+
+/**
+ * Dispara uma varredura completa AGORA, ignorando o cooldown/TTL de 6h —
+ * botão "Atualizar agora" do painel de admin, pra quando a CISS muda um preço
+ * ou uma promoção acaba e não dá pra esperar a renovação automática. Não
+ * bloqueia: dispara em segundo plano e devolve na hora. Se já tiver uma
+ * varredura rolando, não duplica — só avisa que já estava em andamento.
+ */
+export function forcarNovaVarredura(): { jaEmAndamento: boolean } {
+  const jaEmAndamento = estado.varreduraEmVoo !== null
+  estado.proximaTentativa = 0
+  varrerUmaVez()
+  return { jaEmAndamento }
 }
 
 // ═══════════════════════ PRIMEIRO ACESSO ═══════════════════════
@@ -1161,6 +1194,7 @@ export interface Estatisticas {
   total: number
   semImagem: number
   semEstoque: number
+  emPromocao: number
   ocultos: number
   overridesManuais: number
   porCategoria: Record<Categoria, number>
@@ -1181,12 +1215,15 @@ export async function obterEstatisticas(): Promise<Estatisticas> {
 
   let semImagem = 0
   let semEstoque = 0
+  let emPromocao = 0
   const porCategoria: Record<Categoria, number> = { alimentos: 0, bebidas: 0, limpeza: 0, perfumaria: 0 }
   for (const p of catalogo.produtos) {
     if (!p.imagemReal)
       semImagem++
     if (p.semEstoque)
       semEstoque++
+    if (p.emPromocao)
+      emPromocao++
     for (const chave of Object.keys(CAT) as Categoria[]) {
       if (p.cat & CAT[chave])
         porCategoria[chave]++
@@ -1200,6 +1237,7 @@ export async function obterEstatisticas(): Promise<Estatisticas> {
     total: catalogo.produtos.length,
     semImagem,
     semEstoque,
+    emPromocao,
     ocultos: Object.keys(estadoOcultos.dados).length,
     overridesManuais: Object.keys(estadoOverrides.dados).length,
     porCategoria,

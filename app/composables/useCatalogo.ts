@@ -17,6 +17,9 @@ export interface Produto {
   id: string
   nome: string
   preco2: string
+  /** Preço "de" — igual a `preco2` quando não há promoção ativa. */
+  precoOriginal: string
+  emPromocao: boolean
   tipo: string
   img: string
   quantidade: number
@@ -313,4 +316,15 @@ export function imagemErro(e: Event) {
   const img = e.target as HTMLImageElement
   if (!img.src.endsWith(IMAGEM_FALLBACK))
     img.src = IMAGEM_FALLBACK
+}
+
+// ═════════════ PROMOÇÃO ═════════════
+
+/** Desconto em % pro badge (ex.: "-10%"). Arredonda pra baixo — nunca exagera o desconto. */
+export function percentualDesconto(precoOriginal: string, preco2: string): number {
+  const original = Number(precoOriginal)
+  const atual = Number(preco2)
+  if (!original || atual >= original)
+    return 0
+  return Math.floor((1 - atual / original) * 100)
 }

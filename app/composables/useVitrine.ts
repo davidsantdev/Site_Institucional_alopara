@@ -13,6 +13,9 @@ export interface ProdutoVitrine {
   id: string
   nome: string
   preco2: string
+  /** Preço "de" — igual a `preco2` quando não há promoção ativa. */
+  precoOriginal: string
+  emPromocao: boolean
   tipo: string
   img: string
   quantidade: number

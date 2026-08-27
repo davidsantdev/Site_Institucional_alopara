@@ -10,8 +10,10 @@ import {
   Package,
   PackageX,
   PencilLine,
+  RefreshCw,
   Search,
   Sparkles,
+  Tag,
   Trash2,
   Upload,
 } from 'lucide-vue-next'
@@ -68,12 +70,40 @@ async function sair() {
   tela.value = 'login'
 }
 
+// ═════════════ ATUALIZAR CATÁLOGO AGORA ═════════════
+// TTL automático é 6h — este botão é o "sai na hora" pra quando o admin sabe
+// que algo mudou na CISS (promoção acabou, preço mudou) e não quer esperar.
+
+const atualizando = ref(false)
+
+async function atualizarAgora() {
+  atualizando.value = true
+  try {
+    const r = await $fetch<{ jaEmAndamento: boolean }>('/api/admin/atualizar', { method: 'POST' })
+    toast.success(
+      r.jaEmAndamento ? 'Já tinha uma atualização em andamento' : 'Atualização iniciada',
+      { description: 'Pode levar alguns minutos (revalida imagens de novo) — os números aqui atualizam sozinhos.' },
+    )
+    // Uma olhada rápida agora (ainda em andamento) e outra mais tarde (bem
+    // provável que já tenha terminado) — sem virar polling permanente.
+    setTimeout(carregarStats, 15_000)
+    setTimeout(carregarStats, 90_000)
+  }
+  catch {
+    toast.error('Erro ao iniciar atualização')
+  }
+  finally {
+    atualizando.value = false
+  }
+}
+
 // ═════════════ ESTATÍSTICAS (dashboard) ═════════════
 
 interface Estatisticas {
   total: number
   semImagem: number
   semEstoque: number
+  emPromocao: number
   ocultos: number
   overridesManuais: number
   porCategoria: Record<'alimentos' | 'bebidas' | 'limpeza' | 'perfumaria', number>
@@ -131,6 +161,8 @@ interface ProdutoAdmin {
   id: string
   nome: string
   preco2: string
+  precoOriginal: string
+  emPromocao: boolean
   tipo: string
   img: string
   imagemReal: boolean
@@ -324,12 +356,23 @@ onMounted(verificarSessao)
             Dashboard do catálogo
           </p>
         </div>
-        <button
-          class="flex items-center gap-2 rounded-lg border border-[#2a2a2a] px-3 py-2 text-sm text-[#888] transition hover:border-red-600 hover:text-white"
-          @click="sair"
-        >
-          <LogOut :size="14" /> Sair
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            :disabled="atualizando"
+            title="Dispara uma varredura nova agora, sem esperar o TTL de 6h"
+            class="flex items-center gap-2 rounded-lg border border-[#2a2a2a] px-3 py-2 text-sm text-[#888] transition hover:border-emerald-600 hover:text-white disabled:opacity-40"
+            @click="atualizarAgora"
+          >
+            <RefreshCw :size="14" :class="{ 'animate-spin': atualizando }" />
+            {{ atualizando ? 'Atualizando...' : 'Atualizar agora' }}
+          </button>
+          <button
+            class="flex items-center gap-2 rounded-lg border border-[#2a2a2a] px-3 py-2 text-sm text-[#888] transition hover:border-red-600 hover:text-white"
+            @click="sair"
+          >
+            <LogOut :size="14" /> Sair
+          </button>
+        </div>
       </div>
 
       <!-- ═══ STATS ═══ -->
@@ -337,7 +380,7 @@ onMounted(verificarSessao)
         Carregando estatísticas...
       </p>
 
-      <div v-else-if="stats" class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+      <div v-else-if="stats" class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8">
         <!-- total -->
         <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4">
           <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
@@ -379,6 +422,16 @@ onMounted(verificarSessao)
             {{ formatarNumero(stats.semEstoque) }}
           </p>
         </button>
+
+        <!-- em promoção (informativo — pra achar, é mais rápido buscar pelo nome) -->
+        <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4">
+          <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+            <Tag :size="13" /> Em promoção
+          </div>
+          <p class="text-2xl font-black text-emerald-400">
+            {{ formatarNumero(stats.emPromocao) }}
+          </p>
+        </div>
 
         <!-- ocultos (clicável) -->
         <button
@@ -493,6 +546,12 @@ onMounted(verificarSessao)
                 Sem estoque
               </span>
               <span
+                v-if="p.emPromocao"
+                class="shrink-0 rounded-full border border-emerald-800 bg-emerald-950/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400"
+              >
+                Promoção
+              </span>
+              <span
                 v-if="p.oculto"
                 class="shrink-0 rounded-full border border-red-900 bg-red-950/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-400"
               >
@@ -500,7 +559,9 @@ onMounted(verificarSessao)
               </span>
             </div>
             <p class="text-xs text-[#666]">
-              {{ p.tipo }} · R$ {{ p.preco2 }}
+              {{ p.tipo }} ·
+              <span v-if="p.emPromocao" class="line-through">R$ {{ p.precoOriginal }}</span>
+              R$ {{ p.preco2 }}
             </p>
           </div>
 

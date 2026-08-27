@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ChevronRight, Flame, ShoppingBasket } from 'lucide-vue-next'
+import { percentualDesconto } from '~/composables/useCatalogo'
+import { useVitrine } from '~/composables/useVitrine'
+import { useCarrinho } from '~/data/composable/UseCarrinho'
+
 import Dialog from '../ui/dialog/Dialog.vue'
 import DialogContent from '../ui/dialog/DialogContent.vue'
 import DialogTrigger from '../ui/dialog/DialogTrigger.vue'
-
-import { useVitrine } from '~/composables/useVitrine'
-import { useCarrinho } from '~/data/composable/UseCarrinho'
 
 const { adicionarCarrinho } = useCarrinho()
 const { produtos: bebidasLimitados, carregando } = useVitrine('/api/bebidas', { limite: 5 })
@@ -60,8 +61,11 @@ function diminuir(id: string) {
       <Dialog v-for="B in bebidasLimitados" :key="B.id">
         <DialogTrigger as-child>
           <div class="group relative flex flex-col bg-[#161616] border border-[#1f1f1f] rounded-2xl overflow-hidden cursor-pointer hover:border-red-600 hover:-translate-y-1 transition-all duration-300">
-            <!-- badge -->
-            <div class="absolute top-2.5 left-2.5 z-10 bg-red-600 text-white text-[9px] font-black tracking-wide px-2 py-1 rounded-full flex items-center gap-1 uppercase">
+            <!-- badge: promoção tem prioridade sobre o "Top" decorativo -->
+            <div v-if="B.emPromocao" class="absolute top-2.5 left-2.5 z-10 bg-red-600 text-white text-[9px] font-black tracking-wide px-2 py-1 rounded-full uppercase">
+              -{{ percentualDesconto(B.precoOriginal, B.preco2) }}%
+            </div>
+            <div v-else class="absolute top-2.5 left-2.5 z-10 bg-red-600 text-white text-[9px] font-black tracking-wide px-2 py-1 rounded-full flex items-center gap-1 uppercase">
               <Flame :size="10" /> Top
             </div>
 
@@ -85,9 +89,14 @@ function diminuir(id: string) {
               <h3 class="text-[12px] md:text-[13px] text-[#ccc] font-medium leading-snug line-clamp-2 min-h-[2.2rem]">
                 {{ B.nome }}
               </h3>
-              <span class="mt-auto text-lg md:text-xl font-extrabold text-green-400">
-                R$ {{ B.preco2 }}
-              </span>
+              <div class="mt-auto">
+                <span v-if="B.emPromocao" class="block text-[11px] font-medium text-[#666] line-through">
+                  R$ {{ B.precoOriginal }}
+                </span>
+                <span class="text-lg md:text-xl font-extrabold text-green-400">
+                  R$ {{ B.preco2 }}
+                </span>
+              </div>
             </div>
           </div>
         </DialogTrigger>
@@ -105,9 +114,14 @@ function diminuir(id: string) {
             <h2 class="mt-1 text-xl font-bold text-white leading-snug">
               {{ B.nome }}
             </h2>
-            <p class="mt-2 text-4xl font-black text-green-400">
-              R$ {{ B.preco2 }}
-            </p>
+            <div class="mt-2 flex items-center gap-2">
+              <p class="text-4xl font-black text-green-400">
+                R$ {{ B.preco2 }}
+              </p>
+              <span v-if="B.emPromocao" class="text-sm font-medium text-[#666] line-through">
+                R$ {{ B.precoOriginal }}
+              </span>
+            </div>
 
             <div class="mt-6 flex items-center gap-3">
               <div class="flex items-center gap-1 rounded-xl bg-[#1e1e1e] border border-[#2a2a2a] p-1">
