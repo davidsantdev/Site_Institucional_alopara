@@ -383,10 +383,16 @@ onUnmounted(() => {
                 {{ produto.nome }}
               </p>
               <div class="mt-auto pt-1">
-                <span v-if="produto.emPromocao" class="block text-xs font-medium text-[#666] line-through">
-                  R$ {{ produto.precoOriginal }}
-                </span>
-                <span class="text-xl font-extrabold text-green-400 md:text-2xl">
+                <template v-if="produto.emPromocao">
+                  <p class="text-[10px] leading-tight text-[#666]">
+                    Preço normal: <span class="line-through">R$ {{ produto.precoOriginal }}</span>
+                  </p>
+                  <p class="leading-tight">
+                    <span class="block text-[9px] font-black uppercase tracking-wide text-emerald-500">Preço do clube</span>
+                    <span class="text-xl font-extrabold text-green-400 md:text-2xl">R$ {{ produto.preco2 }}</span>
+                  </p>
+                </template>
+                <span v-else class="text-xl font-extrabold text-green-400 md:text-2xl">
                   R$ {{ produto.preco2 }}
                 </span>
               </div>
@@ -482,13 +488,16 @@ onUnmounted(() => {
             <h2 class="mt-1 text-xl font-semibold text-white leading-snug">
               {{ modalProduto.nome }}
             </h2>
-            <div class="mt-2 flex items-center gap-2">
+            <div class="mt-2">
+              <p v-if="modalProduto.emPromocao" class="text-sm text-[#666]">
+                Preço normal: <span class="line-through">R$ {{ modalProduto.precoOriginal }}</span>
+              </p>
+              <span v-if="modalProduto.emPromocao" class="mb-0.5 block text-xs font-black uppercase tracking-wide text-emerald-500">
+                Preço do clube
+              </span>
               <p class="text-4xl font-extrabold text-green-400">
                 R$ {{ modalProduto.preco2 }}
               </p>
-              <span v-if="modalProduto.emPromocao" class="text-base font-medium text-[#666] line-through">
-                R$ {{ modalProduto.precoOriginal }}
-              </span>
             </div>
 
             <div class="mt-6 flex items-center gap-3">

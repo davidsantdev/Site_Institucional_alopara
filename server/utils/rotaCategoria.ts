@@ -16,7 +16,7 @@ function lerOrdenacao(valor: unknown): Ordenacao | undefined {
  * Todas as rotas de produto são a mesma coisa: pegar o catálogo compartilhado,
  * filtrar por categoria + busca, paginar. Nenhuma delas fala com a origem.
  */
-export function rotaCategoria(categoria: Categoria | Categoria[] | null) {
+export function rotaCategoria(categoria: Categoria | Categoria[] | null, opcoesExtras: { somenteEmPromocao?: boolean } = {}) {
   return defineEventHandler(async (event) => {
     try {
       const query = getQuery(event)
@@ -26,7 +26,7 @@ export function rotaCategoria(categoria: Categoria | Categoria[] | null) {
       const ordenar = lerOrdenacao(query.ordenar)
 
       const catalogo = await getCatalogo()
-      const resultado = consultar(catalogo, categoria, busca, pagina, POR_PAGINA, { tipo, ordenar })
+      const resultado = consultar(catalogo, categoria, busca, pagina, POR_PAGINA, { tipo, ordenar, ...opcoesExtras })
 
       // Enquanto o catálogo está sendo construído a resposta muda rápido, então
       // cacheia pouco. Depois de completo, cacheia por muito mais tempo.

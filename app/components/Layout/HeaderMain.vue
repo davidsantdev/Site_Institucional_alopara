@@ -6,6 +6,7 @@ import Mobilemenu from './Mobilemenu.vue'
 const { totalItens } = useCarrinho()
 
 const navLinks = [
+  { label: 'Ofertas', to: '/ofertas' },
   { label: 'Alimentos', to: '/alimentos' },
   { label: 'Bebidas', to: '/bebidas' },
   { label: 'Limpeza', to: '/limpeza' },
@@ -37,7 +38,7 @@ const navLinks = [
     <div class="flex items-center justify-between px-6 lg:px-10 h-[72px] border-b border-[#1f1f1f]">
       <!-- Logo -->
       <NuxtLink to="/" class="flex flex-col gap-0.5 shrink-0">
-       <img class="w-35" src="/gg.png">
+        <img class="w-35" src="/gg.png">
       </NuxtLink>
 
       <!-- Ações -->

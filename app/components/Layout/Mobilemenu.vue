@@ -12,6 +12,7 @@ const navPrincipal = [
 ]
 
 const categorias = [
+  { label: 'Ofertas', rota: '/Ofertas', icone: Tag },
   { label: 'Alimentos', rota: '/Alimentos', icone: ShoppingBasket },
   { label: 'Bebidas', rota: '/Bebidas', icone: ShoppingBasket },
   { label: 'Limpeza', rota: '/Limpeza', icone: ShoppingBasket },

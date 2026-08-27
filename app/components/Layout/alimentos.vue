@@ -93,10 +93,16 @@ function diminuir(id: string) {
                   {{ A.nome }}
                 </h3>
                 <div class="mt-auto">
-                  <span v-if="A.emPromocao" class="block text-[11px] font-medium text-[#666] line-through">
-                    R$ {{ A.precoOriginal }}
-                  </span>
-                  <span class="text-lg md:text-xl font-extrabold text-green-400">
+                  <template v-if="A.emPromocao">
+                    <p class="text-[9px] leading-tight text-[#666]">
+                      Preço normal: <span class="line-through">R$ {{ A.precoOriginal }}</span>
+                    </p>
+                    <p class="leading-tight">
+                      <span class="block text-[8px] font-black uppercase tracking-wide text-emerald-500">Preço do clube</span>
+                      <span class="text-lg md:text-xl font-extrabold text-green-400">R$ {{ A.preco2 }}</span>
+                    </p>
+                  </template>
+                  <span v-else class="text-lg md:text-xl font-extrabold text-green-400">
                     R$ {{ A.preco2 }}
                   </span>
                 </div>
@@ -117,13 +123,16 @@ function diminuir(id: string) {
               <h2 class="mt-1 text-xl font-bold text-white leading-snug">
                 {{ A.nome }}
               </h2>
-              <div class="mt-2 flex items-center gap-2">
+              <div class="mt-2">
+                <p v-if="A.emPromocao" class="text-sm text-[#666]">
+                  Preço normal: <span class="line-through">R$ {{ A.precoOriginal }}</span>
+                </p>
+                <span v-if="A.emPromocao" class="mb-0.5 block text-xs font-black uppercase tracking-wide text-emerald-500">
+                  Preço do clube
+                </span>
                 <p class="text-4xl font-black text-green-400">
                   R$ {{ A.preco2 }}
                 </p>
-                <span v-if="A.emPromocao" class="text-sm font-medium text-[#666] line-through">
-                  R$ {{ A.precoOriginal }}
-                </span>
               </div>
 
               <div class="mt-6 flex items-center gap-3">

@@ -1096,6 +1096,8 @@ export function consultar(
     incluirSemEstoque?: boolean
     /** Modo "só sem estoque" (painel de admin, pra listar o que a varredura escondeu). */
     somenteSemEstoque?: boolean
+    /** Modo "só em promoção" — usado pela rota pública /api/ofertas e pelo admin. */
+    somenteEmPromocao?: boolean
   } = {},
 ): Resultado {
   // `null` = catálogo inteiro; array = união de categorias.
@@ -1143,6 +1145,10 @@ export function consultar(
 
     // Modo "sem imagem" (painel de admin, pra achar o que falta enriquecer).
     if (opcoes.semImagem && p.imagemReal)
+      continue
+
+    // Modo "só em promoção" — página pública de Ofertas e card do admin.
+    if (opcoes.somenteEmPromocao && !p.emPromocao)
       continue
 
     base.push(p)

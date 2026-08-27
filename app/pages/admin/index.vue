@@ -170,7 +170,7 @@ interface ProdutoAdmin {
   oculto: boolean
 }
 
-type Filtro = '' | 'sem-imagem' | 'ocultos' | 'sem-estoque'
+type Filtro = '' | 'sem-imagem' | 'ocultos' | 'sem-estoque' | 'em-promocao'
 
 const busca = ref('')
 const filtro = ref<Filtro>('')
@@ -423,15 +423,20 @@ onMounted(verificarSessao)
           </p>
         </button>
 
-        <!-- em promoção (informativo — pra achar, é mais rápido buscar pelo nome) -->
-        <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4">
+        <!-- em promoção (clicável) -->
+        <button
+          type="button"
+          class="rounded-xl border p-4 text-left transition"
+          :class="filtro === 'em-promocao' ? 'border-emerald-500 bg-emerald-500/10' : 'border-[#1f1f1f] bg-[#161616] hover:border-emerald-500/60'"
+          @click="alternarFiltro('em-promocao')"
+        >
           <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
             <Tag :size="13" /> Em promoção
           </div>
           <p class="text-2xl font-black text-emerald-400">
             {{ formatarNumero(stats.emPromocao) }}
           </p>
-        </div>
+        </button>
 
         <!-- ocultos (clicável) -->
         <button
@@ -560,8 +565,13 @@ onMounted(verificarSessao)
             </div>
             <p class="text-xs text-[#666]">
               {{ p.tipo }} ·
-              <span v-if="p.emPromocao" class="line-through">R$ {{ p.precoOriginal }}</span>
-              R$ {{ p.preco2 }}
+              <template v-if="p.emPromocao">
+                Preço normal: <span class="line-through">R$ {{ p.precoOriginal }}</span> ·
+                Preço do clube: <span class="font-semibold text-emerald-400">R$ {{ p.preco2 }}</span>
+              </template>
+              <template v-else>
+                R$ {{ p.preco2 }}
+              </template>
             </p>
           </div>
 
