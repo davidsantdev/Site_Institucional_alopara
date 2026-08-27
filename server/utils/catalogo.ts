@@ -275,6 +275,8 @@ interface Estado {
   bootEmVoo: Promise<void> | null
   /** Timestamp antes do qual nenhuma nova varredura é permitida (cooldown de falha). */
   proximaTentativa: number
+  /** Timestamp antes do qual "Atualizar agora" (admin) não dispara outra varredura. */
+  proximoForcar: number
 }
 
 const CHAVE = Symbol.for('alopara.catalogo.estado')
@@ -287,6 +289,7 @@ const estado: Estado = g[CHAVE] ??= {
   varreduraEmVoo: null,
   bootEmVoo: null,
   proximaTentativa: 0,
+  proximoForcar: 0,
 }
 
 /** Resultado de UM código de barras no Cosmos — guardado para sempre, nunca reconsultado. */
@@ -489,16 +492,24 @@ type CatalogoDisco = Omit<Catalogo, 'indice'>
  */
 const CACHE_VERSAO = 2
 
-async function lerDisco(): Promise<CatalogoDisco | null> {
+/**
+ * `versaoAtual: false` = o formato mudou desde que isto foi salvo (campo novo
+ * em `Produto` que este arquivo não tem). Mesmo assim devolve os produtos —
+ * publicá-los AGORA (com o campo novo undefined) e marcar como vencido pra
+ * revalidar em seguida é bem mais seguro do que tratar como "sem cache
+ * nenhum": aquele caminho não tem um `anterior.produtos` pra proteger o site
+ * se a origem estiver fora do ar bem nesse momento (foi o que aconteceu: o
+ * bump de versão coincidiu com a CISS rejeitando o token, e o site ficou sem
+ * NADA pra servir até o token se recuperar sozinho).
+ */
+async function lerDisco(): Promise<{ dados: CatalogoDisco, versaoAtual: boolean } | null> {
   try {
     if (!existsSync(CACHE_FILE))
       return null
     const dados = JSON.parse(await readFile(CACHE_FILE, 'utf-8'))
-    if (dados?.versao !== CACHE_VERSAO)
-      return null // formato mudou desde que isto foi salvo — trata como se não houvesse cache
     if (!Array.isArray(dados?.produtos) || dados.produtos.length === 0)
       return null
-    return dados as CatalogoDisco
+    return { dados: dados as CatalogoDisco, versaoAtual: dados?.versao === CACHE_VERSAO }
   }
   catch {
     return null
@@ -768,6 +779,15 @@ async function buscarPagina(pagina: number, headers: Record<string, string>): Pr
         signal: AbortSignal.timeout(TIMEOUT_MS),
       })
 
+      if (res.status === 401) {
+        // Token aceito na hora de gerar mas rejeitado agora (revogado, sessão
+        // derrubada etc.) — sem isto o cache local (válido por até 50min pelo
+        // relógio, sem checar se a CISS ainda aceita) fazia TODAS as páginas de
+        // TODAS as varreduras falharem com 401 até o TTL local vencer sozinho.
+        // Descartar aqui faz a PRÓXIMA varredura pedir um token novo de verdade.
+        estado.token = null
+      }
+
       if (!res.ok)
         throw new Error(`HTTP ${res.status}`)
 
@@ -976,17 +996,25 @@ function varrerUmaVez(): Promise<void> {
   return estado.varreduraEmVoo
 }
 
+/** Intervalo mínimo entre acionamentos manuais — clicar várias vezes rápido não deve virar munição extra numa origem instável. */
+const COOLDOWN_FORCAR_MS = 60_000
+
 /**
  * Dispara uma varredura completa AGORA, ignorando o cooldown/TTL de 6h —
  * botão "Atualizar agora" do painel de admin, pra quando a CISS muda um preço
  * ou uma promoção acaba e não dá pra esperar a renovação automática. Não
  * bloqueia: dispara em segundo plano e devolve na hora. Se já tiver uma
- * varredura rolando, não duplica — só avisa que já estava em andamento.
+ * varredura rolando (ou uma acabou de ser forçada há pouco), não duplica —
+ * só avisa que já estava em andamento.
  */
 export function forcarNovaVarredura(): { jaEmAndamento: boolean } {
-  const jaEmAndamento = estado.varreduraEmVoo !== null
-  estado.proximaTentativa = 0
-  varrerUmaVez()
+  const agora = Date.now()
+  const jaEmAndamento = estado.varreduraEmVoo !== null || agora < estado.proximoForcar
+  if (!jaEmAndamento) {
+    estado.proximoForcar = agora + COOLDOWN_FORCAR_MS
+    estado.proximaTentativa = 0
+    varrerUmaVez()
+  }
   return { jaEmAndamento }
 }
 
@@ -1032,11 +1060,16 @@ export async function getCatalogo(): Promise<Catalogo> {
   //    Single-flight — várias requisições simultâneas no boot esperam a mesma leitura,
   //    em vez de cada uma concluir "não tem nada" e disparar sua própria varredura.
   estado.bootEmVoo ??= (async () => {
-    const disco = await lerDisco()
-    if (disco) {
-      await publicar(disco.produtos, disco.atualizadoEm, disco.completo)
+    const resultado = await lerDisco()
+    if (resultado) {
+      const { dados: disco, versaoAtual } = resultado
+      // Formato desatualizado: publica os produtos que tem (já servem alguma coisa
+      // pro visitante) mas com atualizadoEm=0 — a próxima chamada mais abaixo vai
+      // ver isto como "vencido" e disparar uma REVALIDAÇÃO (não um cold-start),
+      // que sabe proteger o catálogo anterior se a origem estiver fora do ar.
+      await publicar(disco.produtos, versaoAtual ? disco.atualizadoEm : 0, versaoAtual ? disco.completo : true)
       const idade = Math.round((Date.now() - disco.atualizadoEm) / 60_000)
-      log(`[catálogo] ⚡ ${disco.produtos.length} produtos do disco (${idade}min atrás)`)
+      log(`[catálogo] ⚡ ${disco.produtos.length} produtos do disco (${idade}min atrás)${versaoAtual ? '' : ' — formato antigo, revalidando'}`)
     }
   })()
   await estado.bootEmVoo
