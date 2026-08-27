@@ -477,14 +477,28 @@ async function publicar(produtos: Produto[], atualizadoEm: number, completo: boo
 /** Forma persistida — sem o índice, que é derivado e reconstruído na leitura. */
 type CatalogoDisco = Omit<Catalogo, 'indice'>
 
+/**
+ * Sobe SEMPRE que um campo é adicionado/removido de `Produto` (ex.: `semEstoque`,
+ * `emPromocao`). O cache em disco é lido direto pra memória SEM passar por
+ * `normalizar()` de novo — então um cache salvo pela versão anterior do código
+ * fica com os produtos faltando o campo novo (`undefined`, sempre falsy) até a
+ * próxima varredura completa, até 6h depois. Já aconteceu na prática: produtos
+ * em promoção sumiam do site porque o cache antigo não tinha `emPromocao`.
+ * Subir este número força uma varredura nova no próximo boot, sem precisar
+ * lembrar de apagar `.cache/catalogo.json` manualmente a cada deploy.
+ */
+const CACHE_VERSAO = 2
+
 async function lerDisco(): Promise<CatalogoDisco | null> {
   try {
     if (!existsSync(CACHE_FILE))
       return null
-    const dados = JSON.parse(await readFile(CACHE_FILE, 'utf-8')) as CatalogoDisco
+    const dados = JSON.parse(await readFile(CACHE_FILE, 'utf-8'))
+    if (dados?.versao !== CACHE_VERSAO)
+      return null // formato mudou desde que isto foi salvo — trata como se não houvesse cache
     if (!Array.isArray(dados?.produtos) || dados.produtos.length === 0)
       return null
-    return dados
+    return dados as CatalogoDisco
   }
   catch {
     return null
@@ -496,7 +510,7 @@ async function salvarDisco(catalogo: CatalogoDisco): Promise<void> {
     await mkdir(CACHE_DIR, { recursive: true })
     // Escrita atômica: um crash no meio do write não corrompe o cache.
     const tmp = `${CACHE_FILE}.tmp`
-    await writeFile(tmp, JSON.stringify(catalogo), 'utf-8')
+    await writeFile(tmp, JSON.stringify({ ...catalogo, versao: CACHE_VERSAO }), 'utf-8')
     await rename(tmp, CACHE_FILE)
     log(`[catálogo] 💾 salvo: ${catalogo.produtos.length} produtos`)
   }
