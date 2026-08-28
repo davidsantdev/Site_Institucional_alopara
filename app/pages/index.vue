@@ -19,13 +19,13 @@ useSeoMeta({
     <HeaderMain />
     <ConteudoMain />
 
-    <div class="bg-[#111111] flex flex-col justify-center items-center">
+    <div class="bg-(--bg-pagina) flex flex-col justify-center items-center">
       <CarousselSobre />
       <hr class="border-[#222] w-[90%] m-10">
       <ProdutosRedondo />
     </div>
 
-    <div class="bg-[#111111]">
+    <div class="bg-(--bg-pagina)">
       <MainlayoutSecundary />
       <Footer />
     </div>

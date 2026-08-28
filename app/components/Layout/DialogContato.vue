@@ -68,14 +68,14 @@ function abrirWhatsapp(dep: Departamento) {
       </button>
     </DialogTrigger>
 
-    <DialogContent class="bg-[#111] border border-[#1f1f1f] p-0 w-[92vw] md:w-[440px] overflow-hidden rounded-2xl">
+    <DialogContent class="bg-(--bg-cartao) border border-(--borda) p-0 w-[92vw] md:w-[440px] overflow-hidden rounded-2xl">
       <!-- header -->
-      <div class="px-7 pt-7 pb-6 border-b border-[#1a1a1a]">
+      <div class="px-7 pt-7 pb-6 border-b border-(--borda)">
         <span class="text-red-600 text-[10px] font-black tracking-[3px] uppercase">Alô Pará</span>
-        <h2 class="text-white text-[24px] font-black tracking-tight mt-1 leading-none">
+        <h2 class="text-(--texto-primario) text-[24px] font-black tracking-tight mt-1 leading-none">
           Fale com a gente
         </h2>
-        <p class="text-[#666] text-[13px] mt-2">
+        <p class="text-(--texto-fraco) text-[13px] mt-2">
           Escolha o departamento e continue direto no WhatsApp.
         </p>
       </div>
@@ -86,22 +86,23 @@ function abrirWhatsapp(dep: Departamento) {
           v-for="dep in departamentos"
           :key="dep.label"
           type="button"
-          class="flex items-center gap-4 bg-[#161616] border border-[#1f1f1f] rounded-xl px-4 py-3.5 hover:border-red-600 transition-colors duration-200 group text-left"
+          class="flex items-center gap-4 bg-(--bg-cartao) border border-(--borda) rounded-xl px-4 py-3.5 hover:border-red-600 transition-colors duration-200 group text-left"
           @click="abrirWhatsapp(dep)"
         >
           <div class="w-10 h-10 rounded-lg bg-red-600/10 flex items-center justify-center shrink-0">
             <component :is="dep.icone" :size="18" class="text-red-600" />
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-white text-[14px] font-bold">
+            <p class="text-(--texto-primario) text-[14px] font-bold">
               {{ dep.label }}
             </p>
-            <p class="text-[#555] text-[12px]">
+            <p class="text-(--texto-suave) text-[12px]">
               {{ dep.telefone }}
             </p>
           </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-            class="text-[#333] group-hover:text-red-600 group-hover:translate-x-0.5 transition-all duration-200 shrink-0"
+          <svg
+            width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            class="text-(--texto-minimo) group-hover:text-red-600 group-hover:translate-x-0.5 transition-all duration-200 shrink-0"
           >
             <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
           </svg>
