@@ -1,6 +1,6 @@
 import { defineEventHandler, getQuery } from 'h3'
 import { exigirAdmin } from '../../utils/adminAuth'
-import { consultar, getCatalogo, produtoEstaOculto } from '../../utils/catalogo'
+import { consultar, getCatalogo, produtoEstaOculto, produtoTemOverrideEstoque } from '../../utils/catalogo'
 
 const POR_PAGINA = 30
 
@@ -38,7 +38,11 @@ export default defineEventHandler(async (event) => {
     semImagem: filtro === 'sem-imagem',
   })
 
-  const produtos = resultado.produtos.map(p => ({ ...p, oculto: produtoEstaOculto(p.id) }))
+  const produtos = resultado.produtos.map(p => ({
+    ...p,
+    oculto: produtoEstaOculto(p.id),
+    estoqueManual: produtoTemOverrideEstoque(p.id),
+  }))
   return {
     produtos,
     total: resultado.total,

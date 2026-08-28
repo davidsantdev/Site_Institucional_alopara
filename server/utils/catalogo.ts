@@ -163,6 +163,7 @@ const COSMOS_CACHE_FILE = join(CACHE_DIR, 'cosmos.json')
  */
 const DATA_DIR = join(process.cwd(), '.data')
 const OVERRIDES_FILE = join(DATA_DIR, 'overrides.json')
+const ESTOQUE_OVERRIDES_FILE = join(DATA_DIR, 'estoque-overrides.json')
 export const UPLOADS_DIR = join(DATA_DIR, 'uploads')
 
 const HEADERS_BASE = {
@@ -399,6 +400,83 @@ function aplicarOverrides(produtos: Produto[]): void {
 }
 
 /**
+ * Correção manual de estoque — pra quando a CISS erra (ex.: "arroz" sem o
+ * campo `qtdEstoqueAtual` preenchido mas com estoque de verdade na loja, ou
+ * o contrário). `true` = força "tem estoque", `false` = força "sem estoque".
+ * Ausente = automático, vale o que `normalizar()` calculou da CISS.
+ */
+interface EstadoEstoqueOverrides {
+  /** Chave: Produto.id. */
+  dados: Record<string, boolean>
+  carregado: boolean
+}
+
+const CHAVE_ESTOQUE_OVERRIDES = Symbol.for('alopara.catalogo.estoqueOverrides')
+const estadoEstoqueOverrides: EstadoEstoqueOverrides = g[CHAVE_ESTOQUE_OVERRIDES] ??= {
+  dados: {},
+  carregado: false,
+}
+
+async function carregarEstoqueOverrides(): Promise<void> {
+  if (estadoEstoqueOverrides.carregado)
+    return
+  estadoEstoqueOverrides.carregado = true
+  try {
+    if (!existsSync(ESTOQUE_OVERRIDES_FILE))
+      return
+    const dados = JSON.parse(await readFile(ESTOQUE_OVERRIDES_FILE, 'utf-8'))
+    if (dados && typeof dados === 'object')
+      estadoEstoqueOverrides.dados = dados
+  }
+  catch {
+    // Arquivo ausente ou corrompido: segue com zero correções em vez de travar o site.
+  }
+}
+
+async function salvarEstoqueOverridesDisco(): Promise<void> {
+  await mkdir(DATA_DIR, { recursive: true })
+  const tmp = `${ESTOQUE_OVERRIDES_FILE}.tmp`
+  await writeFile(tmp, JSON.stringify(estadoEstoqueOverrides.dados), 'utf-8')
+  await rename(tmp, ESTOQUE_OVERRIDES_FILE)
+}
+
+/**
+ * Corrige (ou remove a correção de) o estoque de um produto na mão. Aplica no
+ * catálogo já publicado NA HORA e persiste em disco pra sobreviver a
+ * qualquer varredura futura — `publicar()` reaplica a cada catálogo novo.
+ * `disponivel: null` remove a correção, voltando a valer o que a CISS disser
+ * sozinha (só na próxima varredura — o valor atual não é recalculado aqui).
+ */
+export async function definirOverrideEstoque(produtoId: string, disponivel: boolean | null): Promise<void> {
+  await carregarEstoqueOverrides()
+
+  if (disponivel === null)
+    delete estadoEstoqueOverrides.dados[produtoId]
+  else
+    estadoEstoqueOverrides.dados[produtoId] = disponivel
+
+  await salvarEstoqueOverridesDisco()
+
+  const produto = estado.catalogo.produtos.find(p => p.id === produtoId)
+  if (produto && disponivel !== null)
+    produto.semEstoque = !disponivel
+}
+
+export function produtoTemOverrideEstoque(produtoId: string): boolean {
+  return produtoId in estadoEstoqueOverrides.dados
+}
+
+function aplicarOverridesEstoque(produtos: Produto[]): void {
+  if (Object.keys(estadoEstoqueOverrides.dados).length === 0)
+    return
+  for (const p of produtos) {
+    const disponivel = estadoEstoqueOverrides.dados[p.id]
+    if (disponivel !== undefined)
+      p.semEstoque = !disponivel
+  }
+}
+
+/**
  * Produto removido do site pelo admin — some das rotas públicas, mas
  * continua existindo (a CISS é quem manda de verdade; isto não apaga nada
  * de lá, só esconde na vitrine). `consultar()` filtra por isto; o admin
@@ -462,6 +540,10 @@ async function publicar(produtos: Produto[], atualizadoEm: number, completo: boo
   // pelo admin nunca é perdida quando o catálogo é reconstruído do zero.
   await carregarOverrides()
   aplicarOverrides(produtos)
+  // Mesma lógica pra correção manual de estoque — nunca se perde quando a
+  // varredura de 6h reconstrói o catálogo do zero com os dados novos da CISS.
+  await carregarEstoqueOverrides()
+  aplicarOverridesEstoque(produtos)
   // Só carrega — a filtragem em si acontece em consultar(), não aqui, porque
   // o admin precisa continuar enxergando (e restaurando) produto oculto.
   await carregarOcultos()

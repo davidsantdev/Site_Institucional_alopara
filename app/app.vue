@@ -18,6 +18,17 @@ useSeoMeta({
   ogUrl: () => `${SITE_URL}${route.path}`,
 })
 
+// Aplica o modo claro ANTES do primeiro paint — sem isto a página sempre
+// nasceria escura e "piscaria" pra clara um instante depois, pra quem já
+// tinha escolhido o modo claro antes.
+useHead({
+  script: [
+    {
+      innerHTML: `(function(){try{if(localStorage.getItem('alopara-tema')==='claro')document.documentElement.classList.add('claro')}catch(e){}})()`,
+    },
+  ],
+})
+
 // Dados estruturados (Schema.org) — é o que permite o Google mostrar o
 // Alô Pará com nome, telefone e link de forma rica na busca ("rich result"),
 // além de alimentar o painel de negócio local quando a busca é por nome.

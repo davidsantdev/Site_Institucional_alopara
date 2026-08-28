@@ -24,7 +24,7 @@ const info = [
 </script>
 
 <template>
-  <footer class="bg-[#0d0d0d] border-t border-[#1a1a1a]">
+  <footer class="bg-(--bg-input) border-t border-(--borda)">
     <Faqs />
 
     <!-- corpo principal -->
@@ -33,13 +33,13 @@ const info = [
       <div class="flex flex-col gap-10">
         <!-- logo + descrição -->
         <div>
-          <p class="text-white text-[28px] font-black leading-none tracking-tight mb-2">
+          <p class="text-(--texto-primario) text-[28px] font-black leading-none tracking-tight mb-2">
             <span class="text-red-600">Alô</span> Pará
           </p>
-          <p class="text-[9px] font-black tracking-[4px] uppercase text-[#333] mb-5">
+          <p class="text-[9px] font-black tracking-[4px] uppercase text-(--texto-minimo) mb-5">
             Supermercado
           </p>
-          <p class="text-[#444] text-[13px] leading-relaxed max-w-xs">
+          <p class="text-(--texto-esmaecido) text-[13px] leading-relaxed max-w-xs">
             Há mais de 20 anos levando qualidade, economia e confiança para as famílias paraenses.
           </p>
         </div>
@@ -56,7 +56,7 @@ const info = [
                 v-for="item in contato"
                 :key="item.label"
                 :href="item.href"
-                class="text-[#555] text-[13px] font-semibold hover:text-white transition-colors duration-200"
+                class="text-(--texto-suave) text-[13px] font-semibold hover:text-(--texto-primario) transition-colors duration-200"
               >
                 {{ item.label }}
               </a>
@@ -73,7 +73,7 @@ const info = [
                 v-for="item in redes"
                 :key="item.label"
                 :href="item.href"
-                class="flex items-center gap-2 text-[#555] text-[13px] font-semibold hover:text-white transition-colors duration-200 group"
+                class="flex items-center gap-2 text-(--texto-suave) text-[13px] font-semibold hover:text-(--texto-primario) transition-colors duration-200 group"
               >
                 <component :is="item.icone" :size="13" class="group-hover:text-red-600 transition-colors" />
                 {{ item.label }}
@@ -91,7 +91,7 @@ const info = [
                 v-for="item in info"
                 :key="item.label"
                 :href="item.href"
-                class="text-[#555] text-[13px] font-semibold hover:text-white transition-colors duration-200"
+                class="text-(--texto-suave) text-[13px] font-semibold hover:text-(--texto-primario) transition-colors duration-200"
               >
                 {{ item.label }}
               </a>
@@ -105,7 +105,7 @@ const info = [
         <p class="text-[10px] font-black tracking-[3px] uppercase text-red-600">
           Nossa localização
         </p>
-        <div class="relative rounded-xl overflow-hidden border border-[#1f1f1f]">
+        <div class="relative rounded-xl overflow-hidden border border-(--borda)">
           <iframe
             class="w-full h-[340px]"
             src="https://www.google.com/maps?q=-4.2520391,-49.9427902&hl=pt-BR&z=17&output=embed"
@@ -118,16 +118,16 @@ const info = [
     </div>
 
     <!-- barra inferior -->
-    <div class="border-t border-[#1a1a1a] px-6 md:px-10 py-5 flex items-center justify-between flex-wrap gap-4">
-      <p class="text-[#2a2a2a] text-[11px] font-bold tracking-[1px]">
+    <div class="border-t border-(--borda) px-6 md:px-10 py-5 flex items-center justify-between flex-wrap gap-4">
+      <p class="text-(--texto-fraco)/60 text-[11px] font-bold tracking-[1px]">
         © 2026 Alô Pará · Todos os direitos reservados
       </p>
       <div class="flex items-center gap-6">
         <DialogPoliticaPrivacidade />
-        <div class="w-px h-3 bg-[#2a2a2a]" />
+        <div class="w-px h-3 bg-(--borda-forte)" />
         <DialogTermosUso />
-        <div class="w-px h-3 bg-[#2a2a2a]" />
-        <span class="text-[#2a2a2a] text-[11px] font-bold tracking-[1px] select-none">
+        <div class="w-px h-3 bg-(--borda-forte)" />
+        <span class="text-(--texto-fraco)/60 text-[11px] font-bold tracking-[1px] select-none">
           Coded by David S.
         </span>
       </div>

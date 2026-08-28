@@ -1,0 +1,44 @@
+/**
+ * Sistema de cores por tema.
+ *
+ * O site inteiro foi construído com hexadecimais fixos (bg-[#111111] etc.),
+ * sem variável nenhuma — por isso o modo claro não é "inverter tudo": os
+ * arquivos convertidos usam essas variáveis no lugar do hex fixo (via
+ * `bg-[var(--bg-cartao)]`), e só trocar a classe `.claro` no <html> já muda
+ * a cor em todo canto que usa a variável. Ver `useTema.ts`.
+ *
+ * Cor de marca (vermelho, e as cores de cada categoria) NÃO entra aqui de
+ * propósito — texto branco em cima de botão/badge colorido continua branco
+ * nos dois temas; só a superfície neutra (fundo de página, card, texto) muda.
+ */
+:root {
+  --bg-pagina: #111111;
+  --bg-cartao: #161616;
+  --bg-elevado: #1a1a1a;
+  --bg-input: #0d0d0d;
+  --borda: #1f1f1f;
+  --borda-forte: #2a2a2a;
+  --borda-hover: #3a3a3a;
+  --texto-primario: #ffffff;
+  --texto-secundario: #cccccc;
+  --texto-esmaecido: #888888;
+  --texto-fraco: #666666;
+  --texto-suave: #555555;
+  --texto-minimo: #444444;
+}
+
+html.claro {
+  --bg-pagina: #f6f5f1;
+  --bg-cartao: #ffffff;
+  --bg-elevado: #efeee9;
+  --bg-input: #ffffff;
+  --borda: #e5e1d8;
+  --borda-forte: #ddd8cc;
+  --borda-hover: #c2bcac;
+  --texto-primario: #1c1a17;
+  --texto-secundario: #34302a;
+  --texto-esmaecido: #5c564c;
+  --texto-fraco: #6f685c;
+  --texto-suave: #837c6d;
+  --texto-minimo: #97907e;
+}

@@ -167,6 +167,7 @@ interface ProdutoAdmin {
   img: string
   imagemReal: boolean
   semEstoque: boolean
+  estoqueManual: boolean
   oculto: boolean
 }
 
@@ -295,6 +296,48 @@ async function alternarOculto(produto: ProdutoAdmin) {
   }
   catch {
     toast.error('Erro ao atualizar o produto')
+  }
+  finally {
+    enviando.value[produto.id] = false
+  }
+}
+
+// ═════════════ CORRIGIR ESTOQUE NA MÃO ═════════════
+// Pra quando a CISS erra (ex.: "arroz" sem o campo de estoque preenchido,
+// mas com estoque de verdade na loja) — corrige um produto sem esperar a
+// CISS mandar o dado certo algum dia.
+
+async function corrigirEstoque(produto: ProdutoAdmin, disponivel: boolean) {
+  enviando.value[produto.id] = true
+  try {
+    await $fetch(`/api/admin/produtos/${produto.id}/estoque`, { method: 'POST', body: { disponivel } })
+    produto.semEstoque = !disponivel
+    produto.estoqueManual = true
+    toast.success(disponivel ? 'Marcado como disponível' : 'Marcado como sem estoque', { description: produto.nome })
+    carregarStats()
+  }
+  catch {
+    toast.error('Erro ao corrigir estoque')
+  }
+  finally {
+    enviando.value[produto.id] = false
+  }
+}
+
+async function removerCorrecaoEstoque(produto: ProdutoAdmin) {
+  enviando.value[produto.id] = true
+  try {
+    await $fetch(`/api/admin/produtos/${produto.id}/estoque`, { method: 'DELETE' })
+    produto.estoqueManual = false
+    toast.success('Correção removida — voltou a valer o automático', { description: produto.nome })
+    // No modo "sem estoque" o produto pode sumir/aparecer na lista dependendo
+    // do que a CISS disser de verdade — recarrega pra refletir.
+    if (filtro.value === 'sem-estoque')
+      await executarBusca(paginaAtual.value)
+    carregarStats()
+  }
+  catch {
+    toast.error('Erro ao remover correção')
   }
   finally {
     enviando.value[produto.id] = false
@@ -551,6 +594,13 @@ onMounted(verificarSessao)
                 Sem estoque
               </span>
               <span
+                v-if="p.estoqueManual"
+                title="Estoque corrigido na mão — não é o que a CISS informou"
+                class="shrink-0 rounded-full border border-sky-800 bg-sky-950/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-400"
+              >
+                Estoque manual
+              </span>
+              <span
                 v-if="p.emPromocao"
                 class="shrink-0 rounded-full border border-emerald-800 bg-emerald-950/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400"
               >
@@ -596,6 +646,25 @@ onMounted(verificarSessao)
             @click="removerImagem(p)"
           >
             <Trash2 :size="14" />
+          </button>
+
+          <button
+            v-if="p.estoqueManual"
+            title="Remover correção manual — volta a valer o que a CISS informar"
+            class="shrink-0 rounded-lg border border-[#2a2a2a] px-3 py-2 text-xs font-semibold text-sky-400 transition hover:border-sky-600 disabled:opacity-40"
+            :disabled="enviando[p.id]"
+            @click="removerCorrecaoEstoque(p)"
+          >
+            Automático
+          </button>
+          <button
+            v-else
+            :title="p.semEstoque ? 'Corrigir: marcar como disponível' : 'Corrigir: marcar como sem estoque'"
+            class="shrink-0 rounded-lg border border-[#2a2a2a] px-3 py-2 text-xs font-semibold text-[#ccc] transition hover:border-sky-600 hover:text-sky-400 disabled:opacity-40"
+            :disabled="enviando[p.id]"
+            @click="corrigirEstoque(p, p.semEstoque)"
+          >
+            {{ p.semEstoque ? 'Marcar disponível' : 'Marcar sem estoque' }}
           </button>
 
           <button

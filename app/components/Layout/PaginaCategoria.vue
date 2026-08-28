@@ -121,11 +121,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#111111] flex flex-col font-sans">
+  <div class="min-h-screen bg-(--bg-pagina) flex flex-col font-sans">
     <HeaderMain />
 
     <!-- ═════ HERO ═════ -->
-    <div class="relative overflow-hidden bg-[#111111] px-4 py-12 md:py-16 text-center border-b border-[#1a1a1a]">
+    <div class="relative overflow-hidden bg-(--bg-pagina) px-4 py-12 md:py-16 text-center border-b border-(--borda)">
       <div
         class="pointer-events-none absolute top-[-180px] left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-gradient-to-br opacity-20 blur-3xl"
         :class="gradiente"
@@ -137,14 +137,14 @@ onUnmounted(() => {
           Alô Pará Supermercado
         </div>
 
-        <h1 class="mt-2 text-3xl font-black tracking-tight text-white md:text-5xl">
+        <h1 class="mt-2 text-3xl font-black tracking-tight text-(--texto-primario) md:text-5xl">
           {{ titulo }}
         </h1>
 
-        <p class="mt-3 flex items-center justify-center gap-2 text-sm text-[#666] md:text-base">
+        <p class="mt-3 flex items-center justify-center gap-2 text-sm text-(--texto-fraco) md:text-base">
           <template v-if="totalProdutos > 0">
             {{ totalProdutos.toLocaleString('pt-BR') }} produtos disponíveis
-            <span v-if="!cacheCompleto" class="inline-flex items-center gap-1 text-sm text-[#555]">
+            <span v-if="!cacheCompleto" class="inline-flex items-center gap-1 text-sm text-(--texto-suave)">
               <RefreshCw :size="12" class="animate-spin" />
               carregando mais...
             </span>
@@ -161,20 +161,20 @@ onUnmounted(() => {
         <!-- BUSCA -->
         <div class="mx-auto mt-7 max-w-2xl">
           <div class="relative">
-            <Search class="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-[#555]" :size="20" />
+            <Search class="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-(--texto-suave)" :size="20" />
             <input
               v-model="busca"
               type="search"
               :aria-label="`Buscar em ${titulo}`"
               placeholder="Buscar produtos, marcas, categorias..."
-              class="h-14 w-full rounded-2xl border border-[#2a2a2a] bg-[#161616] pl-14 pr-14 text-base text-white outline-none ring-0 transition placeholder:text-[#555] focus:ring-2"
+              class="h-14 w-full rounded-2xl border border-(--borda-forte) bg-(--bg-cartao) pl-14 pr-14 text-base text-(--texto-primario) outline-none ring-0 transition placeholder:text-(--texto-suave) focus:ring-2"
               :class="ring"
             >
             <button
               v-if="busca"
               type="button"
               aria-label="Limpar busca"
-              class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-[#555] transition hover:text-white"
+              class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-(--texto-suave) transition hover:text-(--texto-primario)"
               @click="busca = ''"
             >
               <X :size="18" />
@@ -187,7 +187,7 @@ onUnmounted(() => {
     <!-- ═════ FILTROS ═════ -->
     <!-- Não é sticky: o HeaderMain já ocupa top-0 com altura variável (72px no
          mobile, 150px no desktop) e não há como calcular o offset certo sem JS. -->
-    <div v-if="!erro" class="border-b border-[#1a1a1a] bg-[#111111]">
+    <div v-if="!erro" class="border-b border-(--borda) bg-(--bg-pagina)">
       <div class="mx-auto flex w-full max-w-7xl flex-col gap-2.5 px-3 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6">
         <!-- Chips de subcategoria -->
         <div
@@ -197,7 +197,7 @@ onUnmounted(() => {
           <button
             type="button"
             class="shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-semibold transition"
-            :class="tipoSelecionado === null ? `${botao} text-white shadow-sm` : 'border border-[#2a2a2a] bg-[#161616] text-[#888] hover:border-[#3a3a3a] hover:text-white'"
+            :class="tipoSelecionado === null ? `${botao} text-white shadow-sm` : 'border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario)'"
             @click="selecionarTipo(null)"
           >
             Todos
@@ -207,7 +207,7 @@ onUnmounted(() => {
             :key="faceta.tipo"
             type="button"
             class="shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-semibold transition"
-            :class="tipoSelecionado === faceta.tipo ? `${botao} text-white shadow-sm` : 'border border-[#2a2a2a] bg-[#161616] text-[#888] hover:border-[#3a3a3a] hover:text-white'"
+            :class="tipoSelecionado === faceta.tipo ? `${botao} text-white shadow-sm` : 'border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario)'"
             @click="selecionarTipo(faceta.tipo)"
           >
             {{ faceta.tipo }} <span class="opacity-60">({{ faceta.total }})</span>
@@ -218,11 +218,11 @@ onUnmounted(() => {
         <!-- Ordenação + limpar -->
         <div class="flex shrink-0 items-center justify-end gap-2">
           <div class="relative">
-            <ListFilter class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[#555]" :size="13" />
+            <ListFilter class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-(--texto-suave)" :size="13" />
             <select
               id="ordenar"
               aria-label="Ordenar por"
-              class="h-9 appearance-none rounded-lg border border-[#2a2a2a] bg-[#161616] py-0 pl-7 pr-3 text-xs font-semibold text-[#ccc] outline-none transition focus:ring-2"
+              class="h-9 appearance-none rounded-lg border border-(--borda-forte) bg-(--bg-cartao) py-0 pl-7 pr-3 text-xs font-semibold text-(--texto-secundario) outline-none transition focus:ring-2"
               :class="ring"
               :value="ordenacao"
               @change="aoMudarOrdenacao"
@@ -236,7 +236,7 @@ onUnmounted(() => {
           <button
             v-if="filtrosAtivos"
             type="button"
-            class="flex h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold text-[#666] transition hover:bg-[#1a1a1a] hover:text-white"
+            class="flex h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold text-(--texto-fraco) transition hover:bg-(--bg-elevado) hover:text-(--texto-primario)"
             @click="limparFiltros"
           >
             <X :size="13" />
@@ -252,10 +252,10 @@ onUnmounted(() => {
         <p class="text-5xl">
           😕
         </p>
-        <h2 class="mt-4 text-xl font-bold text-white">
+        <h2 class="mt-4 text-xl font-bold text-(--texto-primario)">
           Erro ao carregar produtos
         </h2>
-        <p class="mt-1 text-[#666]">
+        <p class="mt-1 text-(--texto-fraco)">
           Verifique sua conexão e tente novamente.
         </p>
         <button
@@ -273,21 +273,21 @@ onUnmounted(() => {
       <!-- ═════ SKELETON ═════ -->
       <div v-if="carregando" class="mx-auto w-full max-w-7xl px-3 py-6 md:px-6">
         <div class="mb-4 flex items-center justify-between">
-          <div class="h-4 w-48 rounded bg-[#1a1a1a] animate-pulse" />
-          <div class="h-4 w-24 rounded bg-[#1a1a1a] animate-pulse" />
+          <div class="h-4 w-48 rounded bg-(--bg-elevado) animate-pulse" />
+          <div class="h-4 w-24 rounded bg-(--bg-elevado) animate-pulse" />
         </div>
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4">
           <div
             v-for="n in 24"
             :key="n"
-            class="flex flex-col overflow-hidden rounded-2xl bg-[#161616] border border-[#1f1f1f]"
+            class="flex flex-col overflow-hidden rounded-2xl bg-(--bg-cartao) border border-(--borda)"
           >
-            <div class="h-36 bg-[#1a1a1a] animate-pulse" />
+            <div class="h-36 bg-(--bg-elevado) animate-pulse" />
             <div class="p-3 flex flex-col gap-2">
-              <div class="h-3 rounded bg-[#1f1f1f] animate-pulse w-full" />
-              <div class="h-3 rounded bg-[#1f1f1f] animate-pulse w-3/4" />
-              <div class="h-5 rounded bg-[#1f1f1f] animate-pulse w-1/2 mt-1" />
-              <div class="h-8 rounded-xl bg-[#1a1a1a] animate-pulse mt-2" />
+              <div class="h-3 rounded bg-(--borda) animate-pulse w-full" />
+              <div class="h-3 rounded bg-(--borda) animate-pulse w-3/4" />
+              <div class="h-5 rounded bg-(--borda) animate-pulse w-1/2 mt-1" />
+              <div class="h-8 rounded-xl bg-(--bg-elevado) animate-pulse mt-2" />
             </div>
           </div>
         </div>
@@ -296,8 +296,8 @@ onUnmounted(() => {
       <!-- ═════ GRID ═════ -->
       <div v-else class="mx-auto w-full max-w-7xl px-3 py-6 md:px-6">
         <div class="mb-4 flex items-center justify-between">
-          <p class="text-sm text-[#666] flex items-center gap-2">
-            <span class="font-semibold text-white">{{ totalProdutos.toLocaleString('pt-BR') }}</span>
+          <p class="text-sm text-(--texto-fraco) flex items-center gap-2">
+            <span class="font-semibold text-(--texto-primario)">{{ totalProdutos.toLocaleString('pt-BR') }}</span>
             produtos
             <template v-if="busca">
               para "<span :class="texto">{{ busca }}</span>"
@@ -307,22 +307,22 @@ onUnmounted(() => {
             </template>
             <span
               v-if="!cacheCompleto"
-              class="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-medium"
+              class="inline-flex items-center gap-1 rounded-full border border-(--borda) bg-(--bg-elevado) px-2 py-0.5 text-[11px] font-medium"
               :class="badge"
             >
               <RefreshCw :size="10" class="animate-spin" />
               atualizando
             </span>
           </p>
-          <p class="text-sm text-[#555]">
+          <p class="text-sm text-(--texto-suave)">
             Página {{ paginaAtual }} de {{ totalPaginas }}
           </p>
         </div>
 
         <!-- Sem resultado -->
-        <div v-if="produtos.length === 0" class="flex flex-col items-center py-24 text-[#555]">
+        <div v-if="produtos.length === 0" class="flex flex-col items-center py-24 text-(--texto-suave)">
           <Search :size="48" class="mb-4 opacity-30" />
-          <p class="text-lg font-medium text-[#888]">
+          <p class="text-lg font-medium text-(--texto-esmaecido)">
             Nenhum produto encontrado
           </p>
           <p class="mt-1 text-sm">
@@ -346,7 +346,7 @@ onUnmounted(() => {
           <div
             v-for="produto in produtos"
             :key="produto.id"
-            class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-[#161616] border border-[#1f1f1f] hover:border-[#3a3a3a] hover:-translate-y-0.5 transition-all duration-200 animate-fadeIn"
+            class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-(--bg-cartao) border border-(--borda) hover:border-(--borda-hover) hover:-translate-y-0.5 transition-all duration-200 animate-fadeIn"
             @click="abrirModal(produto)"
           >
             <span
@@ -379,12 +379,12 @@ onUnmounted(() => {
             </div>
 
             <div class="flex flex-1 flex-col gap-1 p-3 pt-2">
-              <p class="line-clamp-2 min-h-[2.5rem] text-[12px] font-medium leading-snug text-[#ccc] md:text-[13px]">
+              <p class="line-clamp-2 min-h-[2.5rem] text-[12px] font-medium leading-snug text-(--texto-secundario) md:text-[13px]">
                 {{ produto.nome }}
               </p>
               <div class="mt-auto pt-1">
                 <template v-if="produto.emPromocao">
-                  <p class="text-[10px] leading-tight text-[#666]">
+                  <p class="text-[10px] leading-tight text-(--texto-fraco)">
                     Preço normal: <span class="line-through">R$ {{ produto.precoOriginal }}</span>
                   </p>
                   <p class="leading-tight">
@@ -407,7 +407,7 @@ onUnmounted(() => {
               type="button"
               aria-label="Página anterior"
               :disabled="paginaAtual === 1"
-              class="flex h-9 w-9 items-center justify-center rounded-xl border border-[#2a2a2a] bg-[#161616] text-[#888] hover:border-[#3a3a3a] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+              class="flex h-9 w-9 items-center justify-center rounded-xl border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario) disabled:opacity-30 disabled:cursor-not-allowed transition"
               @click="irParaPagina(paginaAtual - 1)"
             >
               <ChevronLeft :size="16" />
@@ -416,7 +416,7 @@ onUnmounted(() => {
             <template v-for="(p, idx) in paginasVisiveis" :key="idx">
               <span
                 v-if="p === '...'"
-                class="flex h-9 w-9 items-center justify-center text-[#555] text-sm select-none"
+                class="flex h-9 w-9 items-center justify-center text-(--texto-suave) text-sm select-none"
               >…</span>
               <button
                 v-else
@@ -425,7 +425,7 @@ onUnmounted(() => {
                 class="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-medium transition"
                 :class="p === paginaAtual
                   ? `${botao} text-white shadow`
-                  : 'border border-[#2a2a2a] bg-[#161616] text-[#888] hover:border-[#3a3a3a] hover:text-white'"
+                  : 'border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario)'"
                 @click="irParaPagina(p as number)"
               >
                 {{ p }}
@@ -436,14 +436,14 @@ onUnmounted(() => {
               type="button"
               aria-label="Próxima página"
               :disabled="paginaAtual === totalPaginas"
-              class="flex h-9 w-9 items-center justify-center rounded-xl border border-[#2a2a2a] bg-[#161616] text-[#888] hover:border-[#3a3a3a] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+              class="flex h-9 w-9 items-center justify-center rounded-xl border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario) disabled:opacity-30 disabled:cursor-not-allowed transition"
               @click="irParaPagina(paginaAtual + 1)"
             >
               <ChevronRight :size="16" />
             </button>
           </div>
 
-          <p class="text-xs text-[#555]">
+          <p class="text-xs text-(--texto-suave)">
             {{ intervaloExibido.de.toLocaleString('pt-BR') }}
             –
             {{ intervaloExibido.ate.toLocaleString('pt-BR') }}
@@ -465,12 +465,12 @@ onUnmounted(() => {
       >
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="fecharModal" />
 
-        <div class="relative z-10 w-full max-w-md overflow-hidden rounded-t-3xl md:rounded-3xl bg-[#111] border border-[#1f1f1f] shadow-2xl">
+        <div class="relative z-10 w-full max-w-md overflow-hidden rounded-t-3xl md:rounded-3xl bg-(--bg-cartao) border border-(--borda) shadow-2xl">
           <div class="flex items-center justify-center bg-[#fafafa] h-60 p-6 relative">
             <button
               type="button"
               aria-label="Fechar"
-              class="absolute top-4 right-4 rounded-full bg-black/60 border border-[#2a2a2a] p-2 text-[#888] hover:text-white transition"
+              class="absolute top-4 right-4 rounded-full bg-black/60 border border-white/10 p-2 text-white/70 hover:text-white transition"
               @click="fecharModal"
             >
               <X :size="18" />
@@ -484,12 +484,12 @@ onUnmounted(() => {
           </div>
 
           <div class="px-8 py-6">
-            <span class="text-xs text-[#555] uppercase tracking-widest">{{ modalProduto.tipo }}</span>
-            <h2 class="mt-1 text-xl font-semibold text-white leading-snug">
+            <span class="text-xs text-(--texto-suave) uppercase tracking-widest">{{ modalProduto.tipo }}</span>
+            <h2 class="mt-1 text-xl font-semibold text-(--texto-primario) leading-snug">
               {{ modalProduto.nome }}
             </h2>
             <div class="mt-2">
-              <p v-if="modalProduto.emPromocao" class="text-sm text-[#666]">
+              <p v-if="modalProduto.emPromocao" class="text-sm text-(--texto-fraco)">
                 Preço normal: <span class="line-through">R$ {{ modalProduto.precoOriginal }}</span>
               </p>
               <span v-if="modalProduto.emPromocao" class="mb-0.5 block text-xs font-black uppercase tracking-wide text-emerald-500">
@@ -501,20 +501,20 @@ onUnmounted(() => {
             </div>
 
             <div class="mt-6 flex items-center gap-3">
-              <div class="flex items-center gap-2 rounded-xl bg-[#1e1e1e] border border-[#2a2a2a] p-1">
+              <div class="flex items-center gap-2 rounded-xl bg-(--bg-elevado) border border-(--borda-forte) p-1">
                 <button
                   type="button"
                   aria-label="Diminuir quantidade"
-                  class="flex h-9 w-9 items-center justify-center rounded-lg text-white text-lg hover:bg-[#2a2a2a] transition"
+                  class="flex h-9 w-9 items-center justify-center rounded-lg text-(--texto-primario) text-lg hover:bg-(--borda-forte) transition"
                   @click="diminuir"
                 >
                   −
                 </button>
-                <span class="min-w-[2rem] text-center font-bold text-white text-lg">{{ modalProduto.quantidade }}</span>
+                <span class="min-w-[2rem] text-center font-bold text-(--texto-primario) text-lg">{{ modalProduto.quantidade }}</span>
                 <button
                   type="button"
                   aria-label="Aumentar quantidade"
-                  class="flex h-9 w-9 items-center justify-center rounded-lg text-white text-lg hover:bg-[#2a2a2a] transition"
+                  class="flex h-9 w-9 items-center justify-center rounded-lg text-(--texto-primario) text-lg hover:bg-(--borda-forte) transition"
                   @click="aumentar"
                 >
                   +
