@@ -3,7 +3,7 @@ import DialogContato from './DialogContato.vue'
 </script>
 
 <template>
-  <section class="relative bg-(--bg-pagina) min-h-screen flex flex-col items-center pt-15    overflow-hidden px-6 ">
+  <section class="relative bg-(--bg-pagina) flex flex-col items-center pt-20 pb-16 overflow-hidden px-6">
     <!-- Círculo decorativo de fundo -->
     <div
       class="absolute top-[-180px] left-1/2 -translate-x-1/2 w-[600px] h-[600px]
