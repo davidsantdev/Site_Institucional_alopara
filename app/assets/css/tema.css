@@ -25,6 +25,8 @@
   --texto-fraco: #666666;
   --texto-suave: #555555;
   --texto-minimo: #444444;
+  /** Verde do preço — green-400, escolhido pra saltar num card ESCURO. */
+  --preco: #4ade80;
 }
 
 html.claro {
@@ -41,4 +43,7 @@ html.claro {
   --texto-fraco: #6f685c;
   --texto-suave: #837c6d;
   --texto-minimo: #97907e;
+  /** Mesmo green-400 quase some em fundo branco (contraste ~1.8:1) — mais
+   * escuro aqui pra continuar legível sem perder a identidade "preço verde". */
+  --preco: #15803d;
 }

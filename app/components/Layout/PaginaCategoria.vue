@@ -389,10 +389,10 @@ onUnmounted(() => {
                   </p>
                   <p class="leading-tight">
                     <span class="block text-[9px] font-black uppercase tracking-wide text-emerald-500">Preço do clube</span>
-                    <span class="text-xl font-extrabold text-green-400 md:text-2xl">R$ {{ produto.preco2 }}</span>
+                    <span class="text-xl font-extrabold text-(--preco) md:text-2xl">R$ {{ produto.preco2 }}</span>
                   </p>
                 </template>
-                <span v-else class="text-xl font-extrabold text-green-400 md:text-2xl">
+                <span v-else class="text-xl font-extrabold text-(--preco) md:text-2xl">
                   R$ {{ produto.preco2 }}
                 </span>
               </div>
@@ -495,7 +495,7 @@ onUnmounted(() => {
               <span v-if="modalProduto.emPromocao" class="mb-0.5 block text-xs font-black uppercase tracking-wide text-emerald-500">
                 Preço do clube
               </span>
-              <p class="text-4xl font-extrabold text-green-400">
+              <p class="text-4xl font-extrabold text-(--preco)">
                 R$ {{ modalProduto.preco2 }}
               </p>
             </div>

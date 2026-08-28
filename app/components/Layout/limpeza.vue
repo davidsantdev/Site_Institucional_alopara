@@ -96,10 +96,10 @@ function diminuir(id: string) {
                   </p>
                   <p class="leading-tight">
                     <span class="block text-[8px] font-black uppercase tracking-wide text-emerald-500">Preço do clube</span>
-                    <span class="text-lg md:text-xl font-extrabold text-green-400">R$ {{ L.preco2 }}</span>
+                    <span class="text-lg md:text-xl font-extrabold text-(--preco)">R$ {{ L.preco2 }}</span>
                   </p>
                 </template>
-                <span v-else class="text-lg md:text-xl font-extrabold text-green-400">
+                <span v-else class="text-lg md:text-xl font-extrabold text-(--preco)">
                   R$ {{ L.preco2 }}
                 </span>
               </div>
@@ -127,7 +127,7 @@ function diminuir(id: string) {
               <span v-if="L.emPromocao" class="mb-0.5 block text-xs font-black uppercase tracking-wide text-emerald-500">
                 Preço do clube
               </span>
-              <p class="text-4xl font-black text-green-400">
+              <p class="text-4xl font-black text-(--preco)">
                 R$ {{ L.preco2 }}
               </p>
             </div>

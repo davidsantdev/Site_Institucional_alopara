@@ -64,7 +64,7 @@ function comprarWhatsapp() {
 </script>
 
 <template>
-  <div class="bg-[#111111] min-h-screen flex flex-col">
+  <div class="bg-(--bg-pagina) min-h-screen flex flex-col">
     <HeaderMain />
 
     <main class="flex-1 max-w-6xl mx-auto w-full px-4 md:px-6 py-10">
@@ -72,7 +72,7 @@ function comprarWhatsapp() {
       <div class="flex items-center justify-between gap-3 mb-8">
         <div class="flex items-center gap-3">
           <ShoppingCart :size="24" class="text-red-600" />
-          <h1 class="text-white text-[22px] md:text-2xl font-black tracking-tight">
+          <h1 class="text-(--texto-primario) text-[22px] md:text-2xl font-black tracking-tight">
             Meu Carrinho
           </h1>
           <span
@@ -86,7 +86,7 @@ function comprarWhatsapp() {
         <button
           v-if="carrinho.length"
           type="button"
-          class="flex items-center gap-1.5 text-[11px] font-bold tracking-wide uppercase text-[#555] hover:text-red-500 transition-colors"
+          class="flex items-center gap-1.5 text-[11px] font-bold tracking-wide uppercase text-(--texto-suave) hover:text-red-500 transition-colors"
           @click="esvaziarCarrinho"
         >
           <Trash2 :size="14" />
@@ -97,10 +97,10 @@ function comprarWhatsapp() {
       <!-- VAZIO -->
       <div
         v-if="totalItens.vazio"
-        class="flex flex-col items-center justify-center py-28 gap-4 text-[#444]"
+        class="flex flex-col items-center justify-center py-28 gap-4 text-(--texto-minimo)"
       >
         <Frown :size="64" class="opacity-40" />
-        <p class="text-xl md:text-2xl font-light text-[#888]">
+        <p class="text-xl md:text-2xl font-light text-(--texto-esmaecido)">
           Seu carrinho está vazio
         </p>
         <button
@@ -119,7 +119,7 @@ function comprarWhatsapp() {
           <div
             v-for="item in carrinho"
             :key="item.id ?? item.nome"
-            class="bg-[#161616] rounded-2xl border border-[#1f1f1f] flex items-center gap-4 p-4 hover:border-[#2a2a2a] transition-colors"
+            class="bg-(--bg-cartao) rounded-2xl border border-(--borda) flex items-center gap-4 p-4 hover:border-(--borda-forte) transition-colors"
           >
             <!-- IMG -->
             <div class="bg-[#fafafa] rounded-xl flex items-center justify-center md:w-28 md:h-28 w-20 h-20 flex-shrink-0 p-2">
@@ -128,12 +128,12 @@ function comprarWhatsapp() {
 
             <!-- INFO -->
             <div class="flex-1 min-w-0">
-              <h3 class="text-white font-semibold text-sm md:text-base leading-snug line-clamp-2">
+              <h3 class="text-(--texto-primario) font-semibold text-sm md:text-base leading-snug line-clamp-2">
                 {{ item.nome }}
               </h3>
 
               <div class="flex items-baseline gap-2 mt-2">
-                <span class="text-green-400 text-xl font-extrabold">
+                <span class="text-(--preco) text-xl font-extrabold">
                   R$ {{ precoItem(item) }}
                 </span>
               </div>
@@ -143,17 +143,17 @@ function comprarWhatsapp() {
                 <button
                   type="button"
                   :aria-label="`Diminuir quantidade de ${item.nome}`"
-                  class="w-7 h-7 flex items-center justify-center rounded-lg border border-[#2a2a2a] text-white hover:bg-[#1e1e1e] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  class="w-7 h-7 flex items-center justify-center rounded-lg border border-(--borda-forte) text-(--texto-primario) hover:bg-(--bg-elevado) disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   :disabled="(item.quantidade ?? 1) <= 1"
                   @click="diminuir(item)"
                 >
                   −
                 </button>
-                <span class="font-bold min-w-6 text-center text-white">{{ item.quantidade ?? 1 }}</span>
+                <span class="font-bold min-w-6 text-center text-(--texto-primario)">{{ item.quantidade ?? 1 }}</span>
                 <button
                   type="button"
                   :aria-label="`Aumentar quantidade de ${item.nome}`"
-                  class="w-7 h-7 flex items-center justify-center rounded-lg border border-[#2a2a2a] text-white hover:bg-[#1e1e1e] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  class="w-7 h-7 flex items-center justify-center rounded-lg border border-(--borda-forte) text-(--texto-primario) hover:bg-(--bg-elevado) disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   :disabled="(item.quantidade ?? 1) >= 99"
                   @click="aumentar(item)"
                 >
@@ -166,7 +166,7 @@ function comprarWhatsapp() {
             <button
               type="button"
               :aria-label="`Remover ${item.nome} do carrinho`"
-              class="flex-shrink-0 flex items-center gap-1.5 text-[#555] hover:text-red-500 hover:bg-red-500/10 text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+              class="flex-shrink-0 flex items-center gap-1.5 text-(--texto-suave) hover:text-red-500 hover:bg-red-500/10 text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
               @click="removeItem(item.nome)"
             >
               <Trash2 :size="15" />
@@ -176,7 +176,7 @@ function comprarWhatsapp() {
 
           <button
             type="button"
-            class="self-start text-sm text-[#555] font-semibold hover:text-white transition-colors mt-2"
+            class="self-start text-sm text-(--texto-suave) font-semibold hover:text-(--texto-primario) transition-colors mt-2"
             @click="navigateTo('/')"
           >
             ← Continuar comprando
@@ -185,8 +185,8 @@ function comprarWhatsapp() {
 
         <!-- RESUMO -->
         <div class="lg:w-80 w-full">
-          <div class="bg-[#161616] rounded-2xl border border-[#1f1f1f] p-6 sticky top-24">
-            <h3 class="font-black text-white text-lg mb-4 tracking-tight">
+          <div class="bg-(--bg-cartao) rounded-2xl border border-(--borda) p-6 sticky top-24">
+            <h3 class="font-black text-(--texto-primario) text-lg mb-4 tracking-tight">
               Resumo do pedido
             </h3>
 
@@ -194,17 +194,17 @@ function comprarWhatsapp() {
               <div
                 v-for="item in carrinho"
                 :key="item.id ?? item.nome"
-                class="flex justify-between text-sm text-[#666]"
+                class="flex justify-between text-sm text-(--texto-fraco)"
               >
                 <span class="truncate max-w-[60%]">{{ item.nome }} x{{ item.quantidade ?? 1 }}</span>
-                <span class="font-medium text-[#ccc]">R$ {{ precoItem(item) }}</span>
+                <span class="font-medium text-(--texto-secundario)">R$ {{ precoItem(item) }}</span>
               </div>
             </div>
 
-            <div class="border-t border-[#1f1f1f] pt-4 mb-6">
-              <div class="flex justify-between font-bold text-white">
+            <div class="border-t border-(--borda) pt-4 mb-6">
+              <div class="flex justify-between font-bold text-(--texto-primario)">
                 <span>Total</span>
-                <span class="text-green-400 text-xl">R$ {{ totalCarrinho }}</span>
+                <span class="text-(--preco) text-xl">R$ {{ totalCarrinho }}</span>
               </div>
             </div>
 
