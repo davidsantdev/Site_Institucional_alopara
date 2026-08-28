@@ -18,13 +18,13 @@ useSeoMeta({
   ogUrl: () => `${SITE_URL}${route.path}`,
 })
 
-// Aplica o modo claro ANTES do primeiro paint — sem isto a página sempre
-// nasceria escura e "piscaria" pra clara um instante depois, pra quem já
-// tinha escolhido o modo claro antes.
+// Aplica o tema ANTES do primeiro paint — sem isto a página sempre nasceria
+// com o padrão e "piscaria" pro tema escolhido um instante depois. Padrão é
+// claro: só fica escuro se a pessoa já tiver escolhido isso antes.
 useHead({
   script: [
     {
-      innerHTML: `(function(){try{if(localStorage.getItem('alopara-tema')==='claro')document.documentElement.classList.add('claro')}catch(e){}})()`,
+      innerHTML: `(function(){try{if(localStorage.getItem('alopara-tema')!=='escuro')document.documentElement.classList.add('claro')}catch(e){document.documentElement.classList.add('claro')}})()`,
     },
   ],
 })

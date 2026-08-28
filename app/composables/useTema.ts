@@ -8,7 +8,9 @@ import { onMounted, ref } from 'vue'
 const CHAVE_STORAGE = 'alopara-tema'
 type Tema = 'escuro' | 'claro'
 
-const tema = ref<Tema>('escuro')
+// Padrão é claro — só o app.vue sabe de verdade antes do paint (lê o
+// localStorage), mas o ref começa igual pro ícone não "pular" na hidratação.
+const tema = ref<Tema>('claro')
 let inicializado = false
 
 function aplicar(valor: Tema) {
@@ -25,13 +27,14 @@ export function useTema() {
     inicializado = true
     try {
       const salvo = localStorage.getItem(CHAVE_STORAGE)
-      if (salvo === 'claro')
-        tema.value = 'claro'
-      // O <html class="claro"> já foi aplicado antes do paint pelo script
+      if (salvo === 'escuro')
+        tema.value = 'escuro'
+      // 'claro' (ou nada salvo ainda) já é o valor padrão do ref — e o
+      // <html class="claro"> já foi aplicado antes do paint pelo script
       // inline em app.vue — não precisa reaplicar aqui, só sincronizar o ref.
     }
     catch {
-      // localStorage indisponível (modo privado, cookies bloqueados) — segue no escuro padrão.
+      // localStorage indisponível (modo privado, cookies bloqueados) — segue no claro padrão.
     }
   })
 
