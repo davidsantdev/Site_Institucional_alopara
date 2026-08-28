@@ -20,11 +20,11 @@ function Adega() {
 <template>
   <div class="pt-16 pb-4 select-none">
     <!-- abas -->
-    <div class="w-full max-w-6xl mx-auto px-4 md:px-6 flex gap-8 border-b border-[#1f1f1f] mb-10">
+    <div class="w-full max-w-6xl mx-auto px-4 md:px-6 flex gap-8 border-b border-(--borda) mb-10">
       <button
         type="button"
         class="pb-4 -mb-px text-[12px] md:text-[13px] font-black tracking-[2px] uppercase border-b-2 transition-colors"
-        :class="Alimen ? 'border-red-600 text-white' : 'border-transparent text-[#555] hover:text-[#999]'"
+        :class="Alimen ? 'border-red-600 text-(--texto-primario)' : 'border-transparent text-(--texto-suave) hover:text-(--texto-esmaecido)'"
         @click="promo"
       >
         Os melhores produtos
@@ -32,7 +32,7 @@ function Adega() {
       <button
         type="button"
         class="pb-4 -mb-px text-[12px] md:text-[13px] font-black tracking-[2px] uppercase border-b-2 transition-colors"
-        :class="Vinh ? 'border-red-600 text-white' : 'border-transparent text-[#555] hover:text-[#999]'"
+        :class="Vinh ? 'border-red-600 text-(--texto-primario)' : 'border-transparent text-(--texto-suave) hover:text-(--texto-esmaecido)'"
         @click="Adega"
       >
         Bebidas
