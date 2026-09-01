@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Moon, ShoppingCart, Sun } from 'lucide-vue-next'
+import { Moon, ShoppingCart, Sun, Tag } from 'lucide-vue-next'
 import { useTema } from '~/composables/useTema'
 import { useCarrinho } from '~/data/composable/UseCarrinho'
 import Mobilemenu from './Mobilemenu.vue'
@@ -75,6 +75,27 @@ const navLinks = [
           <Mobilemenu />
         </div>
       </div>
+    </div>
+
+    <!-- Nav de categorias (mobile) — sem isto, Ofertas só existia dentro do
+         hambúrguer, escondida atrás de vários toques. -->
+    <div class="flex md:hidden items-center gap-2 px-4 h-[52px] border-b border-(--borda) overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <NuxtLink
+        to="/ofertas"
+        class="shrink-0 flex items-center gap-1 bg-red-600 text-white text-[11px] font-black tracking-[1px] uppercase px-3.5 py-1.5 rounded-full"
+      >
+        <Tag :size="12" />
+        Ofertas
+      </NuxtLink>
+      <NuxtLink
+        v-for="link in navLinks.slice(1)"
+        :key="link.to"
+        :to="link.to"
+        class="shrink-0 text-[11px] font-bold tracking-[1px] uppercase text-(--texto-suave) px-3.5 py-1.5 rounded-full border border-(--borda) transition-all"
+        active-class="text-red-600 border-red-600"
+      >
+        {{ link.label }}
+      </NuxtLink>
     </div>
 
     <!-- Nav de categorias (desktop) -->
