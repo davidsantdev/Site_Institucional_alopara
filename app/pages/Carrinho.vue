@@ -52,10 +52,13 @@ function comprarWhatsapp() {
     quantidade_itens: carrinho.value.length,
   })
 
+  const itens = carrinho.value
+    .map((item, i) => `${i + 1}. ${item.nome}\n   Quantidade: ${item.quantidade ?? 1} — R$ ${precoItem(item)}`)
+    .join('\n\n')
+
   const mensagem = [
-    ...carrinho.value.map(item =>
-      `Olá, vim pelo site\nProduto: ${item.nome}\nQuantidade: ${item.quantidade ?? 1}\nPreço: R$ ${precoItem(item)}`,
-    ),
+    'Olá, vim pelo site! Gostaria de fazer o seguinte pedido:',
+    itens,
     `Total do pedido: R$ ${totalCarrinho.value}`,
   ].join('\n\n')
 
