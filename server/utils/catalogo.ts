@@ -21,6 +21,7 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import process from 'node:process'
+import { buscarOfertasMercafacil } from './mercafacil'
 
 /** Log informativo do catálogo. Centralizado para não espalhar console.log. */
 // eslint-disable-next-line no-console
@@ -57,6 +58,8 @@ export interface Produto {
    * `consultar()` filtra por isto nas rotas públicas — o admin vê/busca mesmo assim.
    */
   semEstoque: boolean
+  /** Código de barras (EAN/GTIN) — usado pra cruzar com as ofertas da Mercafácil. */
+  ean: string
 }
 
 export interface Catalogo {
@@ -572,7 +575,7 @@ type CatalogoDisco = Omit<Catalogo, 'indice'>
  * Subir este número força uma varredura nova no próximo boot, sem precisar
  * lembrar de apagar `.cache/catalogo.json` manualmente a cada deploy.
  */
-const CACHE_VERSAO = 2
+const CACHE_VERSAO = 3
 
 /**
  * `versaoAtual: false` = o formato mudou desde que isto foi salvo (campo novo
@@ -950,6 +953,7 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
       quantidade: 1,
       cat,
       semEstoque,
+      ean: String(p.codigoBarra || p.nrcodbarprod || ''),
     })
     novos++
   }
@@ -1056,12 +1060,28 @@ async function varrer(): Promise<void> {
   await validarImagens(produtos)
   // Segunda fonte de imagem, só pro que sobrou sem foto — ver enriquecerComCosmos().
   await enriquecerComCosmos(produtos)
+  // Ofertas reais do Clube Alô — sobrepõe (não substitui) o vlrPromocao da
+  // CISS: quem já veio marcado por lá continua, a Mercafácil só acrescenta
+  // (e corrige o preço) pros que ela conhece. Ver server/utils/mercafacil.ts.
+  const ofertasMercafacil = await buscarOfertasMercafacil()
+  let novasPromocoes = 0
+  for (const p of produtos) {
+    const oferta = p.ean ? ofertasMercafacil.get(p.ean) : undefined
+    if (!oferta)
+      continue
+    if (!p.emPromocao)
+      novasPromocoes++
+    p.precoOriginal = oferta.precoNormal.toFixed(2)
+    p.preco2 = oferta.precoOferta.toFixed(2)
+    p.emPromocao = true
+  }
 
   const agora = Date.now()
   await publicar(produtos, agora, true)
   estado.proximaTentativa = 0
   const semEstoque = produtos.filter(p => p.semEstoque).length
-  log(`[catálogo] ✅ ${produtos.length} produtos (${semEstoque} sem estoque, escondidos do site público)`)
+  const emPromocao = produtos.filter(p => p.emPromocao).length
+  log(`[catálogo] ✅ ${produtos.length} produtos (${semEstoque} sem estoque, ${emPromocao} em promoção — ${novasPromocoes} vieram da Mercafácil)`)
 
   await salvarDisco({ produtos, atualizadoEm: agora, completo: true })
 }
