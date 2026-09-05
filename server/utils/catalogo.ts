@@ -1226,6 +1226,18 @@ export interface Resultado {
 const MAX_FACETAS = 20
 
 /**
+ * Produtos-âncora por categoria — o que a maioria já procura de cara, então
+ * aparecem primeiro em "Mais relevantes" (comparado por nome, sem acento
+ * definido porque a CISS não é consistente em como grava). Índice da lista
+ * = ordem de prioridade (arroz antes de feijão antes de macarrão etc.).
+ * Categoria sem entrada aqui = comportamento de sempre, sem alteração.
+ */
+const ANCORAS_POR_CATEGORIA: Partial<Record<Categoria, string[]>> = {
+  alimentos: ['ARROZ', 'FEIJAO', 'FEIJÃO', 'MACARRAO', 'MACARRÃO'],
+  perfumaria: ['SHAMPOO', 'XAMPU'],
+}
+
+/**
  * Filtra o catálogo por categoria + busca + subcategoria, ordena e pagina.
  * Roda 100% em memória — nenhuma requisição à origem.
  */
@@ -1328,6 +1340,23 @@ export function consultar(
   // aparecendo — nunca é descartado. Array.sort é estável, então isto só
   // separa em dois blocos sem embaralhar a ordenação já aplicada acima.
   filtrados.sort((a, b) => (a.imagemReal ? 0 : 1) - (b.imagemReal ? 0 : 1))
+
+  // "Mais relevantes" (padrão, sem busca): dentro de UMA categoria só, alguns
+  // produtos-âncora aparecem primeiro — o que a maioria já vai procurar de
+  // cara, em vez de depender da ordem arbitrária que a CISS mandou. Roda por
+  // último de propósito (sort estável): vira o critério PRINCIPAL, e dentro
+  // de cada âncora a ordem por imagem-real de cima continua valendo.
+  if ((!opcoes.ordenar || opcoes.ordenar === 'relevancia') && !termo && typeof categoria === 'string') {
+    const ancoras = ANCORAS_POR_CATEGORIA[categoria]
+    if (ancoras?.length) {
+      const rank = (p: Produto) => {
+        const nome = p.nome.toUpperCase()
+        const i = ancoras.findIndex(palavra => nome.includes(palavra))
+        return i === -1 ? ancoras.length : i
+      }
+      filtrados.sort((a, b) => rank(a) - rank(b))
+    }
+  }
 
   const paginaSegura = Math.max(1, pagina)
   const inicio = (paginaSegura - 1) * porPagina
