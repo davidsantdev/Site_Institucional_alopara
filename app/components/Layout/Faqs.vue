@@ -8,7 +8,7 @@ const perguntas = [
   {
     valor: 'item-1',
     pergunta: 'Quais são os horários de funcionamento do Alô Pará?',
-    resposta: 'Nossas lojas funcionam em horário comercial, podendo variar conforme a unidade. Para saber o horário atualizado, consulte nossa página de contato ou nossas redes sociais.',
+    resposta: 'Na Matriz 7:00 às 21:00 de segunda a sábado Domingo 7:00 às 12:30,  feriados podendo haver redução de horário dás 7:00 às 12:30. No Filial 7:00 às 21:00 de segunda a sábado Domingo 7:00 às 12:30, feriados podendo haver redução de horário dás 7:00 às 12:30',
   },
   {
     valor: 'item-2',
