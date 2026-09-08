@@ -395,7 +395,11 @@ async function aoEscolherArquivoEncarte(evento: Event) {
     toast.success('Encarte adicionado')
   }
   catch (e: any) {
-    toast.error(e?.data?.statusMessage || 'Erro ao enviar encarte')
+    // Sem statusMessage normalmente é o nginx/proxy recusando o corpo da
+    // requisição antes de chegar no Nitro (ex.: 413 por client_max_body_size
+    // baixo) — mostrar o código ajuda a identificar isso sem olhar log de servidor.
+    const status = e?.status ?? e?.statusCode
+    toast.error(e?.data?.statusMessage || (status ? `Erro ao enviar encarte (código ${status})` : 'Erro ao enviar encarte — verifique a conexão'))
   }
   finally {
     enviandoEncarte.value = false
