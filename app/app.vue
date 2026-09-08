@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { capturarCodigoAfiliado } from '~/composables/useAfiliado'
+
 // Canonical + og:url por página. Sem isso, TODA página (inclusive as de
 // categoria) declarava a home como canônica — o Google entende isso como
 // "não indexe esta página, indexe a outra", derrubando a visibilidade de
@@ -7,6 +10,11 @@
 // <link rel="canonical"> e a duplicata confunde o rastreador.
 const SITE_URL = 'https://alopara.com.br'
 const route = useRoute()
+
+// Guarda o código de indicação (?ref=CODIGO) assim que o app monta, pra
+// reaparecer na mensagem do WhatsApp quando a pessoa finalizar a compra,
+// mesmo que ela chegue por outra página que não seja a home.
+onMounted(capturarCodigoAfiliado)
 
 useHead({
   link: [

@@ -3,6 +3,7 @@ import { Frown, ShoppingCart, Trash2 } from 'lucide-vue-next'
 import { computed } from 'vue'
 import Footer from '~/components/Layout/Footer.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
+import { obterCodigoAfiliado } from '~/composables/useAfiliado'
 import { useCarrinho } from '~/data/composable/UseCarrinho'
 
 useSeoMeta({
@@ -42,9 +43,6 @@ function diminuir(item: any) {
 }
 
 function comprarWhatsapp() {
-  // Esta é a conversão real do site — o clique que vira pedido de verdade.
-  // Fica registrada como evento custom no GA4 (não é "purchase" porque a venda
-  // só se confirma depois, na conversa do WhatsApp).
   const { gtag } = useGtag()
   gtag('event', 'finalizar_whatsapp', {
     value: Number(totalCarrinho.value.replace(',', '.')) || 0,
@@ -56,10 +54,16 @@ function comprarWhatsapp() {
     .map((item, i) => `${i + 1}. ${item.nome}\n   Quantidade: ${item.quantidade ?? 1} — R$ ${precoItem(item)}`)
     .join('\n\n')
 
+  // Se a pessoa chegou por um link de indicação, o código vai junto na
+  // mensagem — é assim que o atendente sabe que veio de um afiliado, já
+  // que o pedido inteiro fecha por aqui, fora de qualquer sistema.
+  const codigoAfiliado = obterCodigoAfiliado()
+
   const mensagem = [
     'Olá, vim pelo site! Gostaria de fazer o seguinte pedido:',
     itens,
     `Total do pedido: R$ ${totalCarrinho.value}`,
+    ...(codigoAfiliado ? [`Código de indicação: ${codigoAfiliado}`] : []),
   ].join('\n\n')
 
   window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`, '_blank')
@@ -71,7 +75,6 @@ function comprarWhatsapp() {
     <HeaderMain />
 
     <main class="flex-1 max-w-6xl mx-auto w-full px-4 md:px-6 py-10">
-      <!-- HEADER -->
       <div class="flex items-center justify-between gap-3 mb-8">
         <div class="flex items-center gap-3">
           <ShoppingCart :size="24" class="text-red-600" />
@@ -97,7 +100,6 @@ function comprarWhatsapp() {
         </button>
       </div>
 
-      <!-- VAZIO -->
       <div
         v-if="totalItens.vazio"
         class="flex flex-col items-center justify-center py-28 gap-4 text-(--texto-minimo)"
@@ -115,21 +117,17 @@ function comprarWhatsapp() {
         </button>
       </div>
 
-      <!-- CONTEÚDO -->
       <div v-else class="flex flex-col lg:flex-row gap-8">
-        <!-- LISTA -->
         <div class="flex-1 flex flex-col gap-3">
           <div
             v-for="item in carrinho"
             :key="item.id ?? item.nome"
             class="bg-(--bg-cartao) rounded-2xl border border-(--borda) flex items-center gap-4 p-4 hover:border-(--borda-forte) transition-colors"
           >
-            <!-- IMG -->
             <div class="bg-[#fafafa] rounded-xl flex items-center justify-center md:w-28 md:h-28 w-20 h-20 flex-shrink-0 p-2">
               <img class="w-full h-full object-contain" :src="item.img" :alt="item.nome">
             </div>
 
-            <!-- INFO -->
             <div class="flex-1 min-w-0">
               <h3 class="text-(--texto-primario) font-semibold text-sm md:text-base leading-snug line-clamp-2">
                 {{ item.nome }}
@@ -141,7 +139,6 @@ function comprarWhatsapp() {
                 </span>
               </div>
 
-              <!-- quantidade -->
               <div class="flex items-center gap-2 mt-3">
                 <button
                   type="button"
@@ -165,7 +162,6 @@ function comprarWhatsapp() {
               </div>
             </div>
 
-            <!-- REMOVER -->
             <button
               type="button"
               :aria-label="`Remover ${item.nome} do carrinho`"
@@ -186,7 +182,6 @@ function comprarWhatsapp() {
           </button>
         </div>
 
-        <!-- RESUMO -->
         <div class="lg:w-80 w-full">
           <div class="bg-(--bg-cartao) rounded-2xl border border-(--borda) p-6 sticky top-24">
             <h3 class="font-black text-(--texto-primario) text-lg mb-4 tracking-tight">

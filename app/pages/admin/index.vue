@@ -6,6 +6,7 @@ import {
   Eye,
   EyeOff,
   ImageOff,
+  Link2,
   LogOut,
   Newspaper,
   Package,
@@ -17,6 +18,7 @@ import {
   Tag,
   Trash2,
   Upload,
+  Users,
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
@@ -44,6 +46,7 @@ async function verificarSessao() {
     if (r.autenticado) {
       carregarStats()
       carregarEncartes()
+      carregarAfiliados()
     }
   }
   catch {
@@ -60,6 +63,7 @@ async function entrar() {
     tela.value = 'painel'
     carregarStats()
     carregarEncartes()
+    carregarAfiliados()
   }
   catch (e: any) {
     erroLogin.value = e?.data?.statusMessage || 'Não foi possível entrar'
@@ -472,6 +476,210 @@ async function removerEncarteAdmin(encarte: EncarteAdmin) {
     removendoEncarte.value[encarte.id] = false
   }
 }
+
+// ═════════════ AFILIADOS (Indique e Ganhe) ═════════════
+// Como o pedido fecha pelo WhatsApp (sem pagamento no site), não tem como
+// confirmar uma venda sozinho — o admin registra na mão quando o atendente
+// vê o código de indicação chegar na mensagem.
+
+interface Afiliado {
+  id: string
+  nome: string
+  codigo: string
+  percentual: number
+  telefone?: string
+  criadoEm: number
+}
+
+interface Indicacao {
+  id: string
+  afiliadoId: string
+  codigo: string
+  valorCompra: number
+  comissao: number
+  observacao?: string
+  status: 'pendente' | 'pago'
+  criadoEm: number
+  pagoEm?: number
+}
+
+const afiliados = ref<Afiliado[]>([])
+const indicacoes = ref<Indicacao[]>([])
+const carregandoAfiliados = ref(false)
+
+const novoNomeAfiliado = ref('')
+const novoCodigoAfiliado = ref('')
+const novoPercentualAfiliado = ref<number | null>(null)
+const novoTelefoneAfiliado = ref('')
+const criandoAfiliado = ref(false)
+const removendoAfiliado = ref<Record<string, boolean>>({})
+
+const codigoIndicacao = ref('')
+const valorIndicacao = ref<number | null>(null)
+const observacaoIndicacao = ref('')
+const registrandoIndicacao = ref(false)
+const alternandoIndicacao = ref<Record<string, boolean>>({})
+const removendoIndicacao = ref<Record<string, boolean>>({})
+
+async function carregarAfiliados() {
+  carregandoAfiliados.value = true
+  try {
+    const [rA, rI] = await Promise.all([
+      $fetch<{ afiliados: Afiliado[] }>('/api/admin/afiliados'),
+      $fetch<{ indicacoes: Indicacao[] }>('/api/admin/indicacoes'),
+    ])
+    afiliados.value = rA.afiliados
+    indicacoes.value = rI.indicacoes
+  }
+  catch {
+    toast.error('Erro ao carregar afiliados')
+  }
+  finally {
+    carregandoAfiliados.value = false
+  }
+}
+
+/** Sugere um código a partir do nome — só se o admin ainda não tiver editado o campo na mão. */
+function aoDigitarNomeAfiliado() {
+  if (novoCodigoAfiliado.value)
+    return
+  novoCodigoAfiliado.value = novoNomeAfiliado.value
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g, '')
+    .split(/\s+/)[0]
+    ?.slice(0, 10) ?? ''
+}
+
+async function criarAfiliadoAdmin() {
+  criandoAfiliado.value = true
+  try {
+    const r = await $fetch<{ afiliado: Afiliado }>('/api/admin/afiliados', {
+      method: 'POST',
+      body: {
+        nome: novoNomeAfiliado.value,
+        codigo: novoCodigoAfiliado.value,
+        percentual: novoPercentualAfiliado.value,
+        telefone: novoTelefoneAfiliado.value || undefined,
+      },
+    })
+    afiliados.value.unshift(r.afiliado)
+    novoNomeAfiliado.value = ''
+    novoCodigoAfiliado.value = ''
+    novoPercentualAfiliado.value = null
+    novoTelefoneAfiliado.value = ''
+    toast.success('Afiliado cadastrado')
+  }
+  catch (e: any) {
+    toast.error(e?.data?.statusMessage || 'Erro ao cadastrar afiliado')
+  }
+  finally {
+    criandoAfiliado.value = false
+  }
+}
+
+async function removerAfiliadoAdmin(afiliado: Afiliado) {
+  removendoAfiliado.value[afiliado.id] = true
+  try {
+    await $fetch(`/api/admin/afiliados/${afiliado.id}`, { method: 'DELETE' })
+    afiliados.value = afiliados.value.filter(a => a.id !== afiliado.id)
+    toast.success('Afiliado removido', { description: afiliado.nome })
+  }
+  catch {
+    toast.error('Erro ao remover afiliado')
+  }
+  finally {
+    removendoAfiliado.value[afiliado.id] = false
+  }
+}
+
+function linkAfiliado(codigo: string) {
+  return `https://alopara.com.br/?ref=${codigo}`
+}
+
+async function copiarLinkAfiliado(codigo: string) {
+  try {
+    await navigator.clipboard.writeText(linkAfiliado(codigo))
+    toast.success('Link copiado')
+  }
+  catch {
+    toast.error(`Não foi possível copiar — copie na mão: ${linkAfiliado(codigo)}`)
+  }
+}
+
+async function registrarIndicacaoAdmin() {
+  if (!codigoIndicacao.value || !valorIndicacao.value) {
+    toast.error('Escolha o afiliado e o valor da compra')
+    return
+  }
+  registrandoIndicacao.value = true
+  try {
+    const r = await $fetch<{ indicacao: Indicacao }>('/api/admin/indicacoes', {
+      method: 'POST',
+      body: {
+        codigo: codigoIndicacao.value,
+        valorCompra: valorIndicacao.value,
+        observacao: observacaoIndicacao.value || undefined,
+      },
+    })
+    indicacoes.value.unshift(r.indicacao)
+    codigoIndicacao.value = ''
+    valorIndicacao.value = null
+    observacaoIndicacao.value = ''
+    toast.success('Venda registrada', { description: `Comissão: R$ ${r.indicacao.comissao.toFixed(2)}` })
+  }
+  catch (e: any) {
+    toast.error(e?.data?.statusMessage || 'Erro ao registrar venda')
+  }
+  finally {
+    registrandoIndicacao.value = false
+  }
+}
+
+async function alternarIndicacaoAdmin(indicacao: Indicacao) {
+  alternandoIndicacao.value[indicacao.id] = true
+  try {
+    const r = await $fetch<{ indicacao: Indicacao }>(`/api/admin/indicacoes/${indicacao.id}`, { method: 'PATCH' })
+    const idx = indicacoes.value.findIndex(i => i.id === indicacao.id)
+    if (idx !== -1)
+      indicacoes.value[idx] = r.indicacao
+  }
+  catch {
+    toast.error('Erro ao atualizar status')
+  }
+  finally {
+    alternandoIndicacao.value[indicacao.id] = false
+  }
+}
+
+async function removerIndicacaoAdmin(indicacao: Indicacao) {
+  removendoIndicacao.value[indicacao.id] = true
+  try {
+    await $fetch(`/api/admin/indicacoes/${indicacao.id}`, { method: 'DELETE' })
+    indicacoes.value = indicacoes.value.filter(i => i.id !== indicacao.id)
+    toast.success('Indicação removida')
+  }
+  catch {
+    toast.error('Erro ao remover indicação')
+  }
+  finally {
+    removendoIndicacao.value[indicacao.id] = false
+  }
+}
+
+/** Soma de comissão pendente/paga por afiliado, pra mostrar no card sem recalcular a cada render. */
+const resumoAfiliados = computed(() => {
+  const mapa = new Map<string, { pendente: number, pago: number }>()
+  for (const i of indicacoes.value) {
+    const atual = mapa.get(i.afiliadoId) ?? { pendente: 0, pago: 0 }
+    if (i.status === 'pendente')
+      atual.pendente += i.comissao
+    else
+      atual.pago += i.comissao
+    mapa.set(i.afiliadoId, atual)
+  }
+  return mapa
+})
 
 onMounted(verificarSessao)
 </script>
@@ -891,6 +1099,194 @@ onMounted(verificarSessao)
                 @click="removerEncarteAdmin(e)"
               >
                 <Trash2 :size="12" /> {{ removendoEncarte[e.id] ? 'Removendo...' : 'Remover' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ AFILIADOS (Indique e Ganhe) ═══ -->
+      <div class="mt-10 border-t border-[#1f1f1f] pt-8">
+        <h2 class="mb-4 flex items-center gap-2 text-lg font-black">
+          <Users :size="18" class="text-red-600" /> Indique e Ganhe
+        </h2>
+
+        <!-- cadastrar afiliado -->
+        <div class="mb-6 rounded-xl border border-[#1f1f1f] bg-[#161616] p-4">
+          <p class="mb-3 text-xs font-bold uppercase tracking-wide text-[#666]">
+            Novo afiliado
+          </p>
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <input
+              v-model="novoNomeAfiliado"
+              type="text"
+              placeholder="Nome"
+              class="h-11 rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] px-3 text-sm text-white outline-none transition focus:border-red-600"
+              @input="aoDigitarNomeAfiliado"
+            >
+            <input
+              v-model="novoCodigoAfiliado"
+              type="text"
+              placeholder="Código (ex.: JOAO10)"
+              class="h-11 rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] px-3 text-sm text-white uppercase outline-none transition focus:border-red-600"
+            >
+            <input
+              v-model.number="novoPercentualAfiliado"
+              type="number"
+              min="0.1"
+              max="100"
+              step="0.5"
+              placeholder="% de comissão"
+              class="h-11 rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] px-3 text-sm text-white outline-none transition focus:border-red-600"
+            >
+            <input
+              v-model="novoTelefoneAfiliado"
+              type="text"
+              placeholder="Telefone (opcional)"
+              class="h-11 rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] px-3 text-sm text-white outline-none transition focus:border-red-600"
+            >
+          </div>
+          <button
+            type="button"
+            class="mt-3 flex h-10 items-center justify-center gap-1.5 rounded-lg bg-red-600 px-5 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-40"
+            :disabled="criandoAfiliado || !novoNomeAfiliado || !novoCodigoAfiliado || !novoPercentualAfiliado"
+            @click="criarAfiliadoAdmin"
+          >
+            {{ criandoAfiliado ? 'Cadastrando...' : 'Cadastrar afiliado' }}
+          </button>
+        </div>
+
+        <!-- lista de afiliados -->
+        <p v-if="carregandoAfiliados" class="text-sm text-[#555]">
+          Carregando...
+        </p>
+        <p v-else-if="afiliados.length === 0" class="text-sm text-[#555]">
+          Nenhum afiliado cadastrado ainda.
+        </p>
+
+        <div v-else class="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            v-for="a in afiliados"
+            :key="a.id"
+            class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4"
+          >
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <p class="truncate font-bold text-white">
+                  {{ a.nome }}
+                </p>
+                <p class="text-xs text-[#888]">
+                  <span class="font-mono text-red-500">{{ a.codigo }}</span> · {{ a.percentual }}%
+                </p>
+                <p v-if="a.telefone" class="text-xs text-[#666]">
+                  {{ a.telefone }}
+                </p>
+              </div>
+              <button
+                title="Remover afiliado"
+                class="shrink-0 rounded-lg border border-[#2a2a2a] p-2 text-[#555] transition hover:border-red-600 hover:text-red-500 disabled:opacity-40"
+                :disabled="removendoAfiliado[a.id]"
+                @click="removerAfiliadoAdmin(a)"
+              >
+                <Trash2 :size="14" />
+              </button>
+            </div>
+
+            <div class="mt-3 flex items-center justify-between border-t border-[#1f1f1f] pt-3 text-xs">
+              <span class="text-emerald-400">Pendente: R$ {{ (resumoAfiliados.get(a.id)?.pendente ?? 0).toFixed(2) }}</span>
+              <span class="text-[#666]">Pago: R$ {{ (resumoAfiliados.get(a.id)?.pago ?? 0).toFixed(2) }}</span>
+            </div>
+
+            <button
+              type="button"
+              class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#2a2a2a] py-1.5 text-[11px] font-semibold text-[#888] transition hover:border-red-600 hover:text-white"
+              @click="copiarLinkAfiliado(a.codigo)"
+            >
+              <Link2 :size="12" /> Copiar link de indicação
+            </button>
+          </div>
+        </div>
+
+        <!-- registrar venda indicada -->
+        <div class="mb-6 rounded-xl border border-[#1f1f1f] bg-[#161616] p-4">
+          <p class="mb-3 text-xs font-bold uppercase tracking-wide text-[#666]">
+            Registrar venda indicada
+          </p>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <select
+              v-model="codigoIndicacao"
+              class="h-11 rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] px-3 text-sm text-white outline-none transition focus:border-red-600"
+            >
+              <option value="" disabled>
+                Escolha o afiliado
+              </option>
+              <option v-for="a in afiliados" :key="a.id" :value="a.codigo">
+                {{ a.nome }} ({{ a.codigo }})
+              </option>
+            </select>
+            <input
+              v-model.number="valorIndicacao"
+              type="number"
+              min="0.01"
+              step="0.01"
+              placeholder="Valor da compra (R$)"
+              class="h-11 rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] px-3 text-sm text-white outline-none transition focus:border-red-600"
+            >
+            <input
+              v-model="observacaoIndicacao"
+              type="text"
+              placeholder="Observação (opcional)"
+              class="h-11 rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] px-3 text-sm text-white outline-none transition focus:border-red-600"
+            >
+          </div>
+          <button
+            type="button"
+            class="mt-3 flex h-10 items-center justify-center gap-1.5 rounded-lg bg-red-600 px-5 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-40"
+            :disabled="registrandoIndicacao || !codigoIndicacao || !valorIndicacao"
+            @click="registrarIndicacaoAdmin"
+          >
+            {{ registrandoIndicacao ? 'Registrando...' : 'Registrar venda' }}
+          </button>
+        </div>
+
+        <!-- lista de indicações -->
+        <p v-if="indicacoes.length === 0" class="text-sm text-[#555]">
+          Nenhuma venda indicada registrada ainda.
+        </p>
+        <div v-else class="flex flex-col gap-2">
+          <div
+            v-for="i in indicacoes"
+            :key="i.id"
+            class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#1f1f1f] bg-[#161616] p-3"
+          >
+            <div class="text-sm">
+              <span class="font-mono text-red-500">{{ i.codigo }}</span>
+              <span class="text-[#888]"> · compra R$ {{ i.valorCompra.toFixed(2) }} · comissão </span>
+              <span class="font-bold text-white">R$ {{ i.comissao.toFixed(2) }}</span>
+              <span v-if="i.observacao" class="text-[#666]"> · {{ i.observacao }}</span>
+              <p class="text-[10px] text-[#555]">
+                {{ new Date(i.criadoEm).toLocaleDateString('pt-BR') }}
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                class="rounded-lg border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-40"
+                :class="i.status === 'pago'
+                  ? 'border-emerald-700 text-emerald-400'
+                  : 'border-[#2a2a2a] text-[#ccc] hover:border-emerald-600 hover:text-emerald-400'"
+                :disabled="alternandoIndicacao[i.id]"
+                @click="alternarIndicacaoAdmin(i)"
+              >
+                {{ i.status === 'pago' ? 'Pago ✓' : 'Marcar como pago' }}
+              </button>
+              <button
+                title="Remover"
+                class="rounded-lg border border-[#2a2a2a] p-2 text-[#555] transition hover:border-red-600 hover:text-red-500 disabled:opacity-40"
+                :disabled="removendoIndicacao[i.id]"
+                @click="removerIndicacaoAdmin(i)"
+              >
+                <Trash2 :size="14" />
               </button>
             </div>
           </div>
