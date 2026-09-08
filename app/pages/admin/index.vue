@@ -7,6 +7,7 @@ import {
   EyeOff,
   ImageOff,
   LogOut,
+  Newspaper,
   Package,
   PackageX,
   PencilLine,
@@ -40,8 +41,10 @@ async function verificarSessao() {
   try {
     const r = await $fetch<{ autenticado: boolean }>('/api/admin/sessao')
     tela.value = r.autenticado ? 'painel' : 'login'
-    if (r.autenticado)
+    if (r.autenticado) {
       carregarStats()
+      carregarEncartes()
+    }
   }
   catch {
     tela.value = 'login'
@@ -56,6 +59,7 @@ async function entrar() {
     senha.value = ''
     tela.value = 'painel'
     carregarStats()
+    carregarEncartes()
   }
   catch (e: any) {
     erroLogin.value = e?.data?.statusMessage || 'Não foi possível entrar'
@@ -341,6 +345,76 @@ async function removerCorrecaoEstoque(produto: ProdutoAdmin) {
   }
   finally {
     enviando.value[produto.id] = false
+  }
+}
+
+// ═════════════ ENCARTES ═════════════
+// Conteúdo puro que o admin sobe na mão — sem depender de CISS/Mercafácil.
+
+interface EncarteAdmin {
+  id: string
+  titulo: string
+  arquivo: string
+  criadoEm: number
+}
+
+const encartes = ref<EncarteAdmin[]>([])
+const carregandoEncartes = ref(false)
+const novoTituloEncarte = ref('')
+const enviandoEncarte = ref(false)
+const removendoEncarte = ref<Record<string, boolean>>({})
+
+async function carregarEncartes() {
+  carregandoEncartes.value = true
+  try {
+    const r = await $fetch<{ encartes: EncarteAdmin[] }>('/api/encartes')
+    encartes.value = r.encartes
+  }
+  catch {
+    toast.error('Erro ao carregar encartes')
+  }
+  finally {
+    carregandoEncartes.value = false
+  }
+}
+
+async function aoEscolherArquivoEncarte(evento: Event) {
+  const input = evento.target as HTMLInputElement
+  const arquivo = input.files?.[0]
+  if (!arquivo)
+    return
+
+  enviandoEncarte.value = true
+  try {
+    const form = new FormData()
+    form.append('arquivo', arquivo)
+    form.append('titulo', novoTituloEncarte.value)
+    const r = await $fetch<{ encarte: EncarteAdmin }>('/api/admin/encartes', { method: 'POST', body: form })
+    encartes.value.unshift(r.encarte)
+    novoTituloEncarte.value = ''
+    toast.success('Encarte adicionado')
+  }
+  catch (e: any) {
+    toast.error(e?.data?.statusMessage || 'Erro ao enviar encarte')
+  }
+  finally {
+    enviandoEncarte.value = false
+    input.value = '' // permite escolher o mesmo arquivo de novo depois, se precisar
+  }
+}
+
+async function removerEncarteAdmin(encarte: EncarteAdmin) {
+  removendoEncarte.value[encarte.id] = true
+  try {
+    await $fetch(`/api/admin/encartes/${encarte.id}`, { method: 'DELETE' })
+    encartes.value = encartes.value.filter(e => e.id !== encarte.id)
+    toast.success('Encarte removido', { description: encarte.titulo })
+  }
+  catch {
+    toast.error('Erro ao remover encarte')
+  }
+  finally {
+    removendoEncarte.value[encarte.id] = false
   }
 }
 
@@ -703,6 +777,69 @@ onMounted(verificarSessao)
         >
           <ChevronRight :size="16" />
         </button>
+      </div>
+
+      <!-- ═══ ENCARTES ═══ -->
+      <div class="mt-10 border-t border-[#1f1f1f] pt-8">
+        <h2 class="mb-4 flex items-center gap-2 text-lg font-black">
+          <Newspaper :size="18" class="text-red-600" /> Encartes
+        </h2>
+
+        <!-- upload -->
+        <div class="mb-6 flex flex-col gap-3 rounded-xl border border-[#1f1f1f] bg-[#161616] p-4 sm:flex-row sm:items-center">
+          <input
+            v-model="novoTituloEncarte"
+            type="text"
+            placeholder="Título (ex.: Ofertas de 08 a 14/09)"
+            class="h-11 flex-1 rounded-lg border border-[#2a2a2a] bg-[#0d0d0d] px-3 text-sm text-white outline-none transition focus:border-red-600"
+          >
+          <label
+            class="flex h-11 shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#2a2a2a] px-4 text-sm font-semibold text-[#ccc] transition hover:border-red-600 hover:text-white"
+            :class="{ 'pointer-events-none opacity-40': enviandoEncarte }"
+          >
+            <Upload :size="14" />
+            {{ enviandoEncarte ? 'Enviando...' : 'Escolher imagem e adicionar' }}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              class="hidden"
+              @change="aoEscolherArquivoEncarte"
+            >
+          </label>
+        </div>
+
+        <p v-if="carregandoEncartes" class="text-sm text-[#555]">
+          Carregando encartes...
+        </p>
+        <p v-else-if="encartes.length === 0" class="text-sm text-[#555]">
+          Nenhum encarte publicado ainda.
+        </p>
+
+        <div v-else class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <div
+            v-for="e in encartes"
+            :key="e.id"
+            class="overflow-hidden rounded-xl border border-[#1f1f1f] bg-[#161616]"
+          >
+            <img :src="`/uploads/encartes/${e.arquivo}`" :alt="e.titulo" class="aspect-3/4 w-full object-cover">
+            <div class="p-2">
+              <p class="truncate text-xs font-semibold">
+                {{ e.titulo }}
+              </p>
+              <p class="text-[10px] text-[#555]">
+                {{ new Date(e.criadoEm).toLocaleDateString('pt-BR') }}
+              </p>
+              <button
+                type="button"
+                class="mt-1.5 flex w-full items-center justify-center gap-1 rounded-lg border border-[#2a2a2a] py-1.5 text-[11px] font-semibold text-[#888] transition hover:border-red-600 hover:text-red-500 disabled:opacity-40"
+                :disabled="removendoEncarte[e.id]"
+                @click="removerEncarteAdmin(e)"
+              >
+                <Trash2 :size="12" /> {{ removendoEncarte[e.id] ? 'Removendo...' : 'Remover' }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

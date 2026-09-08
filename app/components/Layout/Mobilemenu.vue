@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Download, Home, Menu, Moon, ShoppingBasket, Sparkles, Sun, Tag, User2, X } from 'lucide-vue-next'
+import { Download, Home, Menu, Moon, Newspaper, ShoppingBasket, Sparkles, Sun, Tag, User2, X } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useTema } from '~/composables/useTema'
 
@@ -15,6 +15,7 @@ const navPrincipal = [
 
 const categorias = [
   { label: 'Ofertas', rota: '/Ofertas', icone: Tag },
+  { label: 'Encartes', rota: '/Encartes', icone: Newspaper },
   { label: 'Alimentos', rota: '/Alimentos', icone: ShoppingBasket },
   { label: 'Bebidas', rota: '/Bebidas', icone: ShoppingBasket },
   { label: 'Limpeza', rota: '/Limpeza', icone: ShoppingBasket },

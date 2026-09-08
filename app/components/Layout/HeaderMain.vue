@@ -9,6 +9,7 @@ const { tema, alternar } = useTema()
 
 const navLinks = [
   { label: 'Ofertas', to: '/ofertas' },
+  { label: 'Encartes', to: '/encartes' },
   { label: 'Alimentos', to: '/alimentos' },
   { label: 'Bebidas', to: '/bebidas' },
   { label: 'Limpeza', to: '/limpeza' },
