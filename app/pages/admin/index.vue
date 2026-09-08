@@ -378,14 +378,65 @@ async function carregarEncartes() {
   }
 }
 
+/**
+ * Encolhe a imagem no navegador antes de subir — o nginx do servidor tem um
+ * limite padrão de 1MB por requisição, e fotos de encarte tiradas de celular
+ * fácil passam de 5-10MB. Em vez de depender de mexer na config do servidor
+ * (frágil, fácil de errar), a imagem já sai pequena o suficiente pra nunca
+ * esbarrar nesse limite, não importa a config do servidor.
+ */
+async function comprimirImagem(arquivo: File): Promise<File> {
+  const ALVO_BYTES = 700 * 1024 // bem abaixo do limite padrão de 1MB do nginx
+  const MAX_DIMENSAO = 1800
+
+  if (arquivo.size <= ALVO_BYTES)
+    return arquivo
+
+  try {
+    const bitmap = await createImageBitmap(arquivo)
+    let largura = bitmap.width
+    let altura = bitmap.height
+    if (largura > MAX_DIMENSAO || altura > MAX_DIMENSAO) {
+      const escala = MAX_DIMENSAO / Math.max(largura, altura)
+      largura = Math.round(largura * escala)
+      altura = Math.round(altura * escala)
+    }
+
+    const canvas = document.createElement('canvas')
+    canvas.width = largura
+    canvas.height = altura
+    const ctx = canvas.getContext('2d')
+    if (!ctx)
+      return arquivo
+    ctx.drawImage(bitmap, 0, 0, largura, altura)
+
+    // Vai reduzindo a qualidade até caber no alvo, sem passar de 5 tentativas.
+    let qualidade = 0.85
+    for (let tentativa = 0; tentativa < 5; tentativa++) {
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', qualidade))
+      if (!blob)
+        break
+      if (blob.size <= ALVO_BYTES || qualidade <= 0.4)
+        return new File([blob], `${arquivo.name.replace(/\.[^.]+$/, '')}.jpg`, { type: 'image/jpeg' })
+      qualidade -= 0.15
+    }
+  }
+  catch {
+    // Se o navegador não conseguir comprimir por algum motivo, manda o arquivo
+    // original mesmo — melhor tentar (e talvez esbarrar no limite) do que travar aqui.
+  }
+  return arquivo
+}
+
 async function aoEscolherArquivoEncarte(evento: Event) {
   const input = evento.target as HTMLInputElement
-  const arquivo = input.files?.[0]
-  if (!arquivo)
+  const arquivoOriginal = input.files?.[0]
+  if (!arquivoOriginal)
     return
 
   enviandoEncarte.value = true
   try {
+    const arquivo = await comprimirImagem(arquivoOriginal)
     const form = new FormData()
     form.append('arquivo', arquivo)
     form.append('titulo', novoTituloEncarte.value)
