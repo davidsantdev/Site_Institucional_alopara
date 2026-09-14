@@ -1,6 +1,15 @@
 import { computed, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
+// Os produtos vêm de fontes diferentes (categorias, ofertas, cosmos) e nem
+// todas usam o mesmo nome de campo pra preço — algumas com acento, outras
+// sem. Fica num único lugar pra não duplicar essa cadeia de fallback em
+// cada tela que precisa do valor em número (carrinho, checkout, Analytics).
+export function precoUnitario(produto: any): number {
+  const bruto = produto?.preco2 ?? produto?.preço2 ?? produto?.preço ?? produto?.preco ?? '0'
+  return Number.parseFloat(String(bruto).replace(',', '.')) || 0
+}
+
 export function useCarrinho() {
   const carrinho = useState<any[]>('carrinho', () => [])
 
@@ -48,6 +57,22 @@ export function useCarrinho() {
 
     toast.success('Adicionado ao carrinho', {
       description: produto.nome,
+    })
+
+    // GA4 Ecommerce — faltava por completo: o Analytics só via o clique final
+    // no WhatsApp, nunca o "adicionar ao carrinho" (é aqui que TODO botão de
+    // adicionar de qualquer categoria/página cai, ver grep por adicionarCarrinho).
+    const preco = precoUnitario(produto)
+    const { gtag } = useGtag()
+    gtag('event', 'add_to_cart', {
+      currency: 'BRL',
+      value: preco * quantidade,
+      items: [{
+        item_id: String(produto.id ?? produto.nome),
+        item_name: produto.nome,
+        price: preco,
+        quantity: quantidade,
+      }],
     })
   }
 

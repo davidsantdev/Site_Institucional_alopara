@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import Footer from '~/components/Layout/Footer.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
 import { obterCodigoAfiliado } from '~/composables/useAfiliado'
-import { useCarrinho } from '~/data/composable/UseCarrinho'
+import { precoUnitario, useCarrinho } from '~/data/composable/UseCarrinho'
 
 useSeoMeta({
   title: 'Meu Carrinho | Alô Pará',
@@ -16,20 +16,12 @@ const { carrinho, removeItem, esvaziarCarrinho, totalItens } = useCarrinho()
 const NUMERO_WHATSAPP = '5594991923141'
 
 function precoItem(item: any) {
-  const valor = Number.parseFloat(
-    (item.preco2 ?? item.preço2 ?? item.preço ?? '0').toString().replace(',', '.'),
-  )
-  return (valor * (item.quantidade ?? 1)).toFixed(2).replace('.', ',')
+  return (precoUnitario(item) * (item.quantidade ?? 1)).toFixed(2).replace('.', ',')
 }
 
 const totalCarrinho = computed(() =>
   carrinho.value
-    .reduce((acc, c) => {
-      const valor = Number.parseFloat(
-        (c.preco2 ?? c.preço2 ?? c.preço ?? '0').toString().replace(',', '.'),
-      )
-      return acc + valor * (c.quantidade ?? 1)
-    }, 0)
+    .reduce((acc, c) => acc + precoUnitario(c) * (c.quantidade ?? 1), 0)
     .toFixed(2)
     .replace('.', ','),
 )
@@ -43,11 +35,29 @@ function diminuir(item: any) {
 }
 
 function comprarWhatsapp() {
+  const valorTotal = Number(totalCarrinho.value.replace(',', '.')) || 0
+  const itensGA = carrinho.value.map(item => ({
+    item_id: String(item.id ?? item.nome),
+    item_name: item.nome,
+    price: precoUnitario(item),
+    quantity: item.quantidade ?? 1,
+  }))
+
   const { gtag } = useGtag()
+  // 'finalizar_whatsapp' é o evento de sempre (mantido pro que já estava
+  // configurado no GA4); 'begin_checkout' é o nome padrão que o relatório
+  // de Monetização do Analytics reconhece sozinho — sem ele, o valor não
+  // aparecia lá mesmo o evento sendo disparado.
   gtag('event', 'finalizar_whatsapp', {
-    value: Number(totalCarrinho.value.replace(',', '.')) || 0,
+    value: valorTotal,
     currency: 'BRL',
     quantidade_itens: carrinho.value.length,
+    items: itensGA,
+  })
+  gtag('event', 'begin_checkout', {
+    value: valorTotal,
+    currency: 'BRL',
+    items: itensGA,
   })
 
   const itens = carrinho.value
