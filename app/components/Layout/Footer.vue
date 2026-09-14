@@ -127,9 +127,14 @@ const info = [
         <div class="w-px h-3 bg-(--borda-forte)" />
         <DialogTermosUso />
         <div class="w-px h-3 bg-(--borda-forte)" />
-        <span class="text-(--texto-fraco)/60 text-[11px] font-bold tracking-[1px] select-none">
-          Coded by David S.
-        </span>
+        <a
+          href="https://portfolio-daviddev.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer author"
+          class="text-[11px] font-bold tracking-[1px] text-(--texto-fraco) transition-colors hover:text-red-600"
+        >
+          Feito por <span class="text-red-600">David Santos</span>
+        </a>
       </div>
     </div>
   </footer>

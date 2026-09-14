@@ -20,6 +20,14 @@ useHead({
   link: [
     { rel: 'canonical', href: () => `${SITE_URL}${route.path}` },
   ],
+  // Quem pesquisa "quem criou o site alô pará" vinha achando a Mercafácil
+  // (provavelmente por causa do widget do Clube de Descontos, que é deles).
+  // Isto aqui é o sinal padrão de autoria que o Google entende — não troca a
+  // atribuição da hora pra noite, mas é o que existe pra apontar pro criador
+  // certo. O nome completo (não só "David S.") também ajuda a busca por nome.
+  meta: [
+    { name: 'author', content: 'David Santos' },
+  ],
 })
 
 useSeoMeta({
@@ -44,22 +52,43 @@ useHead({
 // cliente — adicionar em `address` e `openingHoursSpecification` assim que
 // vierem (ver conversa). Sem eles o schema ainda é válido, só não concorre
 // ao "pacote local" do Google com força total.
+//
+// O bloco WebSite (author/creator) é o sinal de autoria do site em si —
+// separado do GroceryStore (que descreve o NEGÓCIO) — pra quando alguém
+// pesquisa quem desenvolveu o site, não quem é o mercado.
+const AUTOR = {
+  '@type': 'Person',
+  'name': 'David Santos',
+  'url': 'https://portfolio-daviddev.vercel.app/',
+}
+
 useHead({
   script: [
     {
       type: 'application/ld+json',
       innerHTML: JSON.stringify({
         '@context': 'https://schema.org',
-        '@type': 'GroceryStore',
-        'name': 'Supermercado Alô Pará',
-        'alternateName': ['Alô Pará', 'Alo Para'],
-        'url': SITE_URL,
-        'logo': `${SITE_URL}/favicon.png`,
-        'image': `${SITE_URL}/og-image.png`,
-        'telephone': '+5594991923141',
-        'priceRange': '$$',
-        'sameAs': [
-          'https://instagram.com/supermercadoalopara',
+        '@graph': [
+          {
+            '@type': 'GroceryStore',
+            'name': 'Supermercado Alô Pará',
+            'alternateName': ['Alô Pará', 'Alo Para'],
+            'url': SITE_URL,
+            'logo': `${SITE_URL}/favicon.png`,
+            'image': `${SITE_URL}/og-image.png`,
+            'telephone': '+5594991923141',
+            'priceRange': '$$',
+            'sameAs': [
+              'https://instagram.com/supermercadoalopara',
+            ],
+          },
+          {
+            '@type': 'WebSite',
+            'name': 'Alô Pará',
+            'url': SITE_URL,
+            'author': AUTOR,
+            'creator': AUTOR,
+          },
         ],
       }),
     },
