@@ -1250,6 +1250,17 @@ const ANCORAS_POR_CATEGORIA: Partial<Record<Categoria, string[]>> = {
 }
 
 /**
+ * "Desatualizado" = a CISS informou uma data de última alteração, mas ela é
+ * de um ano anterior ao atual (hoje: 2025 ou antes) — não conta quem nunca
+ * mandou a data (`atualizadoNaCiss === 0`), porque isso é "desconhecido",
+ * não "confirmado antigo". Usa o ano corrente (não um número fixo tipo 2025)
+ * pra continuar certo com o tempo, sem precisar mexer aqui de novo ano que vem.
+ */
+function produtoDesatualizado(p: Produto): boolean {
+  return p.atualizadoNaCiss > 0 && new Date(p.atualizadoNaCiss).getFullYear() < new Date().getFullYear()
+}
+
+/**
  * Filtra o catálogo por categoria + busca + subcategoria, ordena e pagina.
  * Roda 100% em memória — nenhuma requisição à origem.
  */
@@ -1271,6 +1282,8 @@ export function consultar(
     somenteSemEstoque?: boolean
     /** Modo "só em promoção" — usado pela rota pública /api/ofertas e pelo admin. */
     somenteEmPromocao?: boolean
+    /** Modo "só desatualizados" (painel de admin) — ver `produtoDesatualizado()`. */
+    somenteDesatualizados?: boolean
   } = {},
 ): Resultado {
   // `null` = catálogo inteiro; array = união de categorias.
@@ -1322,6 +1335,10 @@ export function consultar(
 
     // Modo "só em promoção" — página pública de Ofertas e card do admin.
     if (opcoes.somenteEmPromocao && !p.emPromocao)
+      continue
+
+    // Modo "só desatualizados" (painel de admin).
+    if (opcoes.somenteDesatualizados && !produtoDesatualizado(p))
       continue
 
     base.push(p)
@@ -1391,6 +1408,7 @@ export interface Estatisticas {
   semImagem: number
   semEstoque: number
   emPromocao: number
+  desatualizados: number
   ocultos: number
   overridesManuais: number
   porCategoria: Record<Categoria, number>
@@ -1412,6 +1430,7 @@ export async function obterEstatisticas(): Promise<Estatisticas> {
   let semImagem = 0
   let semEstoque = 0
   let emPromocao = 0
+  let desatualizados = 0
   const porCategoria: Record<Categoria, number> = { alimentos: 0, bebidas: 0, limpeza: 0, perfumaria: 0 }
   for (const p of catalogo.produtos) {
     if (!p.imagemReal)
@@ -1420,6 +1439,8 @@ export async function obterEstatisticas(): Promise<Estatisticas> {
       semEstoque++
     if (p.emPromocao)
       emPromocao++
+    if (produtoDesatualizado(p))
+      desatualizados++
     for (const chave of Object.keys(CAT) as Categoria[]) {
       if (p.cat & CAT[chave])
         porCategoria[chave]++
@@ -1434,6 +1455,7 @@ export async function obterEstatisticas(): Promise<Estatisticas> {
     semImagem,
     semEstoque,
     emPromocao,
+    desatualizados,
     ocultos: Object.keys(estadoOcultos.dados).length,
     overridesManuais: Object.keys(estadoOverrides.dados).length,
     porCategoria,

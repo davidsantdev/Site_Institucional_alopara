@@ -5,6 +5,7 @@ import {
   Clock,
   Eye,
   EyeOff,
+  History,
   ImageOff,
   Link2,
   LogOut,
@@ -112,6 +113,7 @@ interface Estatisticas {
   semImagem: number
   semEstoque: number
   emPromocao: number
+  desatualizados: number
   ocultos: number
   overridesManuais: number
   porCategoria: Record<'alimentos' | 'bebidas' | 'limpeza' | 'perfumaria', number>
@@ -181,7 +183,7 @@ interface ProdutoAdmin {
   atualizadoNaCiss: number
 }
 
-type Filtro = '' | 'sem-imagem' | 'ocultos' | 'sem-estoque' | 'em-promocao'
+type Filtro = '' | 'sem-imagem' | 'ocultos' | 'sem-estoque' | 'em-promocao' | 'desatualizados'
 
 const busca = ref('')
 const filtro = ref<Filtro>('')
@@ -817,6 +819,22 @@ onMounted(verificarSessao)
           </div>
           <p class="text-2xl font-black text-emerald-400">
             {{ formatarNumero(stats.emPromocao) }}
+          </p>
+        </button>
+
+        <!-- desatualizados (clicável) -->
+        <button
+          type="button"
+          class="rounded-xl border p-4 text-left transition"
+          :class="filtro === 'desatualizados' ? 'border-purple-500 bg-purple-500/10' : 'border-[#1f1f1f] bg-[#161616] hover:border-purple-500/60'"
+          title="A CISS informou uma última alteração, mas é de um ano anterior ao atual"
+          @click="alternarFiltro('desatualizados')"
+        >
+          <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+            <History :size="13" /> Desatualizados
+          </div>
+          <p class="text-2xl font-black text-purple-400">
+            {{ formatarNumero(stats.desatualizados) }}
           </p>
         </button>
 
