@@ -48,6 +48,7 @@ async function verificarSessao() {
       carregarStats()
       carregarEncartes()
       carregarAfiliados()
+      abrirDesatualizadosAoEntrar()
     }
   }
   catch {
@@ -65,6 +66,7 @@ async function entrar() {
     carregarStats()
     carregarEncartes()
     carregarAfiliados()
+    abrirDesatualizadosAoEntrar()
   }
   catch (e: any) {
     erroLogin.value = e?.data?.statusMessage || 'Não foi possível entrar'
@@ -231,6 +233,16 @@ function aoDigitarBusca() {
 function alternarFiltro(novo: Filtro) {
   filtro.value = filtro.value === novo ? '' : novo
   busca.value = ''
+  executarBusca(1)
+}
+
+/**
+ * Ao logar, já abre direto na lista de desatualizados — o admin pediu isso
+ * pra cair reto na tarefa de revisar estoque (marcar disponível/sem estoque)
+ * em vez de precisar clicar no card toda vez que entra no painel.
+ */
+function abrirDesatualizadosAoEntrar() {
+  filtro.value = 'desatualizados'
   executarBusca(1)
 }
 
