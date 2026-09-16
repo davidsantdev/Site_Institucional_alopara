@@ -177,6 +177,8 @@ interface ProdutoAdmin {
   semEstoque: boolean
   estoqueManual: boolean
   oculto: boolean
+  /** Data da última alteração do registro na CISS (ms) — 0 quando a CISS não manda. */
+  atualizadoNaCiss: number
 }
 
 type Filtro = '' | 'sem-imagem' | 'ocultos' | 'sem-estoque' | 'em-promocao'
@@ -958,6 +960,9 @@ onMounted(verificarSessao)
               </template>
               <template v-else>
                 R$ {{ p.preco2 }}
+              </template>
+              <template v-if="p.atualizadoNaCiss">
+                · Atualizado na CISS em {{ new Date(p.atualizadoNaCiss).toLocaleDateString('pt-BR') }}
               </template>
             </p>
           </div>

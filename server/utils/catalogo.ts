@@ -60,6 +60,13 @@ export interface Produto {
   semEstoque: boolean
   /** Código de barras (EAN/GTIN) — usado pra cruzar com as ofertas da Mercafácil. */
   ean: string
+  /**
+   * Data da última alteração do registro na CISS (`dtUltimaAlteracao`), em ms.
+   * Não existe um campo de "última entrada de mercadoria" separado — este é o
+   * sinal mais próximo (muda quando estoque/preço são atualizados por lá).
+   * 0 quando a CISS não manda o campo.
+   */
+  atualizadoNaCiss: number
 }
 
 export interface Catalogo {
@@ -937,6 +944,10 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
       : Number.NaN
     const emPromocao = promo > 0 && promo < preco
 
+    // "YYYY-MM-DD" da CISS — Date(...) entende isso direto, sem precisar de parser.
+    const dataAlteracao = p.dtUltimaAlteracao ? Date.parse(p.dtUltimaAlteracao) : Number.NaN
+    const atualizadoNaCiss = Number.isNaN(dataAlteracao) ? 0 : dataAlteracao
+
     destino.push({
       id,
       nome: p.nome?.trim() || 'Produto sem nome',
@@ -954,6 +965,7 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
       cat,
       semEstoque,
       ean: String(p.codigoBarra || p.nrcodbarprod || ''),
+      atualizadoNaCiss,
     })
     novos++
   }
