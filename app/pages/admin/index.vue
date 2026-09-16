@@ -5,7 +5,6 @@ import {
   Clock,
   Eye,
   EyeOff,
-  History,
   ImageOff,
   Link2,
   LogOut,
@@ -48,7 +47,6 @@ async function verificarSessao() {
       carregarStats()
       carregarEncartes()
       carregarAfiliados()
-      abrirDesatualizadosAoEntrar()
     }
   }
   catch {
@@ -66,7 +64,6 @@ async function entrar() {
     carregarStats()
     carregarEncartes()
     carregarAfiliados()
-    abrirDesatualizadosAoEntrar()
   }
   catch (e: any) {
     erroLogin.value = e?.data?.statusMessage || 'Não foi possível entrar'
@@ -115,7 +112,6 @@ interface Estatisticas {
   semImagem: number
   semEstoque: number
   emPromocao: number
-  desatualizados: number
   ocultos: number
   overridesManuais: number
   porCategoria: Record<'alimentos' | 'bebidas' | 'limpeza' | 'perfumaria', number>
@@ -181,11 +177,9 @@ interface ProdutoAdmin {
   semEstoque: boolean
   estoqueManual: boolean
   oculto: boolean
-  /** Data da última alteração do registro na CISS (ms) — 0 quando a CISS não manda. */
-  atualizadoNaCiss: number
 }
 
-type Filtro = '' | 'sem-imagem' | 'ocultos' | 'sem-estoque' | 'em-promocao' | 'desatualizados'
+type Filtro = '' | 'sem-imagem' | 'ocultos' | 'sem-estoque' | 'em-promocao'
 
 const busca = ref('')
 const filtro = ref<Filtro>('')
@@ -233,16 +227,6 @@ function aoDigitarBusca() {
 function alternarFiltro(novo: Filtro) {
   filtro.value = filtro.value === novo ? '' : novo
   busca.value = ''
-  executarBusca(1)
-}
-
-/**
- * Ao logar, já abre direto na lista de desatualizados — o admin pediu isso
- * pra cair reto na tarefa de revisar estoque (marcar disponível/sem estoque)
- * em vez de precisar clicar no card toda vez que entra no painel.
- */
-function abrirDesatualizadosAoEntrar() {
-  filtro.value = 'desatualizados'
   executarBusca(1)
 }
 
@@ -834,22 +818,6 @@ onMounted(verificarSessao)
           </p>
         </button>
 
-        <!-- desatualizados (clicável) -->
-        <button
-          type="button"
-          class="rounded-xl border p-4 text-left transition"
-          :class="filtro === 'desatualizados' ? 'border-purple-500 bg-purple-500/10' : 'border-[#1f1f1f] bg-[#161616] hover:border-purple-500/60'"
-          title="A CISS informou uma última alteração, mas é de um ano anterior ao atual"
-          @click="alternarFiltro('desatualizados')"
-        >
-          <div class="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
-            <History :size="13" /> Desatualizados
-          </div>
-          <p class="text-2xl font-black text-purple-400">
-            {{ formatarNumero(stats.desatualizados) }}
-          </p>
-        </button>
-
         <!-- ocultos (clicável) -->
         <button
           type="button"
@@ -990,9 +958,6 @@ onMounted(verificarSessao)
               </template>
               <template v-else>
                 R$ {{ p.preco2 }}
-              </template>
-              <template v-if="p.atualizadoNaCiss">
-                · Atualizado na CISS em {{ new Date(p.atualizadoNaCiss).toLocaleDateString('pt-BR') }}
               </template>
             </p>
           </div>
