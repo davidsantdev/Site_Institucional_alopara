@@ -704,11 +704,20 @@ async function getToken(): Promise<string> {
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
+/**
+ * Produtos pesados (açougue, hortifruti) usam um código interno curto — tipo
+ * "120", "699", "23" — em vez de um código de barras de verdade. Adivinhar a
+ * foto a partir disso é perigoso: um código curto tem chance real de coincidir
+ * com QUALQUER OUTRA imagem que exista no CDN por acaso, e a foto errada
+ * aparece com toda confiança (a validação só confere "existe algo aqui",
+ * não "é a foto certa"). Código de barras de verdade tem no mínimo 8 dígitos
+ * (padrão EAN-8) — abaixo disso, nem tenta adivinhar.
+ */
 function montarImagem(codigo: string | number | null | undefined): string {
   if (!codigo)
     return ''
   const cod = String(codigo).trim()
-  if (!cod || cod === '0')
+  if (!/^\d{8,}$/.test(cod))
     return ''
   return `https://cdn.cisslive.com.br/images/${cod}_1.jpg`
 }
