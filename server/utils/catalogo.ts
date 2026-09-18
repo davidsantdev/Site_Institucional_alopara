@@ -83,6 +83,8 @@ export const CAT = {
   bebidas: 1 << 1,
   limpeza: 1 << 2,
   perfumaria: 1 << 3,
+  frutas: 1 << 4,
+  carnes: 1 << 5,
 } as const
 
 export type Categoria = keyof typeof CAT
@@ -215,6 +217,16 @@ const DEPS_LIMPEZA = [
   'PRODUTOS DE LIMPEZA',
 ]
 
+const DEPS_FRUTAS = [
+  'HORTIFRUTI',
+]
+
+const DEPS_CARNES = [
+  'AÇOUGUE',
+  'ACOUGUE',
+  'FIAMBRERIA',
+]
+
 /** Perfumaria casa contra o texto completo do produto, não só o departamento. */
 const TERMOS_PERFUMARIA = [
   'HIGIENE',
@@ -265,6 +277,10 @@ function classificar(bruto: any): number {
     cat |= CAT.limpeza
   if (TERMOS_PERFUMARIA.some(t => blob.includes(t)))
     cat |= CAT.perfumaria
+  if (DEPS_FRUTAS.some(d => dep.includes(d)))
+    cat |= CAT.frutas
+  if (DEPS_CARNES.some(d => dep.includes(d)))
+    cat |= CAT.carnes
   return cat
 }
 
@@ -1400,7 +1416,7 @@ export async function obterEstatisticas(): Promise<Estatisticas> {
   let semImagem = 0
   let semEstoque = 0
   let emPromocao = 0
-  const porCategoria: Record<Categoria, number> = { alimentos: 0, bebidas: 0, limpeza: 0, perfumaria: 0 }
+  const porCategoria: Record<Categoria, number> = { alimentos: 0, bebidas: 0, limpeza: 0, perfumaria: 0, frutas: 0, carnes: 0 }
   for (const p of catalogo.produtos) {
     if (!p.imagemReal)
       semImagem++

@@ -114,7 +114,7 @@ interface Estatisticas {
   emPromocao: number
   ocultos: number
   overridesManuais: number
-  porCategoria: Record<'alimentos' | 'bebidas' | 'limpeza' | 'perfumaria', number>
+  porCategoria: Record<'alimentos' | 'bebidas' | 'limpeza' | 'perfumaria' | 'frutas' | 'carnes', number>
   catalogo: { atualizadoEm: number, completo: boolean, idadeMin: number }
   cosmos: { habilitado: boolean, usadosHoje: number, limiteDiario: number }
 }
@@ -127,6 +127,8 @@ const LABEL_CATEGORIA: Record<string, string> = {
   bebidas: 'Bebidas',
   limpeza: 'Limpeza',
   perfumaria: 'Perfumaria',
+  frutas: 'Hortifruti',
+  carnes: 'Carnes',
 }
 
 async function carregarStats() {
