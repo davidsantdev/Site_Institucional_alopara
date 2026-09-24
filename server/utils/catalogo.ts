@@ -676,7 +676,7 @@ type CatalogoDisco = Omit<Catalogo, 'indice'>
  * Subir este número força uma varredura nova no próximo boot, sem precisar
  * lembrar de apagar `.cache/catalogo.json` manualmente a cada deploy.
  */
-const CACHE_VERSAO = 3
+const CACHE_VERSAO = 4
 
 /**
  * `versaoAtual: false` = o formato mudou desde que isto foi salvo (campo novo
