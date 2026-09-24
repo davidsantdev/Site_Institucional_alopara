@@ -6,14 +6,13 @@
  * O tema vem por props com strings de classe completas (e não montadas em
  * tempo de execução), para que o Tailwind consiga enxergá-las no scanner.
  */
-import type { Ordenacao, Produto } from '~/composables/useCatalogo'
+import type { Ordenacao } from '~/composables/useCatalogo'
 import { ChevronLeft, ChevronRight, ChevronUp, ListFilter, RefreshCw, Search, X } from 'lucide-vue-next'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import CardProduto from '~/components/Layout/CardProduto.vue'
 import Footer from '~/components/Layout/Footer.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
-import ProdutoDetalhe from '~/components/Layout/ProdutoDetalhe.vue'
-import { imagemErro, imgSrc, OPCOES_ORDENACAO, percentualDesconto, useCatalogo } from '~/composables/useCatalogo'
-import { useCarrinho } from '~/data/composable/UseCarrinho'
+import { OPCOES_ORDENACAO, useCatalogo } from '~/composables/useCatalogo'
 
 const props = defineProps<{
   endpoint: string
@@ -28,8 +27,6 @@ const props = defineProps<{
   hoverCard: string
 }>()
 
-const { adicionarCarrinho } = useCarrinho()
-
 const {
   produtos,
   carregando,
@@ -43,6 +40,7 @@ const {
   intervaloExibido,
   carregar,
   irParaPagina,
+  paginaInicial,
   tipoSelecionado,
   ordenacao,
   tiposDisponiveis,
@@ -62,30 +60,13 @@ useSeoMeta({
   ogDescription: descricaoPagina,
 })
 
-// ═════════════ ABA DO PRODUTO ═════════════
-// Quantidade, adicionar e "produtos similares" vivem no ProdutoDetalhe.
-
-const modalProduto = ref<Produto | null>(null)
-
-function abrirModal(produto: Produto) {
-  modalProduto.value = { ...produto }
-}
-function fecharModal() {
-  modalProduto.value = null
-}
-/** "ver todos" dos similares: fecha a aba e filtra a lista pela mesma subcategoria. */
-function verTodosDoTipo(tipo: string) {
-  fecharModal()
-  selecionarTipo(tipo)
-}
-
 // ═════════════ FILTROS ═════════════
 
 function aoMudarOrdenacao(e: Event) {
   definirOrdenacao((e.target as HTMLSelectElement).value as Ordenacao)
 }
 
-// ═════════════ SCROLL / TECLADO ═════════════
+// ═════════════ SCROLL ═════════════
 
 const mostrarTopo = ref(false)
 
@@ -95,20 +76,27 @@ function onScroll() {
 function scrollTopo() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
-function onTecla(e: KeyboardEvent) {
-  if (e.key === 'Escape' && modalProduto.value)
-    fecharModal()
-}
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('scroll', onScroll, { passive: true })
-  window.addEventListener('keydown', onTecla)
-  carregar(1, false)
+
+  // Voltou da página de um produto pelo "voltar"? O vue-router guarda a rolagem
+  // de quando a pessoa saiu (e `forward` só existe nesse caso). Lido ANTES da
+  // primeira carga, que mexe na URL. A lista chega depois do primeiro paint,
+  // então a rolagem só dá pra restaurar quando os cards já estão na tela.
+  const estadoNavegacao = window.history.state
+  const rolagemSalva = estadoNavegacao?.forward ? estadoNavegacao?.scroll : null
+
+  await carregar(paginaInicial, false)
+
+  if (rolagemSalva?.top) {
+    await nextTick()
+    window.scrollTo(rolagemSalva.left ?? 0, rolagemSalva.top)
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', onScroll)
-  window.removeEventListener('keydown', onTecla)
 })
 </script>
 
@@ -335,61 +323,12 @@ onUnmounted(() => {
           v-else
           class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4"
         >
-          <div
+          <CardProduto
             v-for="produto in produtos"
             :key="produto.id"
-            class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-(--bg-cartao) border border-(--borda) hover:border-(--borda-hover) hover:-translate-y-0.5 transition-all duration-200 animate-fadeIn"
-            @click="abrirModal(produto)"
-          >
-            <span
-              v-if="produto.emPromocao"
-              class="absolute left-2 top-2 z-10 rounded-full bg-red-600 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white shadow"
-            >
-              -{{ percentualDesconto(produto.precoOriginal, produto.preco2) }}%
-            </span>
-
-            <button
-              type="button"
-              :aria-label="`Adicionar ${produto.nome} ao carrinho`"
-              class="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-green-500 text-white text-base font-bold shadow hover:bg-green-600 active:scale-95 transition-all"
-              @click.stop="adicionarCarrinho(produto, 1)"
-            >
-              +
-            </button>
-
-            <div class="flex h-36 items-center justify-center bg-[#fafafa] p-3 transition-colors duration-200" :class="hoverCard">
-              <img
-                :src="imgSrc(produto.img)"
-                :alt="produto.nome"
-                width="112"
-                height="112"
-                loading="lazy"
-                decoding="async"
-                class="h-28 w-28 object-contain drop-shadow-sm group-hover:scale-105 transition-transform duration-200"
-                @error="imagemErro"
-              >
-            </div>
-
-            <div class="flex flex-1 flex-col gap-1 p-3 pt-2">
-              <p class="line-clamp-2 min-h-[2.5rem] text-[12px] font-medium leading-snug text-(--texto-secundario) md:text-[13px]">
-                {{ produto.nome }}
-              </p>
-              <div class="mt-auto pt-1">
-                <template v-if="produto.emPromocao">
-                  <p class="text-[10px] leading-tight text-(--texto-fraco)">
-                    Preço normal: <span class="line-through">R$ {{ produto.precoOriginal }}</span>
-                  </p>
-                  <p class="leading-tight">
-                    <span class="block text-[9px] font-black uppercase tracking-wide text-emerald-500">Preço do clube</span>
-                    <span class="text-xl font-extrabold text-(--preco) md:text-2xl">R$ {{ produto.preco2 }}</span>
-                  </p>
-                </template>
-                <span v-else class="text-xl font-extrabold text-(--preco) md:text-2xl">
-                  R$ {{ produto.preco2 }}
-                </span>
-              </div>
-            </div>
-          </div>
+            :produto="produto"
+            :hover-card="hoverCard"
+          />
         </div>
 
         <!-- ═════ PAGINAÇÃO ═════ -->
@@ -446,16 +385,6 @@ onUnmounted(() => {
       </div>
     </template>
 
-    <!-- ═════ ABA DO PRODUTO ═════ -->
-    <ProdutoDetalhe
-      :produto="modalProduto"
-      :endpoint="endpoint"
-      :complemento="produtos"
-      :texto="texto"
-      @fechar="fecharModal"
-      @ver-todos="verTodosDoTipo"
-    />
-
     <!-- ═════ VOLTAR AO TOPO ═════ -->
     <Transition name="fade">
       <button
@@ -477,14 +406,4 @@ onUnmounted(() => {
 <style scoped>
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; transform: scale(0.8); }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.animate-fadeIn { animation: fadeIn 0.25s ease both; }
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-fadeIn { animation: none; }
-}
 </style>

@@ -22,6 +22,8 @@ export interface Produto {
   emPromocao: boolean
   tipo: string
   img: string
+  /** true só quando a foto foi confirmada — foto "adivinhada" que não existe no CDN vem false. */
+  imagemReal?: boolean
   quantidade: number
 }
 
@@ -48,23 +50,61 @@ const MAX_POLLS = 10
 
 export const IMAGEM_FALLBACK = '/sem-imagem.png'
 
+// ═════════════ LINK DO PRODUTO ═════════════
+
+/** "Arroz Tio João 5kg" → "arroz-tio-joao-5kg". Só pra URL ficar legível/indexável — quem manda é o id. */
+export function slugProduto(nome: string): string {
+  return nome
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+}
+
+/** Endereço da página do produto: `/produto/<id>-<slug>`. */
+export function linkProduto(produto: Pick<Produto, 'id' | 'nome'>): string {
+  const slug = slugProduto(produto.nome)
+  return `/produto/${produto.id}${slug ? `-${slug}` : ''}`
+}
+
+const ORDENACOES_VALIDAS = OPCOES_ORDENACAO.map(o => o.valor)
+
+/** `route.query.x` pode vir string, lista ou vazio — aqui sempre string (e com teto de tamanho). */
+function lerQuery(valor: unknown): string {
+  const v = Array.isArray(valor) ? valor[0] : valor
+  return typeof v === 'string' ? v.slice(0, 100) : ''
+}
+
 export function useCatalogo(endpoint: string) {
+  const route = useRoute()
+  const router = useRouter()
+  const pathInicial = route.path
+
+  // O estado da lista mora na URL (?pagina=&tipo=&ordenar=&q=). É o que faz o
+  // "voltar" da página de um produto cair na mesma página/filtro/busca em que
+  // a pessoa estava, em vez de voltar pra página 1 sem nada.
+  const buscaInicial = lerQuery(route.query.q).trim()
+  const ordenarInicial = lerQuery(route.query.ordenar) as Ordenacao
+  const paginaInicial = Math.max(1, Number.parseInt(lerQuery(route.query.pagina)) || 1)
+
   const produtos = ref<Produto[]>([])
   const carregando = ref(true)
   const erro = ref(false)
 
-  const paginaAtual = ref(1)
+  const paginaAtual = ref(paginaInicial)
   const totalPaginas = ref(1)
   const totalProdutos = ref(0)
   const cacheCompleto = ref(false)
 
-  const busca = ref('')
-  const buscaAtiva = ref('')
+  const busca = ref(buscaInicial)
+  const buscaAtiva = ref(buscaInicial)
 
   // ═════════════ FILTROS ═════════════
 
-  const tipoSelecionado = ref<string | null>(null)
-  const ordenacao = ref<Ordenacao>('relevancia')
+  const tipoSelecionado = ref<string | null>(lerQuery(route.query.tipo) || null)
+  const ordenacao = ref<Ordenacao>(ORDENACOES_VALIDAS.includes(ordenarInicial) ? ordenarInicial : 'relevancia')
   const tiposDisponiveis = ref<FacetaTipo[]>([])
 
   const filtrosAtivos = computed(() =>
@@ -101,6 +141,25 @@ export function useCatalogo(endpoint: string) {
     tiposDisponiveis.value = res.tipos || []
   }
 
+  /** Espelha página/filtros/busca na URL (sem empilhar histórico) — ver comentário no topo da função. */
+  function sincronizarUrl() {
+    // Se a pessoa já foi pra outra rota (ex.: abriu um produto) esta lista não manda mais na URL.
+    if (route.path !== pathInicial)
+      return
+
+    const query: Record<string, string> = {}
+    if (paginaAtual.value > 1)
+      query.pagina = String(paginaAtual.value)
+    if (tipoSelecionado.value)
+      query.tipo = tipoSelecionado.value
+    if (ordenacao.value !== 'relevancia')
+      query.ordenar = ordenacao.value
+    if (buscaAtiva.value)
+      query.q = buscaAtiva.value
+
+    router.replace({ query })
+  }
+
   async function carregar(pagina = 1, rolarTopo = true) {
     // Cancela o que estiver em voo: trocar de página não deve empilhar requisições.
     controller?.abort()
@@ -115,7 +174,12 @@ export function useCatalogo(endpoint: string) {
       if (meu !== sequencia)
         return // uma requisição mais nova já assumiu
 
+      // Link antigo/compartilhado com página que não existe mais (ex.: ?pagina=99): cai na primeira.
+      if (pagina > 1 && !res.produtos?.length && res.total > 0)
+        return carregar(1, false)
+
       aplicar(res)
+      sincronizarUrl()
       agendarPoll()
 
       if (rolarTopo && typeof window !== 'undefined') {
@@ -293,6 +357,8 @@ export function useCatalogo(endpoint: string) {
     intervaloExibido,
     carregar,
     irParaPagina,
+    /** Página pedida na URL (?pagina=) — a primeira carga usa isto em vez de sempre 1. */
+    paginaInicial,
     POR_PAGINA,
 
     // filtros

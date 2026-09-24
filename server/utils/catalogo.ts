@@ -1397,6 +1397,58 @@ export function consultar(
   }
 }
 
+// ═══════════════════════ PRODUTO INDIVIDUAL (página /produto/[id]) ═══════════════════════
+
+/**
+ * id → produto, montado uma vez por versão do catálogo. `publicar()` sempre
+ * troca o array inteiro por um novo, então a chave do WeakMap muda junto e o
+ * índice velho é coletado — nunca fica desatualizado. (A correção de estoque
+ * do admin mexe no objeto em si, que o mapa só referencia.)
+ */
+const indicePorId = new WeakMap<Produto[], Map<string, Produto>>()
+
+/** Mesmas regras das listas públicas: oculto pelo admin ou sem estoque nunca aparece. */
+export function buscarProduto(catalogo: Catalogo, id: string): Produto | null {
+  let mapa = indicePorId.get(catalogo.produtos)
+  if (!mapa) {
+    mapa = new Map(catalogo.produtos.map(p => [p.id, p]))
+    indicePorId.set(catalogo.produtos, mapa)
+  }
+  const produto = mapa.get(id)
+  if (!produto || produto.semEstoque || produtoEstaOculto(produto.id))
+    return null
+  return produto
+}
+
+/** Perfumaria por último: ela casa por palavra no nome (CREME, PAPEL...), então é a menos confiável. */
+const PRIORIDADE_CATEGORIA: Categoria[] = ['alimentos', 'bebidas', 'limpeza', 'frutas', 'carnes', 'perfumaria']
+
+/** Categoria "principal" do produto — a que aparece no caminho da página (Início › Categoria › ...). */
+export function categoriaPrincipal(produto: Produto): Categoria | null {
+  return PRIORIDADE_CATEGORIA.find(c => produto.cat & CAT[c]) ?? null
+}
+
+/**
+ * "Produtos similares": mesma subcategoria (promoção primeiro — é o que mais
+ * puxa compra por impulso); se sobrar espaço, completa com o resto da(s)
+ * mesma(s) categoria(s). Tudo em memória, sem tocar a origem.
+ */
+export function similaresDe(catalogo: Catalogo, produto: Produto, limite = 12): Produto[] {
+  const categorias = (Object.keys(CAT) as Categoria[]).filter(c => produto.cat & CAT[c])
+  const promocaoPrimeiro = (lista: Produto[]) => [...lista].sort((a, b) => Number(b.emPromocao) - Number(a.emPromocao))
+
+  const doTipo = consultar(catalogo, categorias, '', 1, 60, { tipo: produto.tipo }).produtos.filter(p => p.id !== produto.id)
+  const similares = promocaoPrimeiro(doTipo)
+
+  if (similares.length < limite) {
+    const vistos = new Set(similares.map(p => p.id))
+    vistos.add(produto.id)
+    const resto = consultar(catalogo, categorias, '', 1, 60).produtos.filter(p => !vistos.has(p.id))
+    similares.push(...promocaoPrimeiro(resto))
+  }
+  return similares.slice(0, limite)
+}
+
 // ═══════════════════════ ESTATÍSTICAS (dashboard do /admin) ═══════════════════════
 
 export interface Estatisticas {
