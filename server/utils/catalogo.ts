@@ -84,7 +84,6 @@ export const CAT = {
   limpeza: 1 << 2,
   perfumaria: 1 << 3,
   frutas: 1 << 4,
-  carnes: 1 << 5,
 } as const
 
 export type Categoria = keyof typeof CAT
@@ -221,12 +220,6 @@ const DEPS_FRUTAS = [
   'HORTIFRUTI',
 ]
 
-const DEPS_CARNES = [
-  'AÇOUGUE',
-  'ACOUGUE',
-  'FIAMBRERIA',
-]
-
 /** Perfumaria casa contra o texto completo do produto, não só o departamento. */
 const TERMOS_PERFUMARIA = [
   'HIGIENE',
@@ -279,8 +272,6 @@ function classificar(bruto: any): number {
     cat |= CAT.perfumaria
   if (DEPS_FRUTAS.some(d => dep.includes(d)))
     cat |= CAT.frutas
-  if (DEPS_CARNES.some(d => dep.includes(d)))
-    cat |= CAT.carnes
   return cat
 }
 
@@ -705,7 +696,7 @@ async function getToken(): Promise<string> {
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 /**
- * Produtos pesados (açougue, hortifruti) usam um código interno curto — tipo
+ * Produtos pesados (hortifruti) usam um código interno curto — tipo
  * "120", "699", "23" — em vez de um código de barras de verdade. Adivinhar a
  * foto a partir disso é perigoso: um código curto tem chance real de coincidir
  * com QUALQUER OUTRA imagem que exista no CDN por acaso, e a foto errada
@@ -1421,7 +1412,7 @@ export function buscarProduto(catalogo: Catalogo, id: string): Produto | null {
 }
 
 /** Perfumaria por último: ela casa por palavra no nome (CREME, PAPEL...), então é a menos confiável. */
-const PRIORIDADE_CATEGORIA: Categoria[] = ['alimentos', 'bebidas', 'limpeza', 'frutas', 'carnes', 'perfumaria']
+const PRIORIDADE_CATEGORIA: Categoria[] = ['alimentos', 'bebidas', 'limpeza', 'frutas', 'perfumaria']
 
 /** Categoria "principal" do produto — a que aparece no caminho da página (Início › Categoria › ...). */
 export function categoriaPrincipal(produto: Produto): Categoria | null {
@@ -1477,7 +1468,7 @@ export async function obterEstatisticas(): Promise<Estatisticas> {
   let semImagem = 0
   let semEstoque = 0
   let emPromocao = 0
-  const porCategoria: Record<Categoria, number> = { alimentos: 0, bebidas: 0, limpeza: 0, perfumaria: 0, frutas: 0, carnes: 0 }
+  const porCategoria: Record<Categoria, number> = { alimentos: 0, bebidas: 0, limpeza: 0, perfumaria: 0, frutas: 0 }
   for (const p of catalogo.produtos) {
     if (!p.imagemReal)
       semImagem++

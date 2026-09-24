@@ -23,7 +23,6 @@ const CATEGORIAS: Record<string, { titulo: string, rota: string }> = {
   limpeza: { titulo: 'Limpeza', rota: '/limpeza' },
   perfumaria: { titulo: 'Perfumaria', rota: '/perfumaria' },
   frutas: { titulo: 'Frutas & Verduras', rota: '/frutas' },
-  carnes: { titulo: 'Carnes & Aves', rota: '/carnes' },
 }
 
 interface RespostaProduto {

@@ -138,7 +138,7 @@ export default defineNuxtConfig({
 
         {
           name: 'description',
-          content: 'Supermercado Alô Pará em Novo Repartimento - PA. Ofertas atualizadas todos os dias em alimentos, hortifruti, carnes, bebidas, limpeza e perfumaria. Compre online.',
+          content: 'Supermercado Alô Pará em Novo Repartimento - PA. Ofertas atualizadas todos os dias em alimentos, hortifruti, bebidas, limpeza e perfumaria. Compre online.',
         },
 
         {
