@@ -178,6 +178,12 @@ interface ProdutoAdmin {
   semEstoque: boolean
   estoqueManual: boolean
   oculto: boolean
+  /** Vendido por peso (preço por KG + escolha de gramas). */
+  pesavel: boolean
+  /** true quando o "por peso" foi corrigido na mão (não é o que a CISS informou). */
+  pesoManual: boolean
+  /** Do Hortifruti — é onde o botão de peso aparece. */
+  hortifruti: boolean
 }
 
 type Filtro = '' | 'sem-imagem' | 'ocultos' | 'sem-estoque' | 'em-promocao'
@@ -344,6 +350,43 @@ async function removerCorrecaoEstoque(produto: ProdutoAdmin) {
     if (filtro.value === 'sem-estoque')
       await executarBusca(paginaAtual.value)
     carregarStats()
+  }
+  catch {
+    toast.error('Erro ao remover correção')
+  }
+  finally {
+    enviando.value[produto.id] = false
+  }
+}
+
+// ═════════════ VENDIDO POR PESO ═════════════
+// A CISS erra nos dois sentidos: pera e cebola roxa vêm como unidade mas são
+// por quilo; abacaxi e maço de couve vêm como unidade e são mesmo por unidade.
+// Só o dono sabe qual é qual — aqui ele corrige.
+
+async function definirPeso(produto: ProdutoAdmin, pesavel: boolean) {
+  enviando.value[produto.id] = true
+  try {
+    await $fetch(`/api/admin/produtos/${produto.id}/peso`, { method: 'POST', body: { pesavel } })
+    produto.pesavel = pesavel
+    produto.pesoManual = true
+    toast.success(pesavel ? 'Agora é vendido por kg' : 'Agora é vendido por unidade', { description: produto.nome })
+  }
+  catch {
+    toast.error('Erro ao corrigir a venda por peso')
+  }
+  finally {
+    enviando.value[produto.id] = false
+  }
+}
+
+async function removerCorrecaoPeso(produto: ProdutoAdmin) {
+  enviando.value[produto.id] = true
+  try {
+    await $fetch(`/api/admin/produtos/${produto.id}/peso`, { method: 'DELETE' })
+    toast.success('Correção removida — voltou ao automático', { description: produto.nome })
+    // O servidor recalcula o automático — recarrega a lista pra mostrar o valor certo.
+    await executarBusca(paginaAtual.value)
   }
   catch {
     toast.error('Erro ao remover correção')
@@ -939,6 +982,13 @@ onMounted(verificarSessao)
                 Estoque manual
               </span>
               <span
+                v-if="p.pesavel"
+                :title="p.pesoManual ? 'Vendido por kg — corrigido na mão' : 'Vendido por kg — automático'"
+                class="shrink-0 rounded-full border border-violet-800 bg-violet-950/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-400"
+              >
+                {{ p.pesoManual ? 'Por kg (manual)' : 'Por kg' }}
+              </span>
+              <span
                 v-if="p.emPromocao"
                 class="shrink-0 rounded-full border border-emerald-800 bg-emerald-950/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-400"
               >
@@ -1004,6 +1054,26 @@ onMounted(verificarSessao)
           >
             {{ p.semEstoque ? 'Marcar disponível' : 'Marcar sem estoque' }}
           </button>
+
+          <template v-if="p.hortifruti || p.pesavel || p.pesoManual">
+            <button
+              v-if="p.pesoManual"
+              title="Remover a correção — volta ao automático (regra do hortifruti)"
+              class="shrink-0 rounded-lg border border-[#2a2a2a] px-3 py-2 text-xs font-semibold text-violet-400 transition hover:border-violet-600 disabled:opacity-40"
+              :disabled="enviando[p.id]"
+              @click="removerCorrecaoPeso(p)"
+            >
+              Peso automático
+            </button>
+            <button
+              :title="p.pesavel ? 'Vender por unidade (sem escolher gramas)' : 'Vender por kg (a pessoa escolhe quantas gramas)'"
+              class="shrink-0 rounded-lg border border-[#2a2a2a] px-3 py-2 text-xs font-semibold text-[#ccc] transition hover:border-violet-600 hover:text-violet-400 disabled:opacity-40"
+              :disabled="enviando[p.id]"
+              @click="definirPeso(p, !p.pesavel)"
+            >
+              {{ p.pesavel ? 'Vender por unidade' : 'Vender por kg' }}
+            </button>
+          </template>
 
           <button
             :title="p.oculto ? 'Restaurar produto no site' : 'Remover produto do site'"

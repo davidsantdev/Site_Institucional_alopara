@@ -21,7 +21,9 @@ import { existsSync } from 'node:fs'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import process from 'node:process'
+import { emojiProduto } from './emojiProduto'
 import { buscarOfertasMercafacil } from './mercafacil'
+import { pesavelPorPadrao } from './pesoPadrao'
 
 /** Log informativo do catálogo. Centralizado para não espalhar console.log. */
 // eslint-disable-next-line no-console
@@ -60,6 +62,16 @@ export interface Produto {
   semEstoque: boolean
   /** Código de barras (EAN/GTIN) — usado pra cruzar com as ofertas da Mercafácil. */
   ean: string
+  /** Unidade de venda da CISS (`unidade`): UN, KG, DZ... Fica guardada pra recalcular `pesavel` quando o admin remove uma correção. */
+  unidade: string
+  /**
+   * Vendido por peso: `preco2` é o preço do KG e a pessoa escolhe quantas
+   * gramas quer. Automático só no Hortifruti (ver pesoPadrao.ts); o
+   * admin corrige as exceções na mão.
+   */
+  pesavel: boolean
+  /** Emoji do hortifruti — usado no lugar da foto quando não há foto de verdade (ver emojiProduto.ts). */
+  emoji: string
 }
 
 export interface Catalogo {
@@ -487,6 +499,85 @@ function aplicarOverridesEstoque(produtos: Produto[]): void {
 }
 
 /**
+ * Correção manual de "vendido por peso" — a CISS erra nos dois sentidos (pera e
+ * cebola roxa vêm como UN mas são por quilo; abacaxi e maço de couve vêm como
+ * UN e são por unidade mesmo). `true` = força "por peso", `false` = força "por
+ * unidade". Ausente = automático (`pesavelPorPadrao`). A API aceita qualquer
+ * produto; o painel mostra o botão no hortifruti e em quem já tem correção.
+ */
+const PESO_OVERRIDES_FILE = join(DATA_DIR, 'peso-overrides.json')
+
+interface EstadoPesoOverrides {
+  /** Chave: Produto.id. */
+  dados: Record<string, boolean>
+  carregado: boolean
+}
+
+const CHAVE_PESO_OVERRIDES = Symbol.for('alopara.catalogo.pesoOverrides')
+const estadoPesoOverrides: EstadoPesoOverrides = g[CHAVE_PESO_OVERRIDES] ??= {
+  dados: {},
+  carregado: false,
+}
+
+async function carregarPesoOverrides(): Promise<void> {
+  if (estadoPesoOverrides.carregado)
+    return
+  estadoPesoOverrides.carregado = true
+  try {
+    if (!existsSync(PESO_OVERRIDES_FILE))
+      return
+    const dados = JSON.parse(await readFile(PESO_OVERRIDES_FILE, 'utf-8'))
+    if (dados && typeof dados === 'object')
+      estadoPesoOverrides.dados = dados
+  }
+  catch {
+    // Arquivo ausente ou corrompido: segue com zero correções em vez de travar o site.
+  }
+}
+
+async function salvarPesoOverridesDisco(): Promise<void> {
+  await mkdir(DATA_DIR, { recursive: true })
+  const tmp = `${PESO_OVERRIDES_FILE}.tmp`
+  await writeFile(tmp, JSON.stringify(estadoPesoOverrides.dados), 'utf-8')
+  await rename(tmp, PESO_OVERRIDES_FILE)
+}
+
+/**
+ * Corrige (ou remove a correção de) "vendido por peso" de um produto. Aplica no
+ * catálogo publicado NA HORA e persiste em disco pra sobreviver às varreduras
+ * (`publicar()` reaplica). `pesavel: null` remove a correção e volta pro
+ * automático também na hora — por isso o produto guarda a `unidade` da CISS.
+ */
+export async function definirOverridePeso(produtoId: string, pesavel: boolean | null): Promise<void> {
+  await carregarPesoOverrides()
+
+  if (pesavel === null)
+    delete estadoPesoOverrides.dados[produtoId]
+  else
+    estadoPesoOverrides.dados[produtoId] = pesavel
+
+  await salvarPesoOverridesDisco()
+
+  const produto = estado.catalogo.produtos.find(p => p.id === produtoId)
+  if (produto)
+    produto.pesavel = pesavel ?? pesavelPorPadrao({ hortifruti: Boolean(produto.cat & CAT.frutas), unidade: produto.unidade, nome: produto.nome })
+}
+
+export function produtoTemOverridePeso(produtoId: string): boolean {
+  return produtoId in estadoPesoOverrides.dados
+}
+
+function aplicarOverridesPeso(produtos: Produto[]): void {
+  if (Object.keys(estadoPesoOverrides.dados).length === 0)
+    return
+  for (const p of produtos) {
+    const pesavel = estadoPesoOverrides.dados[p.id]
+    if (pesavel !== undefined)
+      p.pesavel = pesavel
+  }
+}
+
+/**
  * Produto removido do site pelo admin — some das rotas públicas, mas
  * continua existindo (a CISS é quem manda de verdade; isto não apaga nada
  * de lá, só esconde na vitrine). `consultar()` filtra por isto; o admin
@@ -554,6 +645,9 @@ async function publicar(produtos: Produto[], atualizadoEm: number, completo: boo
   // varredura de 6h reconstrói o catálogo do zero com os dados novos da CISS.
   await carregarEstoqueOverrides()
   aplicarOverridesEstoque(produtos)
+  // E pra correção de "vendido por peso" (pera/cebola por kg, abacaxi por unidade...).
+  await carregarPesoOverrides()
+  aplicarOverridesPeso(produtos)
   // Só carrega — a filtragem em si acontece em consultar(), não aqui, porque
   // o admin precisa continuar enxergando (e restaurando) produto oculto.
   await carregarOcultos()
@@ -953,9 +1047,12 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
       : Number.NaN
     const emPromocao = promo > 0 && promo < preco
 
+    const nome = p.nome?.trim() || 'Produto sem nome'
+    const unidade = String(p.unidade ?? '').trim().toUpperCase()
+
     destino.push({
       id,
-      nome: p.nome?.trim() || 'Produto sem nome',
+      nome,
       preco2: (emPromocao ? promo : preco).toFixed(2),
       precoOriginal: preco.toFixed(2),
       emPromocao,
@@ -970,6 +1067,9 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
       cat,
       semEstoque,
       ean: String(p.codigoBarra || p.nrcodbarprod || ''),
+      unidade,
+      pesavel: pesavelPorPadrao({ hortifruti: Boolean(cat & CAT.frutas), unidade, nome }),
+      emoji: cat & CAT.frutas ? emojiProduto(nome) : '',
     })
     novos++
   }
