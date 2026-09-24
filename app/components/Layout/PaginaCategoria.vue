@@ -7,10 +7,11 @@
  * tempo de execução), para que o Tailwind consiga enxergá-las no scanner.
  */
 import type { Ordenacao, Produto } from '~/composables/useCatalogo'
-import { ChevronLeft, ChevronRight, ChevronUp, ListFilter, RefreshCw, Search, ShoppingCart, X } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, ChevronUp, ListFilter, RefreshCw, Search, X } from 'lucide-vue-next'
 import { onMounted, onUnmounted, ref } from 'vue'
 import Footer from '~/components/Layout/Footer.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
+import ProdutoDetalhe from '~/components/Layout/ProdutoDetalhe.vue'
 import { imagemErro, imgSrc, OPCOES_ORDENACAO, percentualDesconto, useCatalogo } from '~/composables/useCatalogo'
 import { useCarrinho } from '~/data/composable/UseCarrinho'
 
@@ -61,7 +62,8 @@ useSeoMeta({
   ogDescription: descricaoPagina,
 })
 
-// ═════════════ MODAL ═════════════
+// ═════════════ ABA DO PRODUTO ═════════════
+// Quantidade, adicionar e "produtos similares" vivem no ProdutoDetalhe.
 
 const modalProduto = ref<Produto | null>(null)
 
@@ -71,20 +73,10 @@ function abrirModal(produto: Produto) {
 function fecharModal() {
   modalProduto.value = null
 }
-
-function aumentar() {
-  if (modalProduto.value)
-    modalProduto.value.quantidade = Math.min(modalProduto.value.quantidade + 1, 99)
-}
-function diminuir() {
-  if (modalProduto.value && modalProduto.value.quantidade > 1)
-    modalProduto.value.quantidade--
-}
-function adicionarDoModal() {
-  if (!modalProduto.value)
-    return
-  adicionarCarrinho(modalProduto.value, modalProduto.value.quantidade)
+/** "ver todos" dos similares: fecha a aba e filtra a lista pela mesma subcategoria. */
+function verTodosDoTipo(tipo: string) {
   fecharModal()
+  selecionarTipo(tipo)
 }
 
 // ═════════════ FILTROS ═════════════
@@ -454,86 +446,15 @@ onUnmounted(() => {
       </div>
     </template>
 
-    <!-- ═════ MODAL ═════ -->
-    <Transition name="modal">
-      <div
-        v-if="modalProduto"
-        role="dialog"
-        aria-modal="true"
-        class="fixed inset-0 z-50 flex items-end md:items-center justify-center"
-        @click.self="fecharModal"
-      >
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="fecharModal" />
-
-        <div class="relative z-10 w-full max-w-md overflow-hidden rounded-t-3xl md:rounded-3xl bg-(--bg-cartao) border border-(--borda) shadow-2xl">
-          <div class="flex items-center justify-center bg-[#fafafa] h-60 p-6 relative">
-            <button
-              type="button"
-              aria-label="Fechar"
-              class="absolute top-4 right-4 rounded-full bg-black/60 border border-white/10 p-2 text-white/70 hover:text-white transition"
-              @click="fecharModal"
-            >
-              <X :size="18" />
-            </button>
-            <img
-              :src="imgSrc(modalProduto.img)"
-              :alt="modalProduto.nome"
-              class="h-48 object-contain drop-shadow-lg"
-              @error="imagemErro"
-            >
-          </div>
-
-          <div class="px-8 py-6">
-            <span class="text-xs text-(--texto-suave) uppercase tracking-widest">{{ modalProduto.tipo }}</span>
-            <h2 class="mt-1 text-xl font-semibold text-(--texto-primario) leading-snug">
-              {{ modalProduto.nome }}
-            </h2>
-            <div class="mt-2">
-              <p v-if="modalProduto.emPromocao" class="text-sm text-(--texto-fraco)">
-                Preço normal: <span class="line-through">R$ {{ modalProduto.precoOriginal }}</span>
-              </p>
-              <span v-if="modalProduto.emPromocao" class="mb-0.5 block text-xs font-black uppercase tracking-wide text-emerald-500">
-                Preço do clube
-              </span>
-              <p class="text-4xl font-extrabold text-(--preco)">
-                R$ {{ modalProduto.preco2 }}
-              </p>
-            </div>
-
-            <div class="mt-6 flex items-center gap-3">
-              <div class="flex items-center gap-2 rounded-xl bg-(--bg-elevado) border border-(--borda-forte) p-1">
-                <button
-                  type="button"
-                  aria-label="Diminuir quantidade"
-                  class="flex h-9 w-9 items-center justify-center rounded-lg text-(--texto-primario) text-lg hover:bg-(--borda-forte) transition"
-                  @click="diminuir"
-                >
-                  −
-                </button>
-                <span class="min-w-[2rem] text-center font-bold text-(--texto-primario) text-lg">{{ modalProduto.quantidade }}</span>
-                <button
-                  type="button"
-                  aria-label="Aumentar quantidade"
-                  class="flex h-9 w-9 items-center justify-center rounded-lg text-(--texto-primario) text-lg hover:bg-(--borda-forte) transition"
-                  @click="aumentar"
-                >
-                  +
-                </button>
-              </div>
-
-              <button
-                type="button"
-                class="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-6 py-3 text-white font-bold text-base hover:bg-red-700 active:scale-95 transition-all shadow-lg shadow-red-900/30"
-                @click="adicionarDoModal"
-              >
-                <ShoppingCart :size="18" />
-                Adicionar ao carrinho
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Transition>
+    <!-- ═════ ABA DO PRODUTO ═════ -->
+    <ProdutoDetalhe
+      :produto="modalProduto"
+      :endpoint="endpoint"
+      :complemento="produtos"
+      :texto="texto"
+      @fechar="fecharModal"
+      @ver-todos="verTodosDoTipo"
+    />
 
     <!-- ═════ VOLTAR AO TOPO ═════ -->
     <Transition name="fade">
@@ -554,11 +475,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.modal-enter-active, .modal-leave-active { transition: opacity 0.2s ease; }
-.modal-enter-active .relative, .modal-leave-active .relative { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
-.modal-enter-from, .modal-leave-to { opacity: 0; }
-.modal-enter-from .relative { transform: translateY(40px); }
-
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; transform: scale(0.8); }
 
@@ -570,7 +486,5 @@ onUnmounted(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-fadeIn { animation: none; }
-  .modal-enter-active, .modal-leave-active,
-  .modal-enter-active .relative, .modal-leave-active .relative { transition: none; }
 }
 </style>
