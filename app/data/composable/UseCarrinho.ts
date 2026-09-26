@@ -48,6 +48,28 @@ export function subtotalItem(item: any): number {
   return Math.round(centavos * quantidade) / 100
 }
 
+/** 6.9 → "6,90" — o carrinho e a mensagem do WhatsApp mostram com vírgula. */
+export function formatarReais(valor: number): string {
+  return valor.toFixed(2).replace('.', ',')
+}
+
+/**
+ * Uma linha do pedido que vai pro WhatsApp. Produto pesado diz o peso e o preço
+ * do kg ("500 g (R$ 6,99/kg) — R$ 3,50") pro atendente conferir na balança.
+ */
+export function linhaPedido(item: any, posicao: number): string {
+  const porKg = item?.pesavel ? ` (R$ ${formatarReais(precoUnitario(item))}/kg)` : ''
+  return [
+    `${posicao}. ${item.nome}`,
+    `   Quantidade: ${rotuloQuantidade(item)}${porKg} — R$ ${formatarReais(subtotalItem(item))}`,
+  ].join('\n')
+}
+
+/** "Desfazer" o pedido enviado: o que estava no carrinho + o que a pessoa adicionou depois, sem repetir (vale o item atual). */
+export function restaurarItens(anteriores: any[], atuais: any[]): any[] {
+  return [...anteriores.filter(item => !atuais.some(atual => atual.nome === item.nome)), ...atuais]
+}
+
 /** Soma dois pesos em kg sem acumular erro de ponto flutuante (mil gramas por vez). */
 function somarQuantidade(atual: number, extra: number, pesavel: boolean): number {
   return pesavel ? Math.round((atual + extra) * 1000) / 1000 : atual + extra
@@ -131,5 +153,27 @@ export function useCarrinho() {
     toast('Carrinho esvaziado')
   }
 
-  return { carrinho, adicionarCarrinho, removeItem, esvaziarCarrinho, totalItens }
+  /**
+   * Zera o carrinho depois que o pedido foi pro WhatsApp. O pedido não fica
+   * registrado em lugar nenhum além da conversa, então, se a pessoa voltar do
+   * WhatsApp sem ter enviado a mensagem, perderia a lista inteira — por isso o
+   * aviso tem "Desfazer" (junta o que estava com o que ela tiver adicionado
+   * depois, sem duplicar).
+   */
+  function concluirPedido() {
+    const itens = carrinho.value
+    carrinho.value = []
+    toast.success('Pedido enviado pro WhatsApp', {
+      description: 'Seu carrinho foi esvaziado.',
+      duration: 12_000,
+      action: {
+        label: 'Desfazer',
+        onClick: () => {
+          carrinho.value = restaurarItens(itens, carrinho.value)
+        },
+      },
+    })
+  }
+
+  return { carrinho, adicionarCarrinho, removeItem, esvaziarCarrinho, concluirPedido, totalItens }
 }

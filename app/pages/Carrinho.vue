@@ -5,21 +5,16 @@ import Footer from '~/components/Layout/Footer.vue'
 import FotoProduto from '~/components/Layout/FotoProduto.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
 import { obterCodigoAfiliado } from '~/composables/useAfiliado'
-import { PESO, precoUnitario, rotuloQuantidade, subtotalItem, useCarrinho } from '~/data/composable/UseCarrinho'
+import { formatarReais, linhaPedido, PESO, precoUnitario, rotuloQuantidade, subtotalItem, useCarrinho } from '~/data/composable/UseCarrinho'
 
 useSeoMeta({
   title: 'Meu Carrinho | Alô Pará',
   robots: 'noindex, follow',
 })
 
-const { carrinho, removeItem, esvaziarCarrinho, totalItens } = useCarrinho()
+const { carrinho, removeItem, esvaziarCarrinho, concluirPedido, totalItens } = useCarrinho()
 
 const NUMERO_WHATSAPP = '5594991923141'
-
-/** 6.9 → "6,90" (o carrinho mostra com vírgula). */
-function formatarReais(valor: number) {
-  return valor.toFixed(2).replace('.', ',')
-}
 
 /** Quanto custa o item inteiro (produto pesado: preço/kg × kg). */
 function precoItem(item: any) {
@@ -78,7 +73,7 @@ function comprarWhatsapp() {
   })
 
   const itens = carrinho.value
-    .map((item, i) => `${i + 1}. ${item.nome}\n   Quantidade: ${item.quantidade ?? 1} — R$ ${precoItem(item)}`)
+    .map((item, i) => linhaPedido(item, i + 1))
     .join('\n\n')
 
   // Se a pessoa chegou por um link de indicação, o código vai junto na
@@ -93,7 +88,12 @@ function comprarWhatsapp() {
     ...(codigoAfiliado ? [`Código de indicação: ${codigoAfiliado}`] : []),
   ].join('\n\n')
 
-  window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`, '_blank')
+  const conversa = window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`, '_blank')
+
+  // Só zera se a conversa abriu: com o pop-up bloqueado a pessoa ficaria sem
+  // carrinho e sem ter mandado pedido nenhum.
+  if (conversa)
+    concluirPedido()
 }
 </script>
 
