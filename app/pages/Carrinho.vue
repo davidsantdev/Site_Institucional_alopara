@@ -2,10 +2,10 @@
 import { Frown, ShoppingCart, Trash2 } from 'lucide-vue-next'
 import { computed } from 'vue'
 import Footer from '~/components/Layout/Footer.vue'
-import FotoProduto from '~/components/Layout/FotoProduto.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
 import { obterCodigoAfiliado } from '~/composables/useAfiliado'
-import { formatarReais, linhaPedido, PESO, precoUnitario, rotuloQuantidade, subtotalItem, useCarrinho } from '~/data/composable/UseCarrinho'
+import { imagemErro, imgSrc } from '~/composables/useCatalogo'
+import { formatarReais, linhaPedido, precoUnitario, subtotalItem, useCarrinho } from '~/data/composable/UseCarrinho'
 
 useSeoMeta({
   title: 'Meu Carrinho | Alô Pará',
@@ -16,7 +16,7 @@ const { carrinho, removeItem, esvaziarCarrinho, concluirPedido, totalItens } = u
 
 const NUMERO_WHATSAPP = '5594991923141'
 
-/** Quanto custa o item inteiro (produto pesado: preço/kg × kg). */
+/** Quanto custa o item inteiro (preço unitário × quantidade, no centavo). */
 function precoItem(item: any) {
   return formatarReais(subtotalItem(item))
 }
@@ -27,23 +27,11 @@ const totalCarrinho = computed(() =>
 )
 
 function aumentar(item: any) {
-  if (item.pesavel)
-    item.quantidade = Math.min(Math.round((item.quantidade + PESO.PASSO_GRAMAS / 1000) * 1000) / 1000, PESO.MAX_GRAMAS / 1000)
-  else
-    item.quantidade = Math.min((item.quantidade ?? 1) + 1, 99)
+  item.quantidade = Math.min((item.quantidade ?? 1) + 1, 99)
 }
 function diminuir(item: any) {
-  if (item.pesavel)
-    item.quantidade = Math.max(Math.round((item.quantidade - PESO.PASSO_GRAMAS / 1000) * 1000) / 1000, PESO.MIN_GRAMAS / 1000)
-  else if ((item.quantidade ?? 1) > 1)
+  if ((item.quantidade ?? 1) > 1)
     item.quantidade--
-}
-/** O botão − / + trava no limite: peso não passa de 20 kg nem cai de 50 g; o resto, de 1 a 99. */
-function noMinimo(item: any) {
-  return item.pesavel ? item.quantidade <= PESO.MIN_GRAMAS / 1000 : (item.quantidade ?? 1) <= 1
-}
-function noMaximo(item: any) {
-  return item.pesavel ? item.quantidade >= PESO.MAX_GRAMAS / 1000 : (item.quantidade ?? 1) >= 99
 }
 
 function comprarWhatsapp() {
@@ -152,11 +140,7 @@ function comprarWhatsapp() {
             class="bg-(--bg-cartao) rounded-2xl border border-(--borda) flex items-center gap-4 p-4 hover:border-(--borda-forte) transition-colors"
           >
             <div class="bg-[#fafafa] rounded-xl flex items-center justify-center md:w-28 md:h-28 w-20 h-20 flex-shrink-0 p-2">
-              <FotoProduto
-                :produto="item"
-                img-class="w-full h-full object-contain"
-                emoji-class="text-5xl md:text-7xl"
-              />
+              <img class="w-full h-full object-contain" :src="imgSrc(item.img)" :alt="item.nome" @error="imagemErro">
             </div>
 
             <div class="flex-1 min-w-0">
@@ -168,9 +152,6 @@ function comprarWhatsapp() {
                 <span class="text-(--preco) text-xl font-extrabold">
                   R$ {{ precoItem(item) }}
                 </span>
-                <span v-if="item.pesavel" class="text-xs text-(--texto-fraco)">
-                  R$ {{ formatarReais(precoUnitario(item)) }}/kg
-                </span>
               </div>
 
               <div class="flex items-center gap-2 mt-3">
@@ -178,17 +159,17 @@ function comprarWhatsapp() {
                   type="button"
                   :aria-label="`Diminuir quantidade de ${item.nome}`"
                   class="w-7 h-7 flex items-center justify-center rounded-lg border border-(--borda-forte) text-(--texto-primario) hover:bg-(--bg-elevado) disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  :disabled="noMinimo(item)"
+                  :disabled="(item.quantidade ?? 1) <= 1"
                   @click="diminuir(item)"
                 >
                   −
                 </button>
-                <span class="font-bold text-center text-(--texto-primario)" :class="item.pesavel ? 'min-w-14' : 'min-w-6'">{{ rotuloQuantidade(item) }}</span>
+                <span class="font-bold min-w-6 text-center text-(--texto-primario)">{{ item.quantidade ?? 1 }}</span>
                 <button
                   type="button"
                   :aria-label="`Aumentar quantidade de ${item.nome}`"
                   class="w-7 h-7 flex items-center justify-center rounded-lg border border-(--borda-forte) text-(--texto-primario) hover:bg-(--bg-elevado) disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  :disabled="noMaximo(item)"
+                  :disabled="(item.quantidade ?? 1) >= 99"
                   @click="aumentar(item)"
                 >
                   +
@@ -228,7 +209,7 @@ function comprarWhatsapp() {
                 :key="item.id ?? item.nome"
                 class="flex justify-between text-sm text-(--texto-fraco)"
               >
-                <span class="truncate max-w-[60%]">{{ item.nome }} x{{ rotuloQuantidade(item) }}</span>
+                <span class="truncate max-w-[60%]">{{ item.nome }} x{{ item.quantidade ?? 1 }}</span>
                 <span class="font-medium text-(--texto-secundario)">R$ {{ precoItem(item) }}</span>
               </div>
             </div>

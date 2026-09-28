@@ -6,12 +6,10 @@
  * e o "voltar" do navegador funciona. O "+" fica acima (z-10) e não navega.
  */
 import type { Produto } from '~/composables/useCatalogo'
-import { computed } from 'vue'
-import FotoProduto from '~/components/Layout/FotoProduto.vue'
-import { linkProduto, percentualDesconto } from '~/composables/useCatalogo'
-import { formatarPeso, PESO, useCarrinho } from '~/data/composable/UseCarrinho'
+import { imagemErro, imgSrc, linkProduto, percentualDesconto } from '~/composables/useCatalogo'
+import { useCarrinho } from '~/data/composable/UseCarrinho'
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   produto: Produto
   /** Classe completa (pro Tailwind enxergar) do fundo da foto no hover — vem do tema da categoria. */
   hoverCard?: string
@@ -20,13 +18,6 @@ const props = withDefaults(defineProps<{
 })
 
 const { adicionarCarrinho } = useCarrinho()
-
-/** Produto pesado entra com 500 g (dá pra mudar na página do produto e no carrinho); o resto entra com 1. */
-const quantidadeRapida = computed(() => props.produto.pesavel ? PESO.PADRAO_GRAMAS / 1000 : 1)
-
-function adicionarRapido() {
-  adicionarCarrinho(props.produto, quantidadeRapida.value)
-}
 </script>
 
 <template>
@@ -40,19 +31,24 @@ function adicionarRapido() {
 
     <button
       type="button"
-      :aria-label="produto.pesavel ? `Adicionar ${formatarPeso(quantidadeRapida)} de ${produto.nome} ao carrinho` : `Adicionar ${produto.nome} ao carrinho`"
+      :aria-label="`Adicionar ${produto.nome} ao carrinho`"
       class="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-green-500 text-base font-bold text-white shadow transition-all hover:bg-green-600 active:scale-95"
-      @click="adicionarRapido"
+      @click="adicionarCarrinho(produto, 1)"
     >
       +
     </button>
 
     <div class="flex h-36 items-center justify-center bg-[#fafafa] p-3 transition-colors duration-200" :class="hoverCard">
-      <FotoProduto
-        :produto="produto"
-        img-class="h-28 w-28 object-contain drop-shadow-sm transition-transform duration-200 group-hover:scale-105"
-        emoji-class="text-7xl transition-transform duration-200 group-hover:scale-110"
-      />
+      <img
+        :src="imgSrc(produto.img)"
+        :alt="produto.nome"
+        width="112"
+        height="112"
+        loading="lazy"
+        decoding="async"
+        class="h-28 w-28 object-contain drop-shadow-sm transition-transform duration-200 group-hover:scale-105"
+        @error="imagemErro"
+      >
     </div>
 
     <div class="flex flex-1 flex-col gap-1 p-3 pt-2">
@@ -66,18 +62,16 @@ function adicionarRapido() {
       <div class="mt-auto pt-1">
         <template v-if="produto.emPromocao">
           <p class="text-[10px] leading-tight text-(--texto-fraco)">
-            Preço normal: <span class="line-through">R$ {{ produto.precoOriginal }}</span>{{ produto.pesavel ? '/kg' : '' }}
+            Preço normal: <span class="line-through">R$ {{ produto.precoOriginal }}</span>
           </p>
           <p class="leading-tight">
             <span class="block text-[9px] font-black uppercase tracking-wide text-emerald-500">Preço do clube</span>
             <span class="text-xl font-extrabold text-(--preco) md:text-2xl">R$ {{ produto.preco2 }}</span>
-            <span v-if="produto.pesavel" class="ml-0.5 text-xs font-bold text-(--texto-fraco)">/kg</span>
           </p>
         </template>
-        <p v-else class="leading-tight">
-          <span class="text-xl font-extrabold text-(--preco) md:text-2xl">R$ {{ produto.preco2 }}</span>
-          <span v-if="produto.pesavel" class="ml-0.5 text-xs font-bold text-(--texto-fraco)">/kg</span>
-        </p>
+        <span v-else class="text-xl font-extrabold text-(--preco) md:text-2xl">
+          R$ {{ produto.preco2 }}
+        </span>
       </div>
     </div>
   </div>

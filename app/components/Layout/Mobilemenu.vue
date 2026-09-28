@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Apple, Download, Home, Menu, Moon, Newspaper, ShoppingBasket, Sparkles, Sun, Tag, User2, X } from 'lucide-vue-next'
+import { Download, Home, Menu, Moon, Newspaper, ShoppingBasket, Sparkles, Sun, Tag, User2, X } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useTema } from '~/composables/useTema'
 
@@ -17,7 +17,6 @@ const categorias = [
   { label: 'Ofertas', rota: '/Ofertas', icone: Tag },
   { label: 'Encartes', rota: '/Encartes', icone: Newspaper },
   { label: 'Alimentos', rota: '/Alimentos', icone: ShoppingBasket },
-  { label: 'Frutas', rota: '/Frutas', icone: Apple },
   { label: 'Bebidas', rota: '/Bebidas', icone: ShoppingBasket },
   { label: 'Limpeza', rota: '/Limpeza', icone: ShoppingBasket },
   { label: 'Perfumaria', rota: '/Perfumaria', icone: Sparkles },

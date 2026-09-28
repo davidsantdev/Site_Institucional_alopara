@@ -1,6 +1,6 @@
 import { defineEventHandler, getQuery } from 'h3'
 import { exigirAdmin } from '../../utils/adminAuth'
-import { CAT, consultar, getCatalogo, produtoEstaOculto, produtoTemOverrideEstoque, produtoTemOverridePeso } from '../../utils/catalogo'
+import { consultar, getCatalogo, produtoEstaOculto, produtoTemOverrideEstoque } from '../../utils/catalogo'
 
 const POR_PAGINA = 30
 
@@ -42,8 +42,6 @@ export default defineEventHandler(async (event) => {
     ...p,
     oculto: produtoEstaOculto(p.id),
     estoqueManual: produtoTemOverrideEstoque(p.id),
-    pesoManual: produtoTemOverridePeso(p.id),
-    hortifruti: Boolean(p.cat & CAT.frutas),
   }))
   return {
     produtos,

@@ -10,10 +10,9 @@ import { Check, ChevronRight, Home, PackageX, ShoppingCart } from 'lucide-vue-ne
 import { computed, onMounted, ref } from 'vue'
 import CardProduto from '~/components/Layout/CardProduto.vue'
 import Footer from '~/components/Layout/Footer.vue'
-import FotoProduto from '~/components/Layout/FotoProduto.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
-import { linkProduto, percentualDesconto } from '~/composables/useCatalogo'
-import { formatarPeso, PESO, precoUnitario, rotuloQuantidade, subtotalItem, useCarrinho } from '~/data/composable/UseCarrinho'
+import { imagemErro, imgSrc, linkProduto, percentualDesconto } from '~/composables/useCatalogo'
+import { precoUnitario, useCarrinho } from '~/data/composable/UseCarrinho'
 
 const SITE_URL = 'https://alopara.com.br'
 
@@ -23,7 +22,6 @@ const CATEGORIAS: Record<string, { titulo: string, rota: string }> = {
   bebidas: { titulo: 'Bebidas', rota: '/bebidas' },
   limpeza: { titulo: 'Limpeza', rota: '/limpeza' },
   perfumaria: { titulo: 'Perfumaria', rota: '/perfumaria' },
-  frutas: { titulo: 'Frutas & Verduras', rota: '/frutas' },
 }
 
 interface RespostaProduto {
@@ -98,17 +96,6 @@ useHead(computed(() => ({
             'priceCurrency': 'BRL',
             'price': produto.value.preco2,
             'availability': 'https://schema.org/InStock',
-            // Produto pesado: o preço é por quilo — o Google precisa saber disso pra não achar que é por unidade.
-            ...(produto.value.pesavel
-              ? {
-                  priceSpecification: {
-                    '@type': 'UnitPriceSpecification',
-                    'price': produto.value.preco2,
-                    'priceCurrency': 'BRL',
-                    'referenceQuantity': { '@type': 'QuantitativeValue', 'value': 1, 'unitCode': 'KGM' },
-                  },
-                }
-              : {}),
           },
         }),
       }]
@@ -117,52 +104,23 @@ useHead(computed(() => ({
 
 // ═════════════ COMPRA ═════════════
 
-/** Atalhos de peso (g) — quem quer outro valor digita no campo de gramas. */
-const OPCOES_GRAMAS = [250, 500, 750, 1000, 1500, 2000]
-
-const pesavel = computed(() => Boolean(produto.value?.pesavel))
-/** Produto comum: quantas unidades. */
 const quantidade = ref(1)
-/** Produto pesado: quantas gramas. */
-const gramas = ref<number>(PESO.PADRAO_GRAMAS)
 const adicionado = ref(false)
 let timerAdicionado: ReturnType<typeof setTimeout> | null = null
-
-/** O que vai pro carrinho: unidades, ou kg (500 g = 0.5) no produto pesado. */
-const quantidadeEscolhida = computed(() => pesavel.value ? gramas.value / 1000 : quantidade.value)
-/** Quanto fica o que a pessoa escolheu (preço/kg × kg, no centavo) — mostrado ao vivo, é o mesmo cálculo do carrinho. */
-const totalEscolhido = computed(() => produto.value ? subtotalItem({ ...produto.value, quantidade: quantidadeEscolhida.value }) : 0)
 
 /** Quanto desse produto já está no carrinho (o carrinho é compartilhado e persiste, então isto é sempre verdade). */
 const noCarrinho = computed(() => carrinho.value.find((i: any) => i.nome === produto.value?.nome)?.quantidade ?? 0)
 
-/** Arredonda pra 10 g (a balança não mede menos que isso) e segura entre o mínimo e o máximo. */
-function ajustarGramas(valor: number) {
-  const arredondado = Math.round(valor / 10) * 10
-  gramas.value = Math.min(PESO.MAX_GRAMAS, Math.max(PESO.MIN_GRAMAS, arredondado))
-}
-function aoDigitarGramas(evento: Event) {
-  const campo = evento.target as HTMLInputElement
-  ajustarGramas(Number(campo.value) || PESO.PADRAO_GRAMAS)
-  // Se o valor digitado foi corrigido pra o mesmo que já estava, o Vue não re-renderiza — força o campo.
-  campo.value = String(gramas.value)
-}
 function aumentar() {
-  if (pesavel.value)
-    ajustarGramas(gramas.value + PESO.PASSO_GRAMAS)
-  else
-    quantidade.value = Math.min(quantidade.value + 1, 99)
+  quantidade.value = Math.min(quantidade.value + 1, 99)
 }
 function diminuir() {
-  if (pesavel.value)
-    ajustarGramas(gramas.value - PESO.PASSO_GRAMAS)
-  else
-    quantidade.value = Math.max(quantidade.value - 1, 1)
+  quantidade.value = Math.max(quantidade.value - 1, 1)
 }
 function adicionar() {
   if (!produto.value)
     return
-  adicionarCarrinho(produto.value, quantidadeEscolhida.value)
+  adicionarCarrinho(produto.value, quantidade.value)
   adicionado.value = true
   if (timerAdicionado)
     clearTimeout(timerAdicionado)
@@ -228,11 +186,14 @@ onMounted(() => {
             >
               -{{ percentualDesconto(produto.precoOriginal, produto.preco2) }}%
             </span>
-            <FotoProduto
-              :produto="produto"
-              img-class="h-64 w-full object-contain drop-shadow-lg md:h-96"
-              emoji-class="text-9xl md:text-[12rem]"
-            />
+            <img
+              :src="imgSrc(produto.img)"
+              :alt="produto.nome"
+              width="420"
+              height="420"
+              class="h-64 w-full object-contain drop-shadow-lg md:h-96"
+              @error="imagemErro"
+            >
           </div>
 
           <div class="flex flex-col">
@@ -244,35 +205,16 @@ onMounted(() => {
             <div class="mt-5">
               <template v-if="produto.emPromocao">
                 <p class="text-sm text-(--texto-fraco)">
-                  Preço normal: <span class="line-through">R$ {{ produto.precoOriginal }}</span>{{ pesavel ? '/kg' : '' }}
+                  Preço normal: <span class="line-through">R$ {{ produto.precoOriginal }}</span>
                 </p>
                 <span class="block text-[11px] font-black uppercase tracking-wide text-emerald-500">Preço do clube</span>
               </template>
               <p class="text-5xl font-extrabold text-(--preco)">
-                R$ {{ produto.preco2 }}<span v-if="pesavel" class="ml-1 text-xl font-bold text-(--texto-fraco)">/kg</span>
+                R$ {{ produto.preco2 }}
               </p>
             </div>
 
-            <!-- Produto pesado: a pessoa escolhe quantas gramas quer (o preço acima é por quilo). -->
-            <div v-if="pesavel" class="mt-6">
-              <p class="mb-2 text-sm font-bold text-(--texto-primario)">
-                Quanto você quer?
-              </p>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="g in OPCOES_GRAMAS"
-                  :key="g"
-                  type="button"
-                  class="rounded-full border px-3.5 py-1.5 text-sm font-semibold transition"
-                  :class="gramas === g ? 'border-red-600 bg-red-600 text-white' : 'border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario)'"
-                  @click="ajustarGramas(g)"
-                >
-                  {{ formatarPeso(g / 1000) }}
-                </button>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-3" :class="pesavel ? 'mt-4' : 'mt-6'">
+            <div class="mt-6 flex items-center gap-3">
               <div class="flex items-center gap-1 rounded-xl border border-(--borda-forte) bg-(--bg-elevado) p-1">
                 <button
                   type="button"
@@ -282,21 +224,7 @@ onMounted(() => {
                 >
                   −
                 </button>
-                <label v-if="pesavel" class="flex items-center">
-                  <input
-                    :value="gramas"
-                    type="number"
-                    inputmode="numeric"
-                    aria-label="Gramas"
-                    :min="PESO.MIN_GRAMAS"
-                    :max="PESO.MAX_GRAMAS"
-                    step="50"
-                    class="w-16 bg-transparent text-center text-lg font-bold text-(--texto-primario) outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                    @change="aoDigitarGramas"
-                  >
-                  <span class="pr-1 text-sm font-bold text-(--texto-fraco)">g</span>
-                </label>
-                <span v-else class="min-w-8 text-center text-lg font-bold text-(--texto-primario)">{{ quantidade }}</span>
+                <span class="min-w-8 text-center text-lg font-bold text-(--texto-primario)">{{ quantidade }}</span>
                 <button
                   type="button"
                   aria-label="Aumentar quantidade"
@@ -318,14 +246,8 @@ onMounted(() => {
               </button>
             </div>
 
-            <!-- Quanto fica o que foi escolhido — mesma conta do carrinho (preço/kg × kg, no centavo). -->
-            <p v-if="pesavel" class="mt-3 text-sm text-(--texto-fraco)">
-              {{ formatarPeso(gramas / 1000) }} =
-              <strong class="text-xl font-extrabold text-(--preco)">R$ {{ totalEscolhido.toFixed(2) }}</strong>
-            </p>
-
             <p v-if="noCarrinho > 0" class="mt-4 flex flex-wrap items-center gap-x-3 text-sm text-(--texto-fraco)">
-              <span><strong class="text-(--texto-primario)">{{ rotuloQuantidade({ quantidade: noCarrinho, pesavel }) }}</strong> no seu carrinho</span>
+              <span><strong class="text-(--texto-primario)">{{ noCarrinho }}</strong> no seu carrinho</span>
               <NuxtLink to="/Carrinho" class="font-bold text-red-500 hover:underline">
                 Ver carrinho →
               </NuxtLink>
