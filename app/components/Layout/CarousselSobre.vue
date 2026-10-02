@@ -19,7 +19,7 @@ const images = [img1, img2, img3, img4, img5]
 <template>
   <div class="w-full max-w-6xl mx-auto px-6 md:px-10 py-14">
     <div class="flex items-center gap-4 mb-8">
-      <span class="text-red-600 text-[10px] font-black tracking-[4px] uppercase">Ofertas da semana</span>
+      <span class="text-red-600 text-[10px] font-black tracking-[4px] uppercase">Encartes da semana</span>
       <div class="flex-1 h-px bg-(--borda)" />
     </div>
 

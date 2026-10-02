@@ -4,6 +4,7 @@ import ConteudoMain from '~/components/Layout/conteudoMain.vue'
 import Footer from '~/components/Layout/Footer.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
 import MainlayoutSecundary from '~/components/Layout/MainlayoutSecundary.vue'
+import OfertasHome from '~/components/Layout/OfertasHome.vue'
 import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue'
 
 useSeoMeta({
@@ -19,10 +20,16 @@ useSeoMeta({
     <HeaderMain />
     <ConteudoMain />
 
+    <!-- Produto de verdade primeiro (ofertas reais, puxadas do catálogo) — é o
+         que mais segura quem acabou de chegar. Categorias e o carrossel de
+         encartes (imagem decorativa, sem preço) vêm depois, já com a pessoa
+         tendo visto produto de verdade na tela. -->
     <div class="bg-(--bg-pagina) flex flex-col justify-center items-center">
-      <CarousselSobre />
+      <OfertasHome />
       <hr class="border-[#222] w-[90%] m-10">
       <ProdutosRedondo />
+      <hr class="border-[#222] w-[90%] m-10">
+      <CarousselSobre />
     </div>
 
     <div class="bg-(--bg-pagina)">
