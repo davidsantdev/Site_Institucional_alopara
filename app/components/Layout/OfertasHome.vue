@@ -15,7 +15,7 @@ import { ChevronRight, Tag } from 'lucide-vue-next'
 import { computed } from 'vue'
 import CardProduto from '~/components/Layout/CardProduto.vue'
 
-const LIMITE = 12
+const LIMITE = 24
 
 const { data, status } = await useFetch<{ produtos: Produto[] }>('/api/ofertas', {
   query: { pagina: 1 },
@@ -50,7 +50,7 @@ const produtos = computed(() => (data.value?.produtos ?? []).slice(0, LIMITE))
 
     <div v-if="status === 'idle' || status === 'pending'" class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4 lg:grid-cols-6">
       <div
-        v-for="n in 6"
+        v-for="n in LIMITE"
         :key="n"
         class="flex flex-col overflow-hidden rounded-2xl border border-(--borda) bg-(--bg-cartao)"
       >
