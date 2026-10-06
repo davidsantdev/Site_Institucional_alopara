@@ -4,12 +4,8 @@ import DialogPoliticaPrivacidade from './DialogPoliticaPrivacidade.vue'
 import DialogTermosUso from './DialogTermosUso.vue'
 import Faqs from './Faqs.vue'
 
-const contato = [
-  { label: 'Atacado', href: '#' },
-  { label: 'Compras', href: '#' },
-  { label: 'Crediário', href: '#' },
-  { label: 'Financeiro', href: '#' },
-]
+// Calculado — não fica desatualizado a cada virada de ano.
+const ANO_ATUAL = new Date().getFullYear()
 
 const redes = [
   { label: 'Instagram', href: 'https://instagram.com/supermercadoalopara', icone: Instagram },
@@ -45,24 +41,7 @@ const info = [
         </div>
 
         <!-- links em grid -->
-        <div class="grid grid-cols-3 gap-8">
-          <!-- CONTATO -->
-          <div>
-            <p class="text-[10px] font-black tracking-[3px] uppercase text-red-600 mb-4">
-              Contato
-            </p>
-            <div class="flex flex-col gap-2">
-              <a
-                v-for="item in contato"
-                :key="item.label"
-                :href="item.href"
-                class="text-(--texto-suave) text-[13px] font-semibold hover:text-(--texto-primario) transition-colors duration-200"
-              >
-                {{ item.label }}
-              </a>
-            </div>
-          </div>
-
+        <div class="grid grid-cols-2 gap-8">
           <!-- REDES -->
           <div>
             <p class="text-[10px] font-black tracking-[3px] uppercase text-red-600 mb-4">
@@ -120,7 +99,7 @@ const info = [
     <!-- barra inferior -->
     <div class="border-t border-(--borda) px-6 md:px-10 py-5 flex items-center justify-between flex-wrap gap-4">
       <p class="text-(--texto-fraco)/60 text-[11px] font-bold tracking-[1px]">
-        © 2026 Alô Pará · Todos os direitos reservados
+        © {{ ANO_ATUAL }} Alô Pará · Todos os direitos reservados
       </p>
       <div class="flex items-center gap-6">
         <DialogPoliticaPrivacidade />

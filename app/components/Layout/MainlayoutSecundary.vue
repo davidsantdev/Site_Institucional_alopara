@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import Produtos from './Produtos.vue'
-import ProdutosRedondo from './ProdutosRedondo.vue'
+// Mesma conta de conteudoMain.vue (fundado em 2004) — evita os dois lugares
+// discordando entre si de novo no ano que vem.
+const ANOS_DE_HISTORIA = new Date().getFullYear() - 2004
 
 const stats = [
-  { num: '+22', label: 'Anos de história' },
+  { num: `+${ANOS_DE_HISTORIA}`, label: 'Anos de história' },
   { num: '40k', label: 'Clientes atendidos' },
   { num: '+1200', label: 'Produtos' },
 ]
@@ -18,11 +19,6 @@ const acoes = [
 
 <template>
   <div class="bg-(--bg-cartao)">
-    <!-- produtos -->
-    <div class="bg-(--bg-cartao)">
-      <Produtos />
-    </div>
-
     <!-- SEÇÃO SOBRE -->
     <section id="Sobre" class="border-t border-(--borda) px-6 md:px-10 py-20">
       <div class="max-w-6xl mx-auto">
@@ -41,7 +37,7 @@ const acoes = [
               história
             </h2>
             <p class="text-(--texto-suave) text-[14px] leading-relaxed mb-8">
-              Fundado em 2004, o Alô Pará completa 22 anos fazendo parte da história
+              Fundado em 2004, o Alô Pará completa {{ ANOS_DE_HISTORIA }} anos fazendo parte da história
               e da mesa das famílias da nossa região. Mais do que um supermercado,
               somos um parceiro do dia a dia, construído com confiança, respeito e
               compromisso com cada cliente.
@@ -86,17 +82,6 @@ const acoes = [
             </div>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- CATEGORIAS -->
-    <section class="border-t border-(--borda) px-6 md:px-10 py-20">
-      <div class="max-w-6xl mx-auto">
-        <div class="flex items-center gap-4 mb-12">
-          <span class="text-red-600 text-[10px] font-black tracking-[4px] uppercase">O que oferecemos</span>
-          <div class="flex-1 h-px bg-(--borda)" />
-        </div>
-        <ProdutosRedondo />
       </div>
     </section>
 
