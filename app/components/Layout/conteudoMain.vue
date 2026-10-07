@@ -34,15 +34,16 @@ const ANOS_DE_MERCADO = new Date().getFullYear() - 2004
     <div class="flex gap-4 flex-wrap justify-center">
       <DialogContato />
 
-      <a href="#Sobre">
+      <NuxtLink to="/ofertas">
         <button
+          type="button"
           class="bg-transparent hover:bg-red-600 active:scale-[0.98] transition-all
           text-(--texto-primario) hover:text-white font-bold text-sm tracking-widest uppercase
           px-8 py-[14px] rounded-[4px] border-2 border-red-600"
         >
-          Sobre nós
+          Ver ofertas
         </button>
-      </a>
+      </NuxtLink>
     </div>
 
     <!-- Stats -->

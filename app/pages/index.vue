@@ -3,7 +3,6 @@ import CarousselSobre from '~/components/Layout/CarousselSobre.vue'
 import ConteudoMain from '~/components/Layout/conteudoMain.vue'
 import Footer from '~/components/Layout/Footer.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
-import MainlayoutSecundary from '~/components/Layout/MainlayoutSecundary.vue'
 import OfertasHome from '~/components/Layout/OfertasHome.vue'
 import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue'
 
@@ -23,7 +22,9 @@ useSeoMeta({
     <!-- Produto de verdade primeiro (ofertas reais, puxadas do catálogo) — é o
          que mais segura quem acabou de chegar. Categorias e o carrossel de
          encartes (imagem decorativa, sem preço) vêm depois, já com a pessoa
-         tendo visto produto de verdade na tela. -->
+         tendo visto produto de verdade na tela. "Nossa história" e
+         "Responsabilidade social" saíram daqui — não ajudavam a vender
+         (ver conversa) — o conteúdo continua no histórico do git. -->
     <div class="bg-(--bg-pagina) flex flex-col justify-center items-center">
       <OfertasHome />
       <hr class="border-[#222] w-[90%] m-10">
@@ -32,9 +33,6 @@ useSeoMeta({
       <CarousselSobre />
     </div>
 
-    <div class="bg-(--bg-pagina)">
-      <MainlayoutSecundary />
-      <Footer />
-    </div>
+    <Footer />
   </div>
 </template>
