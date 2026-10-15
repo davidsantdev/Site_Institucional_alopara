@@ -1,13 +1,13 @@
 [
-  { "id": 1, "nome": "Arroz Aladdin Branco TP1 5kg", "tipo": "Arroz", "preço2": "18,99", "img": "https://i.ibb.co/d0CLsf9Y/1.png", "quantidade":1 },
-  { "id": 2, "nome": "Arroz Boca Cheia Branco TP3 5kg", "tipo": "Arroz", "preço2": "14,99", "img": "https://i.ibb.co/ns3L980Z/2.png", "quantidade":1 },
+  { "id": 1, "nome": "Arroz Aladdin Branco TP1 5kg", "tipo": "Arroz", "preço2": "18,99", "img": "https://i.ibb.co/d0CLsf9Y/1.png", "quantidade": 1 },
+  { "id": 2, "nome": "Arroz Boca Cheia Branco TP3 5kg", "tipo": "Arroz", "preço2": "14,99", "img": "https://i.ibb.co/ns3L980Z/2.png", "quantidade": 1 },
   { "id": 3, "nome": "Arroz Tio Jorge Branco 5kg", "tipo": "Arroz", "preço2": "21,99", "img": "https://i.ibb.co/4QsntSt/11.png", "quantidade": 1 },
   { "id": 4, "nome": "Arroz Painho Branco TP1 5kg", "tipo": "Arroz", "preço2": "19,99", "img": "https://i.ibb.co/DfRyTC5H/12.png", "quantidade": 1 },
   { "id": 5, "nome": "Arroz Realengo Branco TP1 5kg", "tipo": "Arroz", "preço2": "19,99", "img": "https://i.ibb.co/zhY9W1TM/13.png", "quantidade": 1 },
 
   { "id": 6, "nome": "Feijão Carioca Aladdin 1kg", "tipo": "Feijão", "preço2": "7,99", "img": "https://i.ibb.co/0y1ZDT5Q/14.png", "quantidade": 1 },
 
-  { "id": 7, "nome": "Açúcar Cristal Ecoçúcar 2kg", "tipo": "Açúcar", "preço2": "8,99", "img": "https://i.ibb.co/DDygtPK1/3.png", "quantidade":1 },
+  { "id": 7, "nome": "Açúcar Cristal Ecoçúcar 2kg", "tipo": "Açúcar", "preço2": "8,99", "img": "https://i.ibb.co/DDygtPK1/3.png", "quantidade": 1 },
   { "id": 8, "nome": "Adoçante Adocyl 100ml", "tipo": "Adoçante", "preço2": "4,49", "img": "https://i.ibb.co/jvGXC2Rx/46.png", "quantidade": 1 },
 
   { "id": 9, "nome": "Café Kimimo 250g", "tipo": "Café", "preço2": "14,99", "img": "https://i.ibb.co/pBFX1KCy/15.png", "quantidade": 1 },
@@ -16,22 +16,22 @@
   { "id": 12, "nome": "Café 3 Corações Tradicional a Vácuo 500g", "tipo": "Café", "preço2": "28,99", "img": "https://i.ibb.co/Y7BBYVjd/62.png", "quantidade": 1 },
   { "id": 13, "nome": "Café Maratá a Vácuo 250g", "tipo": "Café", "preço2": "14,79", "img": "https://i.ibb.co/Kxz7zghF/63.png", "quantidade": 1 },
 
-  { "id": 14, "nome": "Leite em Pó CCGL 1kg", "tipo": "Laticínios", "preço2": "39,99", "img": "https://i.ibb.co/20rqs7HW/5.png", "quantidade":1 },
-  { "id": 15, "nome": "Leite em Pó Piracanjuba Integral 1kg", "tipo": "Laticínios", "preço2": "39,99", "img": "https://i.ibb.co/TMMXh4tr/6.png", "quantidade":1 },
+  { "id": 14, "nome": "Leite em Pó CCGL 1kg", "tipo": "Laticínios", "preço2": "39,99", "img": "https://i.ibb.co/20rqs7HW/5.png", "quantidade": 1 },
+  { "id": 15, "nome": "Leite em Pó Piracanjuba Integral 1kg", "tipo": "Laticínios", "preço2": "39,99", "img": "https://i.ibb.co/TMMXh4tr/6.png", "quantidade": 1 },
   { "id": 16, "nome": "Leite Longa Vida Piracanjuba Integral 1L", "tipo": "Laticínios", "preço2": "7,99", "img": "https://i.ibb.co/7Jdqzq7X/18.png", "quantidade": 1 },
   { "id": 17, "nome": "Leite Condensado Piracanjuba 395g", "tipo": "Laticínios", "preço2": "7,39", "img": "https://i.ibb.co/hFSThPPv/19.png", "quantidade": 1 },
   { "id": 18, "nome": "Creme de Leite Frimesa 200g", "tipo": "Laticínios", "preço2": "4,49", "img": "https://i.ibb.co/qMhTmPdC/36.png", "quantidade": 1 },
   { "id": 19, "nome": "Bebida Láctea Danone Yopro Baunilha 250ml", "tipo": "Laticínios", "preço2": "7,99", "img": "https://i.ibb.co/B2z9tVP6/48.png", "quantidade": 1 },
 
-  { "id": 20, "nome": "Macarrão Paulista Parafuso 500g", "tipo": "Massas", "preço2": "3,79", "img": "https://i.ibb.co/4gT9KNWV/7.png", "quantidade":1 },
+  { "id": 20, "nome": "Macarrão Paulista Parafuso 500g", "tipo": "Massas", "preço2": "3,79", "img": "https://i.ibb.co/4gT9KNWV/7.png", "quantidade": 1 },
   { "id": 21, "nome": "Macarrão Paulista Espaguete Sêmola 500g", "tipo": "Massas", "preço2": "2,99", "img": "https://i.ibb.co/mZjsrT9/67.png", "quantidade": 1 },
   { "id": 22, "nome": "Macarrão Instantâneo Sandella 85g", "tipo": "Massas", "preço2": "1,99", "img": "https://i.ibb.co/TMBvzB9Y/23.png", "quantidade": 1 },
 
-  { "id": 23, "nome": "Trigo Dona Benta c/ Fermento 1kg", "tipo": "Farinha", "preço2": "5,79", "img": "https://i.ibb.co/mFv4xCf5/9.png", "quantidade":1 },
+  { "id": 23, "nome": "Trigo Dona Benta c/ Fermento 1kg", "tipo": "Farinha", "preço2": "5,79", "img": "https://i.ibb.co/mFv4xCf5/9.png", "quantidade": 1 },
   { "id": 24, "nome": "Trigo Mirela com Fermento 1kg", "tipo": "Farinha", "preço2": "5,49", "img": "https://i.ibb.co/5WbjP3gn/21.png", "quantidade": 1 },
   { "id": 25, "nome": "Trigo Mirela sem Fermento 1kg", "tipo": "Farinha", "preço2": "5,29", "img": "https://i.ibb.co/tpv2T4J8/22.png", "quantidade": 1 },
   { "id": 26, "nome": "Trigo Mirela para Pastel TP1 5kg", "tipo": "Farinha", "preço2": "27,99", "img": "https://i.ibb.co/GvcghqdT/74.png", "quantidade": 1 },
-  { "id": 27, "nome": "Fécula de Mandioca Lopes 1kg", "tipo": "Farinha", "preço2": "7,99", "img": "https://i.ibb.co/DgVV6sQ9/10.png", "quantidade":1 },
+  { "id": 27, "nome": "Fécula de Mandioca Lopes 1kg", "tipo": "Farinha", "preço2": "7,99", "img": "https://i.ibb.co/DgVV6sQ9/10.png", "quantidade": 1 },
   { "id": 28, "nome": "Massa Pronta Amafil Tapioca 1kg", "tipo": "Farinha", "preço2": "11,99", "img": "https://i.ibb.co/bj6wXhwX/27.png", "quantidade": 1 },
   { "id": 29, "nome": "Farinha de Arroz Natural Life 500g", "tipo": "Farinha", "preço2": "9,99", "img": "https://i.ibb.co/0Rq5XDWj/56.png", "quantidade": 1 },
   { "id": 30, "nome": "Farelo de Trigo Fino Natural Life Kodilar 500g", "tipo": "Farinha", "preço2": "9,99", "img": "https://i.ibb.co/vxdTTqfS/55.png", "quantidade": 1 },
@@ -39,7 +39,7 @@
   { "id": 31, "nome": "Aveia em Flocos Finos Yoki 170g", "tipo": "Cereais", "preço2": "3,79", "img": "https://i.ibb.co/yc8Dstpx/47.png", "quantidade": 1 },
   { "id": 32, "nome": "Cacau em Pó Guimarães 100% 200g", "tipo": "Achocolatados", "preço2": "13,99", "img": "https://i.ibb.co/N6CDLr9T/53.png", "quantidade": 1 },
 
-  { "id": 33, "nome": "Molho de Tomate Fugini Tradicional 300g", "tipo": "Molhos", "preço2": "2,19", "img": "https://i.ibb.co/DPgKXdCM/8.png", "quantidade":1 },
+  { "id": 33, "nome": "Molho de Tomate Fugini Tradicional 300g", "tipo": "Molhos", "preço2": "2,19", "img": "https://i.ibb.co/DPgKXdCM/8.png", "quantidade": 1 },
   { "id": 34, "nome": "Extrato de Tomate Fugini 190g", "tipo": "Molhos", "preço2": "2,49", "img": "https://i.ibb.co/vxn2sXCs/29.png", "quantidade": 1 },
   { "id": 35, "nome": "Extrato de Tomate Olé Copo 190g", "tipo": "Molhos", "preço2": "3,49", "img": "https://i.ibb.co/673hhRWr/30.png", "quantidade": 1 },
   { "id": 36, "nome": "Ketchup Lanchero 3kg", "tipo": "Molhos", "preço2": "17,99", "img": "https://i.ibb.co/SwYbxRSd/31.png", "quantidade": 1 },

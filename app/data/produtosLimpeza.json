@@ -1,4 +1,3 @@
-
 [
   { "id": 1, "nome": "Água Sanitária Clorada Branca 1L", "tipo": "Água Sanitária", "preço1": "2,69", "preço2": "1,99", "img": "https://i.ibb.co/XZyBjV0f/1.png", "quantidade": 1 },
   { "id": 2, "nome": "Água Sanitária FC Cloro Ativo 5L", "tipo": "Água Sanitária", "preço1": "10,99", "preço2": "9,99", "img": "https://i.ibb.co/23zGPYHF/2.png", "quantidade": 1 },
@@ -33,4 +32,3 @@
   { "id": 31, "nome": "Sabão em Pó Tixan Ypê 400g", "tipo": "Sabão", "preço1": "5,99", "preço2": "5,99", "img": "https://i.ibb.co/dwzCZjWz/31.png", "quantidade": 1 },
   { "id": 32, "nome": "Sabão Líquido Omo 900ml", "tipo": "Sabão Líquido", "preço1": "15,99", "preço2": "15,99", "img": "https://i.ibb.co/QjxYsHxM/32.png", "quantidade": 1 }
 ]
-

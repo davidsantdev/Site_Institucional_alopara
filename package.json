@@ -11,6 +11,9 @@
     "type": "git",
     "url": "git+https://github.com/dianprata/nuxt-shadcn-dashboard.git"
   },
+  "bugs": {
+    "url": "https://github.com/dianprata/nuxt-shadcn-dashboard/issues"
+  },
   "keywords": [
     "dashboard",
     "admin-dashboard",
@@ -105,8 +108,5 @@
     "vue-sonner": "^2.0.9",
     "vue-tsc": "^2.2.12",
     "zod": "^3.25.76"
-  },
-  "bugs": {
-    "url": "https://github.com/dianprata/nuxt-shadcn-dashboard/issues"
   }
 }

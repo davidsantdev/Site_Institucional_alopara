@@ -26,9 +26,7 @@
   { "id": 25, "nome": "Sabonete Líquido Francis Dermavita 250ml", "tipo": "Higiene", "quantidade": 1, "preço2": "21,79", "img": "https://i.ibb.co/R46cpjH5/25.png" },
   { "id": 26, "nome": "Sabonete Íntimo Dermattive 200ml", "tipo": "Higiene", "quantidade": 1, "preço2": "19,49", "img": "https://i.ibb.co/S43FkSgx/26.png" },
 
-
-
-    { "id": 27, "nome": "CREME TRATAMENTO NOVEX 1KG", "tipo": "Cabelo", "quantidade": 1, "preço2": "29,99", "img": "" },
+  { "id": 27, "nome": "CREME TRATAMENTO NOVEX 1KG", "tipo": "Cabelo", "quantidade": 1, "preço2": "29,99", "img": "" },
 
   { "id": 28, "nome": "MÁSCARA DE HIDRATAÇÃO DABELLE ", "tipo": "Cabelo", "quantidade": 1, "preço2": "22,99", "img": "" },
 
@@ -49,5 +47,5 @@
   { "id": 36, "nome": "CREME DE TRATAMENTO HIDRATAÇÃO KOLENE CRONOGRAMA POTE 1KG", "tipo": "Cabelo", "quantidade": 1, "preço2": "31,99", "img": "" },
 
   { "id": 37, "nome": "SABONETE LÍQUIDO PALMOLIVE NATURALS ÓLEO NUTRITIVO FRASCO 250ML", "tipo": "Higiene", "quantidade": 1, "preço2": "8,99", "img": "" }
-  
+
 ]
