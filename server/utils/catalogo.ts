@@ -1247,6 +1247,14 @@ const ANCORAS_POR_CATEGORIA: Partial<Record<Categoria, string[]>> = {
 }
 
 /**
+ * Mesma ideia acima, mas pra quando NÃO há uma categoria só — é o caso de
+ * /api/ofertas (categoria null = catálogo inteiro), usada tanto na vitrine
+ * da home quanto na página "Ver todas as ofertas". Reaproveita a âncora de
+ * alimentos: arroz, feijão e macarrão são o que todo mundo procura primeiro.
+ */
+const ANCORAS_GERAL = ANCORAS_POR_CATEGORIA.alimentos!
+
+/**
  * Filtra o catálogo por categoria + busca + subcategoria, ordena e pagina.
  * Roda 100% em memória — nenhuma requisição à origem.
  */
@@ -1352,11 +1360,13 @@ export function consultar(
 
   // "Mais relevantes" (padrão, sem busca): dentro de UMA categoria só, alguns
   // produtos-âncora aparecem primeiro — o que a maioria já vai procurar de
-  // cara, em vez de depender da ordem arbitrária que a CISS mandou. Roda por
-  // último de propósito (sort estável): vira o critério PRINCIPAL, e dentro
-  // de cada âncora a ordem por imagem-real de cima continua valendo.
-  if ((!opcoes.ordenar || opcoes.ordenar === 'relevancia') && !termo && typeof categoria === 'string') {
-    const ancoras = ANCORAS_POR_CATEGORIA[categoria]
+  // cara, em vez de depender da ordem arbitrária que a CISS mandou. Sem
+  // categoria (catálogo inteiro, ex.: /api/ofertas) usa ANCORAS_GERAL pelo
+  // mesmo motivo. Roda por último de propósito (sort estável): vira o
+  // critério PRINCIPAL, e dentro de cada âncora a ordem por imagem-real de
+  // cima continua valendo.
+  if ((!opcoes.ordenar || opcoes.ordenar === 'relevancia') && !termo && (typeof categoria === 'string' || categoria === null)) {
+    const ancoras = typeof categoria === 'string' ? ANCORAS_POR_CATEGORIA[categoria] : ANCORAS_GERAL
     if (ancoras?.length) {
       const rank = (p: Produto) => {
         const nome = p.nome.toUpperCase()
