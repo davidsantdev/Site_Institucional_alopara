@@ -6,6 +6,7 @@ import type { Pergunta } from '~/composables/usePesquisaSatisfacao'
  * alcançada por quem recebe o link direto (ver nuxt.config.ts — fora do
  * sitemap e do robots.txt, e com noindex/nofollow aqui também, 2ª camada).
  */
+import { Lock } from 'lucide-vue-next'
 import { reactive, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { listarPerguntas, SECOES_PESQUISA } from '~/composables/usePesquisaSatisfacao'
@@ -108,10 +109,17 @@ async function enviar() {
             Este formulário tem como objetivo entender melhor como nossos colaboradores se sentem em relação à empresa,
             ao ambiente de trabalho, à liderança, aos benefícios e às condições oferecidas.
           </p>
-          <p class="text-(--texto-suave) text-[14px] leading-relaxed">
+          <p class="text-(--texto-suave) text-[14px] leading-relaxed mb-4">
             Pedimos que responda com sinceridade. Suas respostas serão importantes para identificarmos pontos positivos
             e oportunidades de melhoria.
           </p>
+
+          <div class="flex items-start gap-3 rounded-xl border border-red-600/30 bg-red-600/5 px-4 py-3">
+            <Lock :size="15" class="text-red-600 shrink-0 mt-0.5" />
+            <p class="text-(--texto-primario) text-[13px] font-semibold leading-relaxed">
+              As respostas são confidenciais e serão lidas somente pela direção SARIYA.
+            </p>
+          </div>
         </div>
 
         <!-- IDENTIFICAÇÃO -->
