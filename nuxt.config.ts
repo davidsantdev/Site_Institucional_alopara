@@ -64,16 +64,18 @@ export default defineNuxtConfig({
 
   // Carrinho é por sessão do usuário (localStorage) — não tem valor de busca
   // e ainda dilui o crawl budget se ficar listado ao lado das páginas reais.
+  // /pesquisa-satisfacao é a pesquisa interna dos colaboradores — link enviado
+  // direto a eles, nunca deve aparecer pra ninguém via busca.
   sitemap: {
-    exclude: ['/Carrinho'],
+    exclude: ['/Carrinho', '/pesquisa-satisfacao'],
   },
 
   // @nuxtjs/robots v5 usa `groups`, não `rules` (a chave antiga também era ignorada).
-  // /admin e /uploads também ficam fora — a página do admin já manda noindex
-  // por conta própria (useSeoMeta), isto aqui é a segunda camada.
+  // /admin, /uploads e /pesquisa-satisfacao também ficam fora — essas páginas
+  // já mandam noindex por conta própria (useSeoMeta), isto aqui é a segunda camada.
   robots: {
     groups: [
-      { userAgent: ['*'], allow: ['/'], disallow: ['/api/', '/admin/', '/uploads/'] },
+      { userAgent: ['*'], allow: ['/'], disallow: ['/api/', '/admin/', '/uploads/', '/pesquisa-satisfacao'] },
     ],
   },
 

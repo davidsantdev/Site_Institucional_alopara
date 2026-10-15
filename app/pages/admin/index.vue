@@ -2,6 +2,7 @@
 import {
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
   Clock,
   Eye,
   EyeOff,
@@ -746,6 +747,12 @@ onMounted(verificarSessao)
             <RefreshCw :size="14" :class="{ 'animate-spin': atualizando }" />
             {{ atualizando ? 'Atualizando...' : 'Atualizar agora' }}
           </button>
+          <NuxtLink
+            to="/admin/pesquisa"
+            class="flex items-center gap-2 rounded-lg border border-[#2a2a2a] px-3 py-2 text-sm text-[#888] transition hover:border-emerald-600 hover:text-white"
+          >
+            <ClipboardList :size="14" /> Pesquisa de satisfação
+          </NuxtLink>
           <button
             class="flex items-center gap-2 rounded-lg border border-[#2a2a2a] px-3 py-2 text-sm text-[#888] transition hover:border-red-600 hover:text-white"
             @click="sair"
