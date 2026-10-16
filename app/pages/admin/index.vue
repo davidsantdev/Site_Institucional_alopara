@@ -9,6 +9,7 @@ import {
   ImageOff,
   Link2,
   LogOut,
+  MessageCircle,
   Newspaper,
   Package,
   PackageX,
@@ -24,6 +25,7 @@ import {
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { imagemErro, imgSrc } from '~/composables/useCatalogo'
+import { formatarReais } from '~/data/composable/UseCarrinho'
 
 // Página de uso interno — nunca deve ser indexada nem seguida pelo Google.
 useSeoMeta({
@@ -48,6 +50,7 @@ async function verificarSessao() {
       carregarStats()
       carregarEncartes()
       carregarAfiliados()
+      carregarCliquesWhatsapp()
     }
   }
   catch {
@@ -65,6 +68,7 @@ async function entrar() {
     carregarStats()
     carregarEncartes()
     carregarAfiliados()
+    carregarCliquesWhatsapp()
   }
   catch (e: any) {
     erroLogin.value = e?.data?.statusMessage || 'Não foi possível entrar'
@@ -140,6 +144,28 @@ async function carregarStats() {
   }
   finally {
     carregandoStats.value = false
+  }
+}
+
+// ═════════════ CLIQUES NO WHATSAPP ═════════════
+// Mesmo evento que já ia só pro GA4 (ver Carrinho.vue → comprarWhatsapp),
+// agora também contado aqui — não precisa abrir o Analytics pra ver.
+
+interface ResumoCliquesWhatsapp {
+  total: number
+  hoje: number
+  ultimos7dias: number
+  valorTotalEstimado: number
+}
+
+const cliquesWhatsapp = ref<ResumoCliquesWhatsapp | null>(null)
+
+async function carregarCliquesWhatsapp() {
+  try {
+    cliquesWhatsapp.value = await $fetch<ResumoCliquesWhatsapp>('/api/admin/cliques-whatsapp')
+  }
+  catch {
+    toast.error('Erro ao carregar cliques do WhatsApp')
   }
 }
 
@@ -868,6 +894,47 @@ onMounted(verificarSessao)
           <p class="text-sm font-black leading-tight text-white">
             {{ stats.cosmos.habilitado ? `${stats.cosmos.usadosHoje}/${stats.cosmos.limiteDiario}` : 'Desativado' }}
           </p>
+        </div>
+      </div>
+
+      <!-- ═══ CLIQUES NO WHATSAPP ═══ -->
+      <div v-if="cliquesWhatsapp" class="mb-8">
+        <div class="mb-3 flex items-center gap-1.5 px-1 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+          <MessageCircle :size="13" /> Cliques em "Finalizar no WhatsApp"
+        </div>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4">
+            <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+              Hoje
+            </p>
+            <p class="text-2xl font-black text-white">
+              {{ formatarNumero(cliquesWhatsapp.hoje) }}
+            </p>
+          </div>
+          <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4">
+            <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+              Últimos 7 dias
+            </p>
+            <p class="text-2xl font-black text-white">
+              {{ formatarNumero(cliquesWhatsapp.ultimos7dias) }}
+            </p>
+          </div>
+          <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4">
+            <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+              Total
+            </p>
+            <p class="text-2xl font-black text-white">
+              {{ formatarNumero(cliquesWhatsapp.total) }}
+            </p>
+          </div>
+          <div class="rounded-xl border border-[#1f1f1f] bg-[#161616] p-4" title="Soma do total do carrinho em cada clique — não é venda confirmada, é estimativa do que foi pro WhatsApp">
+            <p class="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#666]">
+              Valor estimado
+            </p>
+            <p class="text-2xl font-black text-emerald-400">
+              R$ {{ formatarReais(cliquesWhatsapp.valorTotalEstimado) }}
+            </p>
+          </div>
         </div>
       </div>
 

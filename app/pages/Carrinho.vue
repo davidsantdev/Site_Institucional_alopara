@@ -36,6 +36,7 @@ function diminuir(item: any) {
 
 function comprarWhatsapp() {
   const valorTotal = Number(totalCarrinho.value.replace(',', '.')) || 0
+  const quantidadeItens = carrinho.value.length
   const itensGA = carrinho.value.map(item => ({
     item_id: String(item.id ?? item.nome),
     item_name: item.nome,
@@ -51,7 +52,7 @@ function comprarWhatsapp() {
   gtag('event', 'finalizar_whatsapp', {
     value: valorTotal,
     currency: 'BRL',
-    quantidade_itens: carrinho.value.length,
+    quantidade_itens: quantidadeItens,
     items: itensGA,
   })
   gtag('event', 'begin_checkout', {
@@ -78,10 +79,14 @@ function comprarWhatsapp() {
 
   const conversa = window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`, '_blank')
 
-  // Só zera se a conversa abriu: com o pop-up bloqueado a pessoa ficaria sem
-  // carrinho e sem ter mandado pedido nenhum.
-  if (conversa)
+  // Só zera (e só conta o clique) se a conversa abriu: com o pop-up
+  // bloqueado a pessoa ficaria sem carrinho e sem ter mandado pedido nenhum.
+  if (conversa) {
     concluirPedido()
+    // Mesmo número do GA4 (evento finalizar_whatsapp acima), mas direto no
+    // painel do admin — fogo e esquece, não trava o fluxo se falhar.
+    $fetch('/api/whatsapp-clique', { method: 'POST', body: { valorTotal, quantidadeItens } }).catch(() => {})
+  }
 }
 </script>
 
