@@ -210,8 +210,8 @@ interface ProdutoAdmin {
   pesavel: boolean
   /** true quando o "por peso" foi corrigido na mão (não é o que a CISS informou). */
   pesoManual: boolean
-  /** Do Hortifruti — é onde o botão de peso aparece. */
-  hortifruti: boolean
+  /** Do Hortifruti ou do Açougue — é onde o botão de peso aparece. */
+  secaoPesavel: boolean
 }
 
 type Filtro = '' | 'sem-imagem' | 'ocultos' | 'sem-estoque' | 'em-promocao'
@@ -1147,10 +1147,10 @@ onMounted(verificarSessao)
             {{ p.semEstoque ? 'Marcar disponível' : 'Marcar sem estoque' }}
           </button>
 
-          <template v-if="p.hortifruti || p.pesavel || p.pesoManual">
+          <template v-if="p.secaoPesavel || p.pesavel || p.pesoManual">
             <button
               v-if="p.pesoManual"
-              title="Remover a correção — volta ao automático (regra do hortifruti)"
+              title="Remover a correção — volta ao automático (regra do hortifruti/açougue)"
               class="shrink-0 rounded-lg border border-[#2a2a2a] px-3 py-2 text-xs font-semibold text-violet-400 transition hover:border-violet-600 disabled:opacity-40"
               :disabled="enviando[p.id]"
               @click="removerCorrecaoPeso(p)"

@@ -50,7 +50,8 @@ export default defineEventHandler(async (event) => {
     oculto: produtoEstaOculto(p.id),
     estoqueManual: produtoTemOverrideEstoque(p.id),
     pesoManual: produtoTemOverridePeso(p.id),
-    hortifruti: Boolean(p.cat & CAT.frutas),
+    // Hortifruti e açougue: onde "vendido por peso" existe — o painel mostra o botão de corrigir.
+    secaoPesavel: Boolean(p.cat & (CAT.frutas | CAT.carnes)),
   }))
   return {
     produtos,

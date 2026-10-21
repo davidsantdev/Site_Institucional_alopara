@@ -121,8 +121,8 @@ useHead(computed(() => ({
 
 // ═════════════ COMPRA ═════════════
 
-/** Atalhos de peso (g) — quem quer outro valor digita no campo de gramas. */
-const OPCOES_GRAMAS = [250, 500, 750, 1000, 1500, 2000]
+/** Atalhos de peso (g) — quem quer outro valor digita no campo de gramas. 100 g é o de frios de balcão. */
+const OPCOES_GRAMAS = [100, 250, 500, 750, 1000, 1500, 2000]
 
 const pesavel = computed(() => Boolean(produto.value?.pesavel))
 const desconto = computed(() => produto.value?.emPromocao ? percentualDesconto(produto.value.precoOriginal, produto.value.preco2) : 0)

@@ -7,7 +7,7 @@ import { MessageCircle, Search, ShoppingCart } from 'lucide-vue-next'
 
 const passos = [
   { icone: Search, titulo: 'Escolha os produtos', texto: 'Navegue pelas categorias ou use a busca lá em cima.' },
-  { icone: ShoppingCart, titulo: 'Monte o carrinho', texto: 'Ajuste as quantidades — no hortifruti você escolhe em gramas.' },
+  { icone: ShoppingCart, titulo: 'Monte o carrinho', texto: 'Ajuste as quantidades — no hortifruti e no açougue você escolhe em gramas.' },
   { icone: MessageCircle, titulo: 'Finalize no WhatsApp', texto: 'A lista vai pronta pra nossa equipe confirmar tudo com você.' },
 ]
 </script>

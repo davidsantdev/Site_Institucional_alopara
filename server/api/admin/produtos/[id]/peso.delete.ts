@@ -2,7 +2,7 @@ import { createError, defineEventHandler, getRouterParam } from 'h3'
 import { exigirAdmin } from '../../../../utils/adminAuth'
 import { definirOverridePeso } from '../../../../utils/catalogo'
 
-/** Remove a correção manual — o produto volta ao automático (regra do hortifruti). */
+/** Remove a correção manual — o produto volta ao automático (regra do hortifruti/açougue, ver pesoPadrao.ts). */
 export default defineEventHandler(async (event) => {
   exigirAdmin(event)
 

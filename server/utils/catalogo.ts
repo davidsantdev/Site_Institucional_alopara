@@ -66,8 +66,8 @@ export interface Produto {
   unidade: string
   /**
    * Vendido por peso: `preco2` é o preço do KG e a pessoa escolhe quantas
-   * gramas quer. Automático só no Hortifruti (ver pesoPadrao.ts); o
-   * admin corrige as exceções na mão.
+   * gramas quer. Automático no Hortifruti e no Açougue (ver pesoPadrao.ts);
+   * o admin corrige as exceções na mão.
    */
   pesavel: boolean
   /** Emoji do hortifruti/açougue — usado no lugar da foto quando não há foto de verdade (ver emojiProduto.ts). */
@@ -512,7 +512,7 @@ function aplicarOverridesEstoque(produtos: Produto[]): void {
  * cebola roxa vêm como UN mas são por quilo; abacaxi e maço de couve vêm como
  * UN e são por unidade mesmo). `true` = força "por peso", `false` = força "por
  * unidade". Ausente = automático (`pesavelPorPadrao`). A API aceita qualquer
- * produto; o painel mostra o botão no hortifruti e em quem já tem correção.
+ * produto; o painel mostra o botão no hortifruti, no açougue e em quem já tem correção.
  */
 const PESO_OVERRIDES_FILE = join(DATA_DIR, 'peso-overrides.json')
 
@@ -569,7 +569,7 @@ export async function definirOverridePeso(produtoId: string, pesavel: boolean | 
 
   const produto = estado.catalogo.produtos.find(p => p.id === produtoId)
   if (produto)
-    produto.pesavel = pesavel ?? pesavelPorPadrao({ hortifruti: Boolean(produto.cat & CAT.frutas), unidade: produto.unidade, nome: produto.nome })
+    produto.pesavel = pesavel ?? pesavelPorPadrao({ hortifruti: Boolean(produto.cat & CAT.frutas), acougue: Boolean(produto.cat & CAT.carnes), unidade: produto.unidade, nome: produto.nome })
 }
 
 export function produtoTemOverridePeso(produtoId: string): boolean {
@@ -694,7 +694,7 @@ type CatalogoDisco = Omit<Catalogo, 'indice'>
  * Subir este número força uma varredura nova no próximo boot, sem precisar
  * lembrar de apagar `.cache/catalogo.json` manualmente a cada deploy.
  */
-const CACHE_VERSAO = 6
+const CACHE_VERSAO = 7
 
 /**
  * `versaoAtual: false` = o formato mudou desde que isto foi salvo (campo novo
@@ -1086,7 +1086,7 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
       semEstoque,
       ean: String(p.codigoBarra || p.nrcodbarprod || ''),
       unidade,
-      pesavel: pesavelPorPadrao({ hortifruti: Boolean(cat & CAT.frutas), unidade, nome }),
+      pesavel: pesavelPorPadrao({ hortifruti: Boolean(cat & CAT.frutas), acougue: Boolean(cat & CAT.carnes), unidade, nome }),
       emoji: cat & CAT.frutas ? emojiProduto(nome) : cat & CAT.carnes ? emojiProduto(nome, 'acougue') : '',
     })
     novos++
