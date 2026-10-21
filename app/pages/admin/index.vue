@@ -7,6 +7,7 @@ import {
   Eye,
   EyeOff,
   ImageOff,
+  ImagePlus,
   Link2,
   LogOut,
   MessageCircle,
@@ -24,6 +25,7 @@ import {
 } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
+import BuscarFoto from '~/components/Admin/BuscarFoto.vue'
 import { imagemErro, imgSrc } from '~/composables/useCatalogo'
 import { formatarReais } from '~/composables/useFormatacao'
 
@@ -316,6 +318,19 @@ function aoEscolherArquivo(produto: ProdutoAdmin, evento: Event) {
   if (arquivo)
     enviarImagem(produto, arquivo)
   input.value = '' // permite escolher o mesmo arquivo de novo depois, se precisar
+}
+
+// Foto escolhida no banco de fotos (ver components/Admin/BuscarFoto.vue).
+const produtoBuscandoFoto = ref<ProdutoAdmin | null>(null)
+
+function aoEscolherFotoBanco(imagem: string) {
+  const produto = produtoBuscandoFoto.value
+  if (produto) {
+    produto.img = imagem
+    produto.imagemReal = true
+  }
+  produtoBuscandoFoto.value = null
+  carregarStats()
 }
 
 async function removerImagem(produto: ProdutoAdmin) {
@@ -1120,6 +1135,16 @@ onMounted(verificarSessao)
           </label>
 
           <button
+            title="Escolher uma foto num banco de fotos grátis (bom pra hortifruti e açougue, que não têm código de barras)"
+            class="flex shrink-0 items-center gap-1.5 rounded-lg border border-[#2a2a2a] px-3 py-2 text-xs font-semibold text-[#ccc] transition hover:border-red-600 hover:text-white disabled:opacity-40"
+            :disabled="enviando[p.id]"
+            @click="produtoBuscandoFoto = p"
+          >
+            <ImagePlus :size="14" />
+            Buscar foto
+          </button>
+
+          <button
             title="Remover foto escolhida (volta ao automático)"
             class="shrink-0 rounded-lg border border-[#2a2a2a] p-2 text-[#555] transition hover:border-red-600 hover:text-red-500 disabled:opacity-40"
             :disabled="enviando[p.id]"
@@ -1456,5 +1481,7 @@ onMounted(verificarSessao)
         </div>
       </div>
     </div>
+
+    <BuscarFoto :produto="produtoBuscandoFoto" @fechar="produtoBuscandoFoto = null" @escolhida="aoEscolherFotoBanco" />
   </div>
 </template>
