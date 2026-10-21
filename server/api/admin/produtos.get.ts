@@ -1,3 +1,4 @@
+import type { Categoria } from '../../utils/catalogo'
 import { defineEventHandler, getQuery } from 'h3'
 import { exigirAdmin } from '../../utils/adminAuth'
 import { CAT, consultar, getCatalogo, produtoEstaOculto, produtoTemOverrideEstoque, produtoTemOverridePeso } from '../../utils/catalogo'
@@ -11,10 +12,15 @@ function lerFiltro(valor: unknown): Filtro | undefined {
   return FILTROS_VALIDOS.includes(valor as Filtro) ? (valor as Filtro) : undefined
 }
 
+function lerCategoria(valor: unknown): Categoria | null {
+  return typeof valor === 'string' && valor in CAT ? (valor as Categoria) : null
+}
+
 /**
- * Busca (ou lista por filtro rápido) em TODAS as categorias, incluindo ocultos
- * — o admin precisa achá-los pra poder restaurar. Paginado porque "sem imagem"
- * sozinho pode ter milhares de produtos.
+ * Busca (ou lista por filtro rápido) em TODAS as categorias (ou só numa, se
+ * `categoria` vier preenchido — ex.: "hortifruti sem imagem"), incluindo
+ * ocultos — o admin precisa achá-los pra poder restaurar. Paginado porque
+ * "sem imagem" sozinho pode ter milhares de produtos.
  */
 export default defineEventHandler(async (event) => {
   exigirAdmin(event)
@@ -22,14 +28,15 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const busca = String(query.busca ?? '').slice(0, 100).trim()
   const filtro = lerFiltro(query.filtro)
+  const categoria = lerCategoria(query.categoria)
   const pagina = Math.max(1, Number(query.pagina) || 1)
 
-  // Nem busca nem filtro: não há o que listar (evita devolver o catálogo inteiro à toa).
-  if (!busca && !filtro)
+  // Nem busca, filtro nem categoria: não há o que listar (evita devolver o catálogo inteiro à toa).
+  if (!busca && !filtro && !categoria)
     return { produtos: [], total: 0, pagina: 1, totalPaginas: 1 }
 
   const catalogo = await getCatalogo()
-  const resultado = consultar(catalogo, null, busca, pagina, POR_PAGINA, {
+  const resultado = consultar(catalogo, categoria, busca, pagina, POR_PAGINA, {
     incluirOcultos: true,
     incluirSemEstoque: true,
     somenteOcultos: filtro === 'ocultos',

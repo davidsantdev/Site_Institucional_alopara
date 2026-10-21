@@ -215,9 +215,11 @@ interface ProdutoAdmin {
 }
 
 type Filtro = '' | 'sem-imagem' | 'ocultos' | 'sem-estoque' | 'em-promocao'
+type FiltroCategoria = '' | 'alimentos' | 'bebidas' | 'limpeza' | 'perfumaria' | 'frutas' | 'carnes'
 
 const busca = ref('')
 const filtro = ref<Filtro>('')
+const categoria = ref<FiltroCategoria>('')
 const produtos = ref<ProdutoAdmin[]>([])
 const buscando = ref(false)
 const paginaAtual = ref(1)
@@ -226,7 +228,7 @@ const totalResultados = ref(0)
 let timeoutBusca: ReturnType<typeof setTimeout> | null = null
 
 async function executarBusca(pagina = 1) {
-  if (!busca.value.trim() && !filtro.value) {
+  if (!busca.value.trim() && !filtro.value && !categoria.value) {
     produtos.value = []
     totalResultados.value = 0
     totalPaginas.value = 1
@@ -235,7 +237,7 @@ async function executarBusca(pagina = 1) {
   buscando.value = true
   try {
     const r = await $fetch<{ produtos: ProdutoAdmin[], total: number, pagina: number, totalPaginas: number }>('/api/admin/produtos', {
-      query: { busca: busca.value, filtro: filtro.value || undefined, pagina },
+      query: { busca: busca.value, filtro: filtro.value || undefined, categoria: categoria.value || undefined, pagina },
     })
     produtos.value = r.produtos
     totalResultados.value = r.total
@@ -254,7 +256,9 @@ function aoDigitarBusca() {
   if (timeoutBusca)
     clearTimeout(timeoutBusca)
   timeoutBusca = setTimeout(() => {
-    filtro.value = '' // digitar texto sai do modo "filtro rápido"
+    // Digitar texto sai do modo "filtro rápido" — os dois não combinam com busca livre.
+    filtro.value = ''
+    categoria.value = ''
     executarBusca(1)
   }, 400)
 }
@@ -265,13 +269,20 @@ function alternarFiltro(novo: Filtro) {
   executarBusca(1)
 }
 
+/** Categoria combina com o filtro rápido (ex.: Hortifruti + Sem imagem) — só busca livre não combina com nenhum dos dois. */
+function alternarCategoria(nova: FiltroCategoria) {
+  categoria.value = categoria.value === nova ? '' : nova
+  busca.value = ''
+  executarBusca(1)
+}
+
 function irParaPagina(p: number) {
   if (p < 1 || p > totalPaginas.value || buscando.value)
     return
   executarBusca(p)
 }
 
-const modoAtivo = computed(() => busca.value.trim() ? 'busca' : filtro.value || null)
+const modoAtivo = computed(() => busca.value.trim() ? 'busca' : (filtro.value || categoria.value || null))
 
 // ═════════════ IMAGEM POR PRODUTO ═════════════
 
@@ -983,12 +994,18 @@ onMounted(verificarSessao)
         </div>
       </div>
 
-      <!-- categorias -->
-      <div v-if="stats" class="mb-8 flex flex-wrap gap-4 px-1 text-xs text-[#666]">
-        <span v-for="(total, cat) in stats.porCategoria" :key="cat">
-          <span class="font-semibold text-[#999]">{{ LABEL_CATEGORIA[cat] }}</span>
-          · {{ formatarNumero(total) }}
-        </span>
+      <!-- categorias (clicável — filtra a busca abaixo por categoria, combina com os cards de cima) -->
+      <div v-if="stats" class="mb-8 flex flex-wrap gap-2 px-1">
+        <button
+          v-for="(total, cat) in stats.porCategoria"
+          :key="cat"
+          type="button"
+          class="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
+          :class="categoria === cat ? 'border-red-600 bg-red-600/10 text-white' : 'border-[#2a2a2a] text-[#999] hover:border-[#444] hover:text-white'"
+          @click="alternarCategoria(cat)"
+        >
+          {{ LABEL_CATEGORIA[cat] }} · {{ formatarNumero(total) }}
+        </button>
       </div>
 
       <!-- ═══ BUSCA ═══ -->
