@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { imagemEmoji } from '~/composables/useCatalogo'
 import { CATEGORIAS_LOJA } from '~/composables/useNavegacao'
 </script>
 
@@ -25,10 +26,10 @@ import { CATEGORIAS_LOJA } from '~/composables/useNavegacao'
             decoding="async"
             class="relative h-[68%] w-[68%] object-contain transition-transform duration-300 group-hover:scale-110"
           >
-          <span v-else-if="c.emojis" class="relative flex items-end text-[1.6rem] leading-none transition-transform duration-300 group-hover:scale-110 sm:text-[2rem] lg:text-[2.4rem]" aria-hidden="true">
-            <span class="-mr-2 -rotate-12">{{ c.emojis[0] }}</span>
-            <span class="z-1 -mb-1 text-[1.2em]">{{ c.emojis[1] }}</span>
-            <span class="-ml-2 rotate-12">{{ c.emojis[2] }}</span>
+          <span v-else-if="c.emojis" class="relative flex items-end text-[1.9rem] leading-none transition-transform duration-300 group-hover:scale-110 sm:text-[2.3rem] lg:text-[2.7rem]" aria-hidden="true">
+            <img :src="imagemEmoji(c.emojis[0]!)" alt="" width="256" height="256" loading="lazy" class="-mr-2.5 h-[1em] w-[1em] -rotate-12 drop-shadow-sm">
+            <img :src="imagemEmoji(c.emojis[1]!)" alt="" width="256" height="256" loading="lazy" class="z-1 -mb-1 h-[1.25em] w-[1.25em] drop-shadow-sm">
+            <img :src="imagemEmoji(c.emojis[2]!)" alt="" width="256" height="256" loading="lazy" class="-ml-2.5 h-[1em] w-[1em] rotate-12 drop-shadow-sm">
           </span>
           <component :is="c.icone" v-else class="relative h-[38%] w-[38%] text-red-600 transition-transform duration-300 group-hover:scale-110" :stroke-width="1.75" />
         </span>

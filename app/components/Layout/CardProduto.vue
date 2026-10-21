@@ -43,7 +43,7 @@ const rotulo = computed(() => rotuloQuantidade({ quantidade: noCarrinho.value, p
       <FotoProduto
         :produto="produto"
         img-class="h-[82%] w-[82%] object-contain transition-transform duration-300 group-hover:scale-[1.04]"
-        emoji-class="text-6xl transition-transform duration-300 group-hover:scale-110 sm:text-7xl"
+        emoji-class="text-7xl transition-transform duration-300 group-hover:scale-110 sm:text-8xl"
       />
     </div>
 

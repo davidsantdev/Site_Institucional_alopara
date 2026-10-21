@@ -8,6 +8,10 @@
  * A ordem da lista importa: a primeira que casar vence ("BATATA DOCE" tem que
  * vir antes de "BATATA"). Casa por palavra inteira — "PERA" não pode pegar
  * "TEMPERADO".
+ *
+ * A tela mostra a versão 3D de cada emoji (public/emoji, ver imagemEmoji em
+ * useCatalogo.ts) — emoji novo aqui precisa do arquivo de lá, senão cai no
+ * emoji de texto do aparelho.
  */
 
 const EMOJIS: [string[], string][] = [

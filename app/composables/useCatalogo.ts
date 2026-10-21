@@ -407,6 +407,20 @@ export function imagemErro(e: Event) {
     img.src = IMAGEM_FALLBACK
 }
 
+/**
+ * Emoji do produto (hortifruti/açougue) → versão 3D da Microsoft (Fluent
+ * Emoji, licença MIT, em public/emoji). O emoji de texto saía diferente em
+ * cada aparelho — chapado no Windows, outro no iPhone. Nome do arquivo = o
+ * código do emoji, sem o seletor de variação (🌶️ → "1f336.webp").
+ */
+export function imagemEmoji(emoji: string): string {
+  const codigo = [...emoji]
+    .map(c => c.codePointAt(0)!.toString(16))
+    .filter(c => c !== 'fe0f')
+    .join('-')
+  return `/emoji/${codigo}.webp`
+}
+
 // ═════════════ PROMOÇÃO ═════════════
 
 /** Desconto em % pro badge (ex.: "-10%"). Arredonda pra baixo — nunca exagera o desconto. */
