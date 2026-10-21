@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Flame } from 'lucide-vue-next'
+import { ShoppingBasket } from 'lucide-vue-next'
 import PaginaCategoria from '~/components/Layout/PaginaCategoria.vue'
 </script>
 
@@ -8,15 +8,15 @@ import PaginaCategoria from '~/components/Layout/PaginaCategoria.vue'
     endpoint="/api/alimentos"
     titulo="Alimentos & Mercearia"
     descricao="Mercearia, padaria, frios e congelados no Supermercado Alô Pará."
-    gradiente="from-red-600 via-red-500 to-orange-500"
-    ring="focus:ring-red-500/50"
-    botao="bg-red-500 hover:bg-red-600"
-    texto="text-red-400"
-    badge="text-orange-400"
-    hover-card="group-hover:bg-red-50"
+    gradiente="from-orange-500 via-amber-500 to-yellow-500"
+    ring="focus:ring-orange-500/20"
+    botao="bg-orange-700 hover:bg-orange-800"
+    texto="text-orange-500"
+    badge="text-orange-500"
+    hover-card="group-hover:bg-orange-50"
   >
     <template #icone>
-      <Flame :size="14" />
+      <ShoppingBasket :size="14" />
     </template>
   </PaginaCategoria>
 </template>

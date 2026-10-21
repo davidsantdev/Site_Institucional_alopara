@@ -1,148 +1,154 @@
 <script setup lang="ts">
-import { Apple, Beef, Download, Home, Menu, Moon, Newspaper, ShoppingBasket, Sparkles, Sun, Tag, User2, X } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { onKeyStroke, useScrollLock } from '@vueuse/core'
+import { ArrowUpRight, ChevronRight, Clock, Download, Home, Instagram, Menu, MessageCircle, Moon, Sun, User2, X } from 'lucide-vue-next'
+import { ref, watch } from 'vue'
+import logo from '~/assets/img/web/logo.webp'
+import { CATEGORIAS_LOJA, CONTATO, LINK_ENCARTES, linkWhatsapp } from '~/composables/useNavegacao'
 import { useTema } from '~/composables/useTema'
 
 const aberto = ref(false)
 const { tema, alternar } = useTema()
+const route = useRoute()
 
-const navPrincipal = [
-  { label: 'Início', rota: '/', icone: Home },
-  { label: 'Trabalhe conosco', rota: '/trabalhe-conosco', icone: User2 },
-  { label: 'Baixar app', rota: '/Baixar', icone: Download },
-  { label: 'Clube de descontos', href: 'https://cadastramento-alopara.mercafacil.com/home', icone: Tag },
-]
+// Trava a rolagem da página por trás do menu (senão o fundo rola junto no celular).
+const travado = useScrollLock(import.meta.client ? document.body : null)
+watch(aberto, (v) => {
+  travado.value = v
+})
 
-const categorias = [
-  { label: 'Ofertas', rota: '/Ofertas', icone: Tag },
-  { label: 'Encartes', rota: '/Encartes', icone: Newspaper },
-  { label: 'Alimentos', rota: '/Alimentos', icone: ShoppingBasket },
-  { label: 'Frutas', rota: '/Frutas', icone: Apple },
-  { label: 'Carnes', rota: '/Carnes', icone: Beef },
-  { label: 'Bebidas', rota: '/Bebidas', icone: ShoppingBasket },
-  { label: 'Limpeza', rota: '/Limpeza', icone: ShoppingBasket },
-  { label: 'Perfumaria', rota: '/Perfumaria', icone: Sparkles },
-]
-
-function ir(rota?: string) {
+watch(() => route.fullPath, () => {
   aberto.value = false
-  if (rota)
-    navigateTo(rota)
-}
+})
+
+onKeyStroke('Escape', () => {
+  aberto.value = false
+})
+
+const institucional = [
+  { label: 'Início', rota: '/', icone: Home },
+  { label: LINK_ENCARTES.label, rota: LINK_ENCARTES.rota, icone: LINK_ENCARTES.icone },
+  { label: 'Baixe o app', rota: '/Baixar', icone: Download },
+  { label: 'Trabalhe conosco', rota: '/trabalhe-conosco', icone: User2 },
+]
 </script>
 
 <template>
   <div>
-    <!-- botão hambúrguer -->
     <button
-      class="flex items-center justify-center w-10 h-10 rounded-lg border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-primario) hover:border-red-600 transition-colors duration-200"
+      type="button"
+      aria-label="Abrir menu"
+      :aria-expanded="aberto"
+      class="grid h-11 w-11 place-items-center rounded-full text-(--texto-primario) transition hover:bg-(--bg-elevado)"
       @click="aberto = true"
     >
-      <Menu :size="20" />
+      <Menu :size="22" />
     </button>
 
-    <!-- backdrop -->
-    <Transition name="fade">
-      <div
-        v-if="aberto"
-        class="fixed inset-0 bg-black/70 z-40"
-        @click="aberto = false"
-      />
-    </Transition>
+    <Teleport to="body">
+      <Transition name="fundo">
+        <div v-if="aberto" class="fixed inset-0 z-60 bg-black/50 backdrop-blur-[2px]" @click="aberto = false" />
+      </Transition>
 
-    <!-- drawer -->
-    <Transition name="slide">
-      <div
-        v-if="aberto"
-        class="fixed top-0 right-0 h-full w-[300px] bg-(--bg-pagina) z-50 flex flex-col overflow-y-auto"
-      >
-        <!-- header -->
-        <div class="flex items-center justify-between px-6 py-5 border-b border-(--borda)">
-          <div>
-            <p class="text-(--texto-primario) text-[18px] font-black leading-none">
-              <span class="text-red-600">Alô</span> Pará
-            </p>
-            <p class="text-(--texto-minimo) text-[9px] font-bold tracking-[3px] uppercase mt-0.5">
-              Supermercado
-            </p>
-          </div>
-          <button
-            class="w-8 h-8 flex items-center justify-center rounded-lg border border-(--borda-forte) text-(--texto-suave) hover:border-red-600 hover:text-(--texto-primario) transition-all duration-200"
-            @click="aberto = false"
-          >
-            <X :size="16" />
-          </button>
-        </div>
-
-        <!-- modo claro/escuro -->
-        <button
-          class="flex items-center gap-3 mx-3 mt-4 px-4 py-3 rounded-lg text-(--texto-esmaecido) hover:text-(--texto-primario) hover:bg-(--bg-elevado) transition-all duration-150 w-auto text-left group"
-          @click="alternar"
+      <Transition name="gaveta">
+        <aside
+          v-if="aberto"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu"
+          class="fixed inset-y-0 right-0 z-61 flex w-85 max-w-[88vw] flex-col overflow-y-auto bg-(--bg-pagina) shadow-(--sombra-3)"
         >
-          <component :is="tema === 'claro' ? Moon : Sun" :size="16" class="text-red-600 shrink-0" />
-          <span class="text-[14px] font-semibold">{{ tema === 'claro' ? 'Modo escuro' : 'Modo claro' }}</span>
-        </button>
-
-        <!-- nav principal -->
-        <div class="flex flex-col px-3 pt-4 gap-0.5">
-          <template v-for="item in navPrincipal" :key="item.label">
-            <!-- LINK EXTERNO -->
-            <a
-              v-if="item.href"
-              :href="item.href"
-              target="_blank"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg text-(--texto-esmaecido) hover:text-(--texto-primario) hover:bg-(--bg-elevado) transition-all duration-150 group"
+          <div class="flex items-center justify-between border-b border-(--borda) px-5 py-4">
+            <img :src="logo" alt="Supermercado Alô Pará" width="560" height="194" class="h-10 w-auto">
+            <button
+              type="button"
+              aria-label="Fechar menu"
+              class="grid h-10 w-10 place-items-center rounded-full text-(--texto-esmaecido) transition hover:bg-(--bg-elevado) hover:text-(--texto-primario)"
               @click="aberto = false"
             >
-              <component :is="item.icone" :size="16" class="text-(--texto-minimo) group-hover:text-red-600 transition-colors shrink-0" />
-              <span class="text-[14px] font-semibold">{{ item.label }}</span>
-            </a>
-
-            <!-- LINK INTERNO -->
-            <button
-              v-else
-              class="flex items-center gap-3 px-4 py-3 rounded-lg text-(--texto-esmaecido) hover:text-(--texto-primario) hover:bg-(--bg-elevado) transition-all duration-150 w-full text-left group"
-              @click="ir(item.rota)"
-            >
-              <component :is="item.icone" :size="16" class="text-(--texto-minimo) group-hover:text-red-600 transition-colors shrink-0" />
-              <span class="text-[14px] font-semibold">{{ item.label }}</span>
+              <X :size="20" />
             </button>
-          </template>
-        </div>
+          </div>
 
-        <!-- categorias -->
-        <div class="flex items-center gap-3 px-6 mt-6 mb-3">
-          <span class="text-[10px] font-black tracking-[3px] uppercase text-red-600">Categorias</span>
-          <div class="flex-1 h-px bg-(--borda)" />
-        </div>
+          <!-- Categorias -->
+          <div class="px-3 pt-4">
+            <p class="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-(--texto-fraco)">
+              Categorias
+            </p>
+            <NuxtLink
+              v-for="c in CATEGORIAS_LOJA"
+              :key="c.rota"
+              :to="c.rota"
+              class="flex items-center gap-3 rounded-xl px-2 py-2 transition hover:bg-(--bg-elevado)"
+              active-class="bg-(--marca-suave)"
+            >
+              <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl" :class="[c.fundo, c.rota === '/ofertas' ? 'text-red-600' : 'text-(--texto-primario)']">
+                <component :is="c.icone" :size="18" />
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="block text-[15px] font-semibold text-(--texto-primario)">{{ c.label }}</span>
+                <span class="block text-xs text-(--texto-fraco)">{{ c.descricao }}</span>
+              </span>
+              <ChevronRight :size="16" class="text-(--texto-minimo)" />
+            </NuxtLink>
+          </div>
 
-        <div class="flex flex-col px-3 gap-0.5">
-          <button
-            v-for="cat in categorias"
-            :key="cat.rota"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-(--texto-esmaecido) hover:text-(--texto-primario) hover:bg-(--bg-elevado) transition-all duration-150 w-full text-left group"
-            @click="ir(cat.rota)"
-          >
-            <component :is="cat.icone" :size="16" class="text-(--texto-minimo) group-hover:text-red-600 transition-colors shrink-0" />
-            <span class="text-[14px] font-semibold">{{ cat.label }}</span>
-          </button>
-        </div>
+          <!-- Institucional -->
+          <div class="mt-3 border-t border-(--borda) px-3 pt-3">
+            <NuxtLink
+              v-for="item in institucional"
+              :key="item.rota"
+              :to="item.rota"
+              class="flex items-center gap-3 rounded-xl px-2 py-2.5 text-[15px] font-medium text-(--texto-secundario) transition hover:bg-(--bg-elevado)"
+            >
+              <component :is="item.icone" :size="18" class="text-(--texto-fraco)" />
+              {{ item.label }}
+            </NuxtLink>
+            <a
+              :href="CONTATO.clube"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-3 rounded-xl px-2 py-2.5 text-[15px] font-medium text-(--texto-secundario) transition hover:bg-(--bg-elevado)"
+            >
+              <ArrowUpRight :size="18" class="text-(--texto-fraco)" />
+              Clube de descontos
+            </a>
+            <button
+              type="button"
+              class="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-[15px] font-medium text-(--texto-secundario) transition hover:bg-(--bg-elevado)"
+              @click="alternar"
+            >
+              <component :is="tema === 'claro' ? Moon : Sun" :size="18" class="text-(--texto-fraco)" />
+              {{ tema === 'claro' ? 'Modo escuro' : 'Modo claro' }}
+            </button>
+          </div>
 
-        <!-- footer -->
-        <div class="mt-auto px-6 py-6 border-t border-(--borda)">
-          <p class="text-(--texto-fraco)/60 text-[10px] font-bold tracking-[2px] uppercase">
-            © Alô Pará · Todos os direitos reservados
-          </p>
-        </div>
-      </div>
-    </Transition>
+          <!-- Atendimento -->
+          <div class="mt-auto border-t border-(--borda) p-5">
+            <a
+              :href="linkWhatsapp()"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center justify-center gap-2 rounded-xl bg-[#25D366] py-3.5 font-semibold text-white transition hover:bg-[#1fb658] active:scale-[0.98]"
+            >
+              <MessageCircle :size="19" />
+              Falar no WhatsApp
+            </a>
+            <div class="mt-4 flex flex-col gap-2 text-sm text-(--texto-fraco)">
+              <span class="flex items-center gap-2"><Clock :size="15" /> {{ CONTATO.horario }}</span>
+              <a :href="CONTATO.instagram" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 transition hover:text-red-600">
+                <Instagram :size="15" /> {{ CONTATO.instagramUsuario }}
+              </a>
+            </div>
+          </div>
+        </aside>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <style scoped>
-.fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-
-.slide-enter-active, .slide-leave-active { transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-.slide-enter-from, .slide-leave-to { transform: translateX(100%); }
+.fundo-enter-active, .fundo-leave-active { transition: opacity 0.25s ease; }
+.fundo-enter-from, .fundo-leave-to { opacity: 0; }
+.gaveta-enter-active, .gaveta-leave-active { transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1); }
+.gaveta-enter-from, .gaveta-leave-to { transform: translateX(100%); }
 </style>

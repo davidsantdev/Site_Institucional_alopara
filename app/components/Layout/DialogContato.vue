@@ -58,17 +58,17 @@ function abrirWhatsapp(dep: Departamento) {
 <template>
   <Dialog>
     <DialogTrigger as-child>
-      <button
-        type="button"
-        class="bg-red-600 hover:bg-red-500 active:scale-[0.98] transition-all
-          text-white font-bold text-sm tracking-widest uppercase
-          px-8 py-[14px] rounded-[4px]"
-      >
-        Entre em contato
-      </button>
+      <slot>
+        <button
+          type="button"
+          class="rounded-full bg-red-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-red-500 active:scale-[0.98]"
+        >
+          Entre em contato
+        </button>
+      </slot>
     </DialogTrigger>
 
-    <DialogContent class="bg-(--bg-cartao) border border-(--borda) p-0 w-[92vw] md:w-[440px] overflow-hidden rounded-2xl">
+    <DialogContent class="bg-(--bg-cartao) border border-(--borda) p-0 w-[92vw] md:w-110 overflow-hidden rounded-2xl">
       <!-- header -->
       <div class="px-7 pt-7 pb-6 border-b border-(--borda)">
         <span class="text-red-600 text-[10px] font-black tracking-[3px] uppercase">Alô Pará</span>

@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import CarousselSobre from '~/components/Layout/CarousselSobre.vue'
-import ConteudoMain from '~/components/Layout/conteudoMain.vue'
+import AppBanner from '~/components/Layout/AppBanner.vue'
+import CampanhasSemana from '~/components/Layout/CampanhasSemana.vue'
+import CategoriasHome from '~/components/Layout/CategoriasHome.vue'
+import ComoComprar from '~/components/Layout/ComoComprar.vue'
+import Faqs from '~/components/Layout/Faqs.vue'
 import Footer from '~/components/Layout/Footer.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
-import OfertasHome from '~/components/Layout/OfertasHome.vue'
-import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue'
+import HeroHome from '~/components/Layout/HeroHome.vue'
+import PrateleiraProdutos from '~/components/Layout/PrateleiraProdutos.vue'
 
 useSeoMeta({
   title: 'Alô Pará | Supermercado em Novo Repartimento - PA',
@@ -15,23 +18,53 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="flex flex-col">
+  <div class="flex min-h-screen flex-col bg-(--bg-pagina)">
     <HeaderMain />
-    <ConteudoMain />
 
-    <!-- Produto de verdade primeiro (ofertas reais, puxadas do catálogo) — é o
-         que mais segura quem acabou de chegar. Categorias e o carrossel de
-         encartes (imagem decorativa, sem preço) vêm depois, já com a pessoa
-         tendo visto produto de verdade na tela. "Nossa história" e
-         "Responsabilidade social" saíram daqui — não ajudavam a vender
-         (ver conversa) — o conteúdo continua no histórico do git. -->
-    <div class="bg-(--bg-pagina) flex flex-col justify-center items-center">
-      <OfertasHome />
-      <hr class="border-[#222] w-[90%] m-10">
-      <ProdutosRedondo />
-      <hr class="border-[#222] w-[90%] m-10">
-      <CarousselSobre />
-    </div>
+    <main>
+      <HeroHome />
+      <CategoriasHome />
+
+      <!-- Produto de verdade logo no começo — é o que segura quem acabou de chegar. -->
+      <PrateleiraProdutos
+        titulo="Ofertas da semana"
+        subtitulo="Preço de clube, enquanto durar o estoque"
+        endpoint="/api/ofertas"
+        link="/ofertas"
+        hover-card="group-hover:bg-red-50"
+      />
+
+      <CampanhasSemana />
+
+      <PrateleiraProdutos
+        titulo="Hortifruti fresquinho"
+        subtitulo="Frutas, verduras e legumes"
+        endpoint="/api/frutas"
+        link="/frutas"
+        hover-card="group-hover:bg-lime-50"
+      />
+
+      <PrateleiraProdutos
+        titulo="Carnes e frios"
+        subtitulo="Bovinos, suínos, aves e frios"
+        endpoint="/api/carnes"
+        link="/carnes"
+        hover-card="group-hover:bg-red-50"
+      />
+
+      <ComoComprar />
+
+      <PrateleiraProdutos
+        titulo="Bebidas"
+        subtitulo="Sucos, refrigerantes, cervejas e mais"
+        endpoint="/api/bebidas"
+        link="/bebidas"
+        hover-card="group-hover:bg-cyan-50"
+      />
+
+      <AppBanner />
+      <Faqs />
+    </main>
 
     <Footer />
   </div>

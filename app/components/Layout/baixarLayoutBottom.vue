@@ -1,38 +1,32 @@
 <script setup lang="ts">
+import { BadgePercent, Download, Smartphone } from 'lucide-vue-next'
+
 const passos = [
-  { num: '01', titulo: 'Tudo na palma da mão', desc: 'Encartes, ofertas e lista de compras — tudo em um só lugar, direto no seu celular.' },
-  { num: '02', titulo: 'Vantagens exclusivas', desc: 'Descontos em tempo real, economizômetro e promoções exclusivas para quem usa o app.' },
-  { num: '03', titulo: 'Como baixar?', desc: 'Acesse a Play Store ou App Store, busque por "Alô Pará", instale e comece a economizar.' },
+  { icone: Smartphone, titulo: 'Tudo na palma da mão', desc: 'Encartes, ofertas e lista de compras — tudo em um só lugar, direto no seu celular.' },
+  { icone: BadgePercent, titulo: 'Vantagens exclusivas', desc: 'Descontos em tempo real, economizômetro e promoções exclusivas para quem usa o app.' },
+  { icone: Download, titulo: 'Como baixar?', desc: 'Abra a Play Store ou a App Store, busque por "Alô Pará", instale e comece a economizar.' },
 ]
 </script>
 
 <template>
-  <div class="border-t border-[#1a1a1a] px-6 md:px-10 py-20">
-    <div class="max-w-5xl mx-auto">
-      <div class="flex items-center gap-4 mb-12">
-        <span class="text-red-600 text-[10px] font-black tracking-[4px] uppercase">O que você está perdendo</span>
-        <div class="flex-1 h-px bg-[#1f1f1f]" />
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div
-          v-for="passo in passos"
-          :key="passo.num"
-          class="bg-[#161616] border border-[#1f1f1f] rounded-xl p-7 flex flex-col gap-5 hover:border-red-600 transition-colors duration-300 group"
-        >
-          <span class="text-[11px] font-black tracking-[3px] text-red-600 uppercase">{{ passo.num }}</span>
-
-          <div>
-            <h3 class="text-white text-[20px] font-black tracking-tight mb-2">
-              {{ passo.titulo }}
-            </h3>
-            <div class="w-6 h-0.5 bg-red-600 mb-4 transition-all duration-300 group-hover:w-12" />
-            <p class="text-[#555] text-[13px] leading-relaxed">
-              {{ passo.desc }}
-            </p>
-          </div>
+  <section class="border-t border-(--borda) bg-(--bg-cartao)">
+    <div class="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-20 lg:px-8">
+      <h2 class="text-2xl font-extrabold tracking-tight text-(--texto-primario) md:text-3xl">
+        O que você ganha com o app
+      </h2>
+      <div class="mt-8 grid gap-4 md:grid-cols-3">
+        <div v-for="p in passos" :key="p.titulo" class="rounded-2xl border border-(--borda) bg-(--bg-pagina) p-6">
+          <span class="grid h-12 w-12 place-items-center rounded-2xl bg-(--marca-suave) text-red-600">
+            <component :is="p.icone" :size="22" />
+          </span>
+          <h3 class="mt-5 text-lg font-bold text-(--texto-primario)">
+            {{ p.titulo }}
+          </h3>
+          <p class="mt-2 text-sm leading-relaxed text-(--texto-fraco)">
+            {{ p.desc }}
+          </p>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </template>

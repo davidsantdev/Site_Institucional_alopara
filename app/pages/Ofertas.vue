@@ -8,12 +8,12 @@ import PaginaCategoria from '~/components/Layout/PaginaCategoria.vue'
     endpoint="/api/ofertas"
     titulo="Ofertas do Clube"
     descricao="Produtos com preço de clube ativo no Supermercado Alô Pará, em Novo Repartimento - PA."
-    gradiente="from-emerald-600 via-emerald-500 to-teal-500"
-    ring="focus:ring-emerald-500/50"
-    botao="bg-emerald-500 hover:bg-emerald-600"
-    texto="text-emerald-400"
-    badge="text-emerald-400"
-    hover-card="group-hover:bg-emerald-50"
+    gradiente="from-red-600 via-red-500 to-orange-500"
+    ring="focus:ring-red-500/20"
+    botao="bg-red-600 hover:bg-red-700"
+    texto="text-red-500"
+    badge="text-red-500"
+    hover-card="group-hover:bg-red-50"
   >
     <template #icone>
       <Tag :size="14" />

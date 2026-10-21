@@ -1,30 +1,28 @@
 <script setup lang="ts">
-import { Frown, ShoppingCart, Trash2 } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { ArrowLeft, MessageCircle, Minus, Plus, ShieldCheck, ShoppingCart, Trash2 } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
 import Footer from '~/components/Layout/Footer.vue'
 import FotoProduto from '~/components/Layout/FotoProduto.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
+import Preco from '~/components/Layout/Preco.vue'
 import { obterCodigoAfiliado } from '~/composables/useAfiliado'
-import { formatarReais, linhaPedido, PESO, precoUnitario, rotuloQuantidade, subtotalItem, useCarrinho } from '~/data/composable/UseCarrinho'
+import { linkProduto } from '~/composables/useCatalogo'
+import { formatarNome, formatarReais } from '~/composables/useFormatacao'
+import { CATEGORIAS_LOJA, CONTATO } from '~/composables/useNavegacao'
+import { linhaPedido, PESO, precoUnitario, rotuloQuantidade, subtotalItem, useCarrinho } from '~/data/composable/UseCarrinho'
 
 useSeoMeta({
   title: 'Meu Carrinho | Alô Pará',
   robots: 'noindex, follow',
 })
 
-const { carrinho, removeItem, esvaziarCarrinho, concluirPedido, totalItens } = useCarrinho()
+const { carrinho, carregado, removeItem, esvaziarCarrinho, concluirPedido, valorTotal } = useCarrinho()
 
-const NUMERO_WHATSAPP = '5594991923141'
+const MAX_OBSERVACAO = 300
+const observacao = ref('')
 
-/** Quanto custa o item inteiro (preço unitário × quantidade, no centavo). */
-function precoItem(item: any) {
-  return formatarReais(subtotalItem(item))
-}
-
-// Soma em centavos inteiros — somar reais em ponto flutuante errava o centavo.
-const totalCarrinho = computed(() =>
-  formatarReais(carrinho.value.reduce((acc, c) => acc + Math.round(subtotalItem(c) * 100), 0) / 100),
-)
+const totalCarrinho = computed(() => formatarReais(valorTotal.value))
+const quantidadeLinhas = computed(() => carrinho.value.length)
 
 function aumentar(item: any) {
   if (item.pesavel)
@@ -47,7 +45,7 @@ function noMaximo(item: any) {
 }
 
 function comprarWhatsapp() {
-  const valorTotal = Number(totalCarrinho.value.replace(',', '.')) || 0
+  const valorTotalNumero = valorTotal.value
   const quantidadeItens = carrinho.value.length
   const itensGA = carrinho.value.map(item => ({
     item_id: String(item.id ?? item.nome),
@@ -62,13 +60,13 @@ function comprarWhatsapp() {
   // de Monetização do Analytics reconhece sozinho — sem ele, o valor não
   // aparecia lá mesmo o evento sendo disparado.
   gtag('event', 'finalizar_whatsapp', {
-    value: valorTotal,
+    value: valorTotalNumero,
     currency: 'BRL',
     quantidade_itens: quantidadeItens,
     items: itensGA,
   })
   gtag('event', 'begin_checkout', {
-    value: valorTotal,
+    value: valorTotalNumero,
     currency: 'BRL',
     items: itensGA,
   })
@@ -81,183 +79,240 @@ function comprarWhatsapp() {
   // mensagem — é assim que o atendente sabe que veio de um afiliado, já
   // que o pedido inteiro fecha por aqui, fora de qualquer sistema.
   const codigoAfiliado = obterCodigoAfiliado()
+  const nota = observacao.value.trim().slice(0, MAX_OBSERVACAO)
 
   const mensagem = [
     'Olá, vim pelo site! Gostaria de fazer o seguinte pedido:',
     itens,
     `Total do pedido: R$ ${totalCarrinho.value}`,
+    ...(nota ? [`Observações: ${nota}`] : []),
     ...(codigoAfiliado ? [`Código de indicação: ${codigoAfiliado}`] : []),
   ].join('\n\n')
 
-  const conversa = window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${encodeURIComponent(mensagem)}`, '_blank')
+  const conversa = window.open(`https://wa.me/${CONTATO.whatsapp}?text=${encodeURIComponent(mensagem)}`, '_blank')
 
   // Só zera (e só conta o clique) se a conversa abriu: com o pop-up
   // bloqueado a pessoa ficaria sem carrinho e sem ter mandado pedido nenhum.
   if (conversa) {
     concluirPedido()
+    observacao.value = ''
     // Mesmo número do GA4 (evento finalizar_whatsapp acima), mas direto no
     // painel do admin — fogo e esquece, não trava o fluxo se falhar.
-    $fetch('/api/whatsapp-clique', { method: 'POST', body: { valorTotal, quantidadeItens } }).catch(() => {})
+    $fetch('/api/whatsapp-clique', { method: 'POST', body: { valorTotal: valorTotalNumero, quantidadeItens } }).catch(() => {})
   }
 }
 </script>
 
 <template>
-  <div class="bg-(--bg-pagina) min-h-screen flex flex-col">
+  <div class="flex min-h-screen flex-col bg-(--bg-pagina)">
     <HeaderMain />
 
-    <main class="flex-1 max-w-6xl mx-auto w-full px-4 md:px-6 py-10">
-      <div class="flex items-center justify-between gap-3 mb-8">
-        <div class="flex items-center gap-3">
-          <ShoppingCart :size="24" class="text-red-600" />
-          <h1 class="text-(--texto-primario) text-[22px] md:text-2xl font-black tracking-tight">
-            Meu Carrinho
-          </h1>
-          <span
-            v-if="carrinho.length"
-            class="bg-red-600 text-white text-[11px] font-black px-2 py-0.5 rounded-full"
-          >
-            {{ carrinho.length }}
-          </span>
+    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 md:px-6 md:py-12 lg:px-8">
+      <!-- ═════ CARREGANDO (o carrinho vem do navegador, depois da página) ═════ -->
+      <div v-if="!carregado" class="grid gap-8 lg:grid-cols-[1fr_380px]">
+        <div class="flex flex-col gap-3">
+          <div class="mb-3 h-9 w-56 animate-pulse rounded-lg bg-(--bg-elevado)" />
+          <div v-for="n in 3" :key="n" class="flex gap-4 rounded-2xl border border-(--borda) bg-(--bg-cartao) p-4">
+            <div class="h-24 w-24 shrink-0 animate-pulse rounded-xl bg-(--bg-elevado)" />
+            <div class="flex-1">
+              <div class="h-4 w-3/4 animate-pulse rounded bg-(--bg-elevado)" />
+              <div class="mt-3 h-6 w-24 animate-pulse rounded bg-(--bg-elevado)" />
+            </div>
+          </div>
         </div>
-
-        <button
-          v-if="carrinho.length"
-          type="button"
-          class="flex items-center gap-1.5 text-[11px] font-bold tracking-wide uppercase text-(--texto-suave) hover:text-red-500 transition-colors"
-          @click="esvaziarCarrinho"
-        >
-          <Trash2 :size="14" />
-          Esvaziar carrinho
-        </button>
+        <div class="h-72 animate-pulse rounded-2xl bg-(--bg-cartao)" />
       </div>
 
-      <div
-        v-if="totalItens.vazio"
-        class="flex flex-col items-center justify-center py-28 gap-4 text-(--texto-minimo)"
-      >
-        <Frown :size="64" class="opacity-40" />
-        <p class="text-xl md:text-2xl font-light text-(--texto-esmaecido)">
+      <!-- ═════ VAZIO ═════ -->
+      <div v-else-if="!quantidadeLinhas" class="mx-auto flex max-w-2xl flex-col items-center py-10 text-center md:py-16">
+        <span class="grid h-20 w-20 place-items-center rounded-3xl bg-(--marca-suave) text-red-600">
+          <ShoppingCart :size="34" />
+        </span>
+        <h1 class="mt-6 text-2xl font-extrabold tracking-tight text-(--texto-primario) md:text-3xl">
           Seu carrinho está vazio
+        </h1>
+        <p class="mt-2 max-w-md text-(--texto-fraco)">
+          Escolha os produtos, monte o carrinho e finalize pelo WhatsApp — a gente confirma tudo com você na conversa.
         </p>
-        <button
-          type="button"
-          class="mt-2 text-sm text-red-500 font-semibold hover:text-red-400 hover:underline transition-colors"
-          @click="navigateTo('/')"
+        <NuxtLink
+          to="/ofertas"
+          class="mt-7 inline-flex h-12 items-center gap-2 rounded-full bg-red-600 px-7 font-semibold text-white shadow-sm shadow-red-900/20 transition hover:bg-red-700 active:scale-[0.97]"
         >
-          Continuar comprando →
-        </button>
+          Ver ofertas da semana
+        </NuxtLink>
+        <div class="mt-10 flex flex-wrap justify-center gap-2">
+          <NuxtLink
+            v-for="c in CATEGORIAS_LOJA.slice(1)"
+            :key="c.rota"
+            :to="c.rota"
+            class="inline-flex items-center gap-2 rounded-full border border-(--borda-forte) bg-(--bg-cartao) px-4 py-2 text-sm font-medium text-(--texto-secundario) transition hover:border-red-600 hover:text-red-600"
+          >
+            <component :is="c.icone" :size="15" />
+            {{ c.label }}
+          </NuxtLink>
+        </div>
       </div>
 
-      <div v-else class="flex flex-col lg:flex-row gap-8">
-        <div class="flex-1 flex flex-col gap-3">
-          <div
-            v-for="item in carrinho"
-            :key="item.id ?? item.nome"
-            class="bg-(--bg-cartao) rounded-2xl border border-(--borda) flex items-center gap-4 p-4 hover:border-(--borda-forte) transition-colors"
-          >
-            <div class="bg-[#fafafa] rounded-xl flex items-center justify-center md:w-28 md:h-28 w-20 h-20 flex-shrink-0 p-2">
-              <FotoProduto
-                :produto="item"
-                img-class="w-full h-full object-contain"
-                emoji-class="text-5xl md:text-7xl"
-              />
+      <!-- ═════ CARRINHO ═════ -->
+      <div v-else class="grid items-start gap-8 lg:grid-cols-[1fr_380px]">
+        <section aria-labelledby="titulo-carrinho">
+          <div class="mb-5 flex items-end justify-between gap-3">
+            <div>
+              <h1 id="titulo-carrinho" class="text-2xl font-extrabold tracking-tight text-(--texto-primario) md:text-3xl">
+                Meu carrinho
+              </h1>
+              <p class="mt-1 text-sm text-(--texto-fraco)">
+                {{ quantidadeLinhas }} {{ quantidadeLinhas === 1 ? 'produto' : 'produtos' }}
+              </p>
             </div>
-
-            <div class="flex-1 min-w-0">
-              <h3 class="text-(--texto-primario) font-semibold text-sm md:text-base leading-snug line-clamp-2">
-                {{ item.nome }}
-              </h3>
-
-              <div class="flex items-baseline gap-2 mt-2">
-                <span class="text-(--preco) text-xl font-extrabold">
-                  R$ {{ precoItem(item) }}
-                </span>
-                <span v-if="item.pesavel" class="text-xs text-(--texto-fraco)">
-                  R$ {{ formatarReais(precoUnitario(item)) }}/kg
-                </span>
-              </div>
-
-              <div class="flex items-center gap-2 mt-3">
-                <button
-                  type="button"
-                  :aria-label="`Diminuir quantidade de ${item.nome}`"
-                  class="w-7 h-7 flex items-center justify-center rounded-lg border border-(--borda-forte) text-(--texto-primario) hover:bg-(--bg-elevado) disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  :disabled="noMinimo(item)"
-                  @click="diminuir(item)"
-                >
-                  −
-                </button>
-                <span class="font-bold text-center text-(--texto-primario)" :class="item.pesavel ? 'min-w-14' : 'min-w-6'">{{ rotuloQuantidade(item) }}</span>
-                <button
-                  type="button"
-                  :aria-label="`Aumentar quantidade de ${item.nome}`"
-                  class="w-7 h-7 flex items-center justify-center rounded-lg border border-(--borda-forte) text-(--texto-primario) hover:bg-(--bg-elevado) disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  :disabled="noMaximo(item)"
-                  @click="aumentar(item)"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
             <button
               type="button"
-              :aria-label="`Remover ${item.nome} do carrinho`"
-              class="flex-shrink-0 flex items-center gap-1.5 text-(--texto-suave) hover:text-red-500 hover:bg-red-500/10 text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
-              @click="removeItem(item.nome)"
+              class="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-(--texto-fraco) transition hover:bg-(--marca-suave) hover:text-red-600"
+              @click="esvaziarCarrinho"
             >
               <Trash2 :size="15" />
-              <span class="hidden md:inline">Remover</span>
+              Esvaziar
             </button>
           </div>
+
+          <ul class="flex flex-col gap-3">
+            <li
+              v-for="item in carrinho"
+              :key="item.id ?? item.nome"
+              class="flex gap-3 rounded-2xl border border-(--borda) bg-(--bg-cartao) p-3 transition-colors hover:border-(--borda-forte) sm:gap-4 sm:p-4"
+            >
+              <NuxtLink
+                :to="item.id ? linkProduto(item) : '#'"
+                class="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-(--bg-foto) sm:h-24 sm:w-24"
+                :aria-label="formatarNome(item.nome)"
+              >
+                <FotoProduto :produto="item" img-class="h-[85%] w-[85%] object-contain" emoji-class="text-5xl" />
+              </NuxtLink>
+
+              <div class="flex min-w-0 flex-1 flex-col">
+                <div class="flex items-start justify-between gap-2">
+                  <h2 class="line-clamp-2 text-sm font-medium leading-snug text-(--texto-primario) sm:text-[15px]">
+                    {{ formatarNome(item.nome) }}
+                  </h2>
+                  <button
+                    type="button"
+                    :aria-label="`Remover ${formatarNome(item.nome)} do carrinho`"
+                    class="-mr-1 -mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-full text-(--texto-suave) transition hover:bg-(--marca-suave) hover:text-red-600"
+                    @click="removeItem(item.nome)"
+                  >
+                    <Trash2 :size="16" />
+                  </button>
+                </div>
+                <p class="numeros mt-0.5 text-xs text-(--texto-fraco)">
+                  R$ {{ formatarReais(precoUnitario(item)) }}{{ item.pesavel ? ' / kg' : ' cada' }}
+                </p>
+
+                <div class="mt-auto flex items-end justify-between gap-3 pt-3">
+                  <div class="flex h-10 items-center rounded-xl border border-(--borda-forte)">
+                    <button
+                      type="button"
+                      :aria-label="`Diminuir ${formatarNome(item.nome)}`"
+                      class="grid h-10 w-10 place-items-center rounded-l-xl text-(--texto-primario) transition hover:bg-(--bg-elevado) disabled:cursor-not-allowed disabled:opacity-30"
+                      :disabled="noMinimo(item)"
+                      @click="diminuir(item)"
+                    >
+                      <Minus :size="15" />
+                    </button>
+                    <span class="numeros text-center text-sm font-bold text-(--texto-primario)" :class="item.pesavel ? 'min-w-14' : 'min-w-8'">{{ rotuloQuantidade(item) }}</span>
+                    <button
+                      type="button"
+                      :aria-label="`Aumentar ${formatarNome(item.nome)}`"
+                      class="grid h-10 w-10 place-items-center rounded-r-xl text-(--texto-primario) transition hover:bg-(--bg-elevado) disabled:cursor-not-allowed disabled:opacity-30"
+                      :disabled="noMaximo(item)"
+                      @click="aumentar(item)"
+                    >
+                      <Plus :size="15" />
+                    </button>
+                  </div>
+                  <Preco :valor="subtotalItem(item)" class="text-xl sm:text-2xl" />
+                </div>
+              </div>
+            </li>
+          </ul>
+
+          <NuxtLink to="/" class="mt-5 inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-(--texto-fraco) transition hover:bg-(--bg-elevado) hover:text-(--texto-primario)">
+            <ArrowLeft :size="16" />
+            Continuar comprando
+          </NuxtLink>
+        </section>
+
+        <!-- ═════ RESUMO ═════ -->
+        <aside class="rounded-2xl border border-(--borda) bg-(--bg-cartao) p-5 shadow-(--sombra-1) md:p-6 lg:sticky lg:top-[calc(var(--altura-header-visivel,0px)+1.5rem)]">
+          <h2 class="text-lg font-bold text-(--texto-primario)">
+            Resumo do pedido
+          </h2>
+
+          <dl class="mt-4 flex flex-col gap-2 text-sm">
+            <div class="flex justify-between text-(--texto-fraco)">
+              <dt>Produtos ({{ quantidadeLinhas }})</dt>
+              <dd class="numeros">
+                R$ {{ totalCarrinho }}
+              </dd>
+            </div>
+            <div class="flex justify-between border-t border-(--borda) pt-3 text-base font-bold text-(--texto-primario)">
+              <dt>Total</dt>
+              <dd class="numeros text-(--preco)">
+                R$ {{ totalCarrinho }}
+              </dd>
+            </div>
+          </dl>
+
+          <label for="observacao" class="mt-5 block text-sm font-medium text-(--texto-secundario)">
+            Observações <span class="font-normal text-(--texto-fraco)">(opcional)</span>
+          </label>
+          <textarea
+            id="observacao"
+            v-model="observacao"
+            rows="3"
+            :maxlength="MAX_OBSERVACAO"
+            placeholder="Ex.: se faltar algum item, pode trocar por similar"
+            class="mt-2 w-full resize-none rounded-xl border border-(--borda-forte) bg-(--bg-input) px-3.5 py-3 text-sm text-(--texto-primario) outline-none transition placeholder:text-(--texto-suave) focus:border-red-600 focus:ring-4 focus:ring-red-600/12"
+          />
 
           <button
             type="button"
-            class="self-start text-sm text-(--texto-suave) font-semibold hover:text-(--texto-primario) transition-colors mt-2"
-            @click="navigateTo('/')"
+            class="mt-5 hidden h-13 w-full items-center justify-center gap-2 rounded-xl bg-green-700 text-base font-semibold text-white shadow-sm transition hover:bg-green-800 active:scale-[0.98] lg:flex"
+            @click="comprarWhatsapp"
           >
-            ← Continuar comprando
+            <MessageCircle :size="20" />
+            Finalizar no WhatsApp
           </button>
-        </div>
 
-        <div class="lg:w-80 w-full">
-          <div class="bg-(--bg-cartao) rounded-2xl border border-(--borda) p-6 sticky top-24">
-            <h3 class="font-black text-(--texto-primario) text-lg mb-4 tracking-tight">
-              Resumo do pedido
-            </h3>
-
-            <div class="flex flex-col gap-2 mb-4">
-              <div
-                v-for="item in carrinho"
-                :key="item.id ?? item.nome"
-                class="flex justify-between text-sm text-(--texto-fraco)"
-              >
-                <span class="truncate max-w-[60%]">{{ item.nome }} x{{ rotuloQuantidade(item) }}</span>
-                <span class="font-medium text-(--texto-secundario)">R$ {{ precoItem(item) }}</span>
-              </div>
-            </div>
-
-            <div class="border-t border-(--borda) pt-4 mb-6">
-              <div class="flex justify-between font-bold text-(--texto-primario)">
-                <span>Total</span>
-                <span class="text-(--preco) text-xl">R$ {{ totalCarrinho }}</span>
-              </div>
-            </div>
-
-            <button
-              v-if="totalItens.compra"
-              type="button"
-              class="w-full bg-red-600 hover:bg-red-700 active:scale-[0.98] transition-all text-white font-bold text-base py-4 rounded-xl shadow-lg shadow-red-900/30 flex items-center justify-center gap-2"
-              @click="comprarWhatsapp"
-            >
-              <ShoppingCart :size="18" />
-              Finalizar no WhatsApp
-            </button>
-          </div>
-        </div>
+          <p class="mt-4 flex items-start gap-2 text-xs leading-relaxed text-(--texto-fraco)">
+            <ShieldCheck :size="16" class="mt-px shrink-0 text-(--clube)" />
+            Nada é cobrado aqui no site: o pedido vai pro nosso WhatsApp e a equipe confirma tudo com você na conversa.
+          </p>
+        </aside>
       </div>
     </main>
+
+    <!-- Celular: o resumo fica lá embaixo, então o botão de fechar o pedido acompanha a tela. -->
+    <div
+      v-if="carregado && quantidadeLinhas"
+      class="sticky bottom-0 z-40 border-t border-(--borda) bg-(--bg-vidro) px-4 py-3 backdrop-blur-xl lg:hidden"
+    >
+      <div class="mx-auto flex max-w-7xl items-center gap-4">
+        <div class="shrink-0">
+          <p class="text-xs text-(--texto-fraco)">
+            Total
+          </p>
+          <Preco :valor="valorTotal" class="text-2xl" />
+        </div>
+        <button
+          type="button"
+          class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-green-700 font-semibold text-white shadow-sm transition hover:bg-green-800 active:scale-[0.98]"
+          @click="comprarWhatsapp"
+        >
+          <MessageCircle :size="19" />
+          Finalizar no WhatsApp
+        </button>
+      </div>
+    </div>
 
     <Footer />
   </div>

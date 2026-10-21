@@ -6,10 +6,10 @@ import PaginaCategoria from '~/components/Layout/PaginaCategoria.vue'
 <template>
   <PaginaCategoria
     endpoint="/api/carnes"
-    titulo="Carnes & Aves"
+    titulo="Carnes & Frios"
     descricao="Açougue — bovinos, suínos, aves e frios no Supermercado Alô Pará."
     gradiente="from-red-800 via-rose-700 to-orange-800"
-    ring="focus:ring-red-700/50"
+    ring="focus:ring-red-700/20"
     botao="bg-red-800 hover:bg-red-900"
     texto="text-red-500"
     badge="text-rose-500"

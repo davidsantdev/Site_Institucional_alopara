@@ -13,10 +13,12 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="bg-[#111]">
+  <div class="flex min-h-screen flex-col bg-(--bg-pagina)">
     <HeaderMain />
-    <BaixarLayout />
-    <BaixarLayoutBottom />
+    <main>
+      <BaixarLayout />
+      <BaixarLayoutBottom />
+    </main>
     <Footer />
   </div>
 </template>

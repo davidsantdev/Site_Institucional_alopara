@@ -24,7 +24,7 @@ export interface Produto {
   img: string
   /** true só quando a foto foi confirmada — foto "adivinhada" que não existe no CDN vem false. */
   imagemReal?: boolean
-  /** Emoji do hortifruti, usado no lugar da foto quando `imagemReal` é falso (ver FotoProduto). */
+  /** Emoji do hortifruti/açougue, usado no lugar da foto quando `imagemReal` é falso (ver FotoProduto). */
   emoji?: string
   /** Vendido por peso: `preco2` é por KG e a `quantidade` no carrinho é em KG (ver UseCarrinho). */
   pesavel?: boolean
@@ -275,6 +275,25 @@ export function useCatalogo(endpoint: string) {
       pollsFeitos = 0
       carregar(1, false)
     }, DEBOUNCE_MS)
+  })
+
+  // Busca vinda de FORA desta lista — a busca do header leva pra /busca?q=...
+  // e, se a página de resultados já está aberta, só a URL muda (a página não
+  // remonta). Quando é a própria lista que escreve o termo na URL
+  // (sincronizarUrl), ele já é igual a `buscaAtiva` e isto não faz nada.
+  watch(() => route.query.q, (q) => {
+    if (route.path !== pathInicial)
+      return
+    const novo = lerQuery(q).trim()
+    if (novo === buscaAtiva.value)
+      return
+    if (timeoutBusca)
+      clearTimeout(timeoutBusca)
+    busca.value = novo
+    buscaAtiva.value = novo
+    tipoSelecionado.value = null
+    pollsFeitos = 0
+    carregar(1, false)
   })
 
   // ═════════════ FILTROS: AÇÕES ═════════════

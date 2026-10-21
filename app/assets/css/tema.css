@@ -27,6 +27,18 @@
   --texto-minimo: #444444;
   /** Verde do preço — green-400, escolhido pra saltar num card ESCURO. */
   --preco: #4ade80;
+  /** Fundo atrás da foto do produto: as fotos vêm em fundo branco, então
+   * fica claro nos dois temas — só um pouco menos ofuscante no escuro. */
+  --bg-foto: #f4f4f2;
+  /** Header fixo com fundo translúcido (o conteúdo passa por baixo, desfocado). */
+  --bg-vidro: rgb(17 17 17 / 0.82);
+  --marca-suave: rgb(220 38 38 / 0.14);
+  /** Selo "Clube" (preço de clube) — verde do preço, em versão de etiqueta. */
+  --clube: #34d399;
+  --clube-fundo: rgb(52 211 153 / 0.14);
+  --sombra-1: 0 1px 2px rgb(0 0 0 / 0.45);
+  --sombra-2: 0 14px 32px -14px rgb(0 0 0 / 0.8), 0 2px 6px rgb(0 0 0 / 0.35);
+  --sombra-3: 0 28px 64px -20px rgb(0 0 0 / 0.85);
 }
 
 html.claro {
@@ -46,4 +58,56 @@ html.claro {
   /** Mesmo green-400 quase some em fundo branco (contraste ~1.8:1) — mais
    * escuro aqui pra continuar legível sem perder a identidade "preço verde". */
   --preco: #15803d;
+  --bg-foto: #ffffff;
+  --bg-vidro: rgb(246 245 241 / 0.86);
+  --marca-suave: #fdecec;
+  --clube: #047857;
+  --clube-fundo: #d1fae5;
+  --sombra-1: 0 1px 2px rgb(28 26 23 / 0.05), 0 1px 3px rgb(28 26 23 / 0.07);
+  --sombra-2: 0 14px 30px -12px rgb(28 26 23 / 0.2), 0 2px 6px rgb(28 26 23 / 0.06);
+  --sombra-3: 0 28px 60px -18px rgb(28 26 23 / 0.28);
+}
+
+/* Em camada `base` (a mesma do Tailwind) pra que utilitários como
+   `outline-none` continuem vencendo onde o componente desenha o próprio foco. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid #dc2626;
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: rgb(220 38 38 / 0.2);
+  }
+
+  /* Preço e contador alinhados por dígito — números não "dançam" ao mudar. */
+  .numeros {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Trilho horizontal (prateleiras da home, chips): rola com o dedo, sem barra. */
+  .trilho {
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+  }
+
+  .trilho::-webkit-scrollbar {
+    display: none;
+  }
+
+  .trilho > * {
+    scroll-snap-align: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

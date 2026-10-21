@@ -1,18 +1,19 @@
 <script setup lang="ts">
 /**
- * Página de categoria — o corpo compartilhado de Alimentos, Bebidas, Limpeza
- * e Perfumaria, que antes eram 4 arquivos de ~500 linhas quase idênticos.
+ * Página de categoria — o corpo compartilhado de Alimentos, Hortifruti,
+ * Carnes, Bebidas, Limpeza, Perfumaria, Ofertas e da busca do site.
  *
  * O tema vem por props com strings de classe completas (e não montadas em
  * tempo de execução), para que o Tailwind consiga enxergá-las no scanner.
  */
 import type { Ordenacao } from '~/composables/useCatalogo'
-import { ChevronLeft, ChevronRight, ChevronUp, ListFilter, RefreshCw, Search, X } from 'lucide-vue-next'
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { ArrowUp, ChevronLeft, ChevronRight, ListFilter, RefreshCw, Search, SearchX, X } from 'lucide-vue-next'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import CardProduto from '~/components/Layout/CardProduto.vue'
 import Footer from '~/components/Layout/Footer.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
 import { OPCOES_ORDENACAO, useCatalogo } from '~/composables/useCatalogo'
+import { formatarTipo } from '~/composables/useFormatacao'
 
 const props = defineProps<{
   endpoint: string
@@ -25,6 +26,8 @@ const props = defineProps<{
   texto: string
   badge: string
   hoverCard: string
+  /** Página de resultados da busca do site: título vira o termo buscado e fica fora do Google. */
+  modoBusca?: boolean
 }>()
 
 const {
@@ -50,7 +53,14 @@ const {
   limparFiltros,
 } = useCatalogo(props.endpoint)
 
-const tituloPagina = `${props.titulo} | Alô Pará`
+const termoBusca = computed(() => busca.value.trim())
+const tituloExibido = computed(() => props.modoBusca
+  ? (termoBusca.value ? `Resultados para "${termoBusca.value}"` : 'Buscar produtos')
+  : props.titulo)
+
+const tituloPagina = computed(() => props.modoBusca
+  ? `${termoBusca.value ? `${termoBusca.value} — busca` : 'Busca'} | Alô Pará`
+  : `${props.titulo} | Alô Pará`)
 const descricaoPagina = props.descricao ?? `${props.titulo} no Supermercado Alô Pará, em Novo Repartimento - PA.`
 
 useSeoMeta({
@@ -58,6 +68,8 @@ useSeoMeta({
   description: descricaoPagina,
   ogTitle: tituloPagina,
   ogDescription: descricaoPagina,
+  // Página de resultado de busca é conteúdo "fino" e infinito pro Google — fica de fora.
+  robots: props.modoBusca ? 'noindex, follow' : undefined,
 })
 
 // ═════════════ FILTROS ═════════════
@@ -71,7 +83,7 @@ function aoMudarOrdenacao(e: Event) {
 const mostrarTopo = ref(false)
 
 function onScroll() {
-  mostrarTopo.value = window.scrollY > 600
+  mostrarTopo.value = window.scrollY > 900
 }
 function scrollTopo() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -101,108 +113,119 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-(--bg-pagina) flex flex-col font-sans">
+  <div class="flex min-h-screen flex-col bg-(--bg-pagina) font-sans">
     <HeaderMain />
 
-    <!-- ═════ HERO ═════ -->
-    <div class="relative overflow-hidden bg-(--bg-pagina) px-4 py-12 md:py-16 text-center border-b border-(--borda)">
-      <div
-        class="pointer-events-none absolute top-[-180px] left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-gradient-to-br opacity-20 blur-3xl"
-        :class="gradiente"
-      />
+    <!-- ═════ CABEÇALHO DA CATEGORIA ═════ -->
+    <section class="relative overflow-hidden border-b border-(--borda)">
+      <div class="pointer-events-none absolute -right-20 -top-40 h-105 w-105 rounded-full bg-linear-to-br opacity-15 blur-3xl" :class="gradiente" />
 
-      <div class="relative mx-auto max-w-3xl">
-        <div class="mb-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-br px-4 py-1.5 text-[10px] font-black uppercase tracking-[3px] text-white" :class="gradiente">
-          <slot name="icone" />
-          Alô Pará Supermercado
-        </div>
+      <div class="relative mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-9 lg:px-8">
+        <nav aria-label="Caminho" class="mb-4 flex items-center gap-1 text-xs text-(--texto-fraco)">
+          <NuxtLink to="/" class="transition hover:text-(--texto-primario)">
+            Início
+          </NuxtLink>
+          <ChevronRight :size="12" class="opacity-50" />
+          <span class="font-medium text-(--texto-secundario)" aria-current="page">{{ modoBusca ? 'Busca' : titulo }}</span>
+        </nav>
 
-        <h1 class="mt-2 text-3xl font-black tracking-tight text-(--texto-primario) md:text-5xl">
-          {{ titulo }}
-        </h1>
-
-        <p class="mt-3 flex items-center justify-center gap-2 text-sm text-(--texto-fraco) md:text-base">
-          <template v-if="totalProdutos > 0">
-            {{ totalProdutos.toLocaleString('pt-BR') }} produtos disponíveis
-            <span v-if="!cacheCompleto" class="inline-flex items-center gap-1 text-sm text-(--texto-suave)">
-              <RefreshCw :size="12" class="animate-spin" />
-              carregando mais...
+        <div class="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div class="flex items-center gap-4">
+            <span
+              class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-linear-to-br text-white shadow-lg md:h-16 md:w-16 [&_svg]:h-7 [&_svg]:w-7"
+              :class="gradiente"
+            >
+              <Search v-if="modoBusca" />
+              <slot v-else name="icone" />
             </span>
-          </template>
-          <template v-else-if="carregando">
-            <RefreshCw :size="14" class="animate-spin opacity-70" />
-            Carregando catálogo...
-          </template>
-          <template v-else>
-            Catálogo disponível
-          </template>
-        </p>
+            <div class="min-w-0">
+              <h1 class="text-2xl font-extrabold tracking-tight text-(--texto-primario) md:text-4xl">
+                {{ tituloExibido }}
+              </h1>
+              <p class="mt-1 flex items-center gap-2 text-sm text-(--texto-fraco) md:text-base">
+                <template v-if="totalProdutos > 0">
+                  <span><strong class="numeros font-semibold text-(--texto-secundario)">{{ totalProdutos.toLocaleString('pt-BR') }}</strong> {{ totalProdutos === 1 ? 'produto' : 'produtos' }}</span>
+                  <span v-if="!cacheCompleto" class="inline-flex items-center gap-1 text-xs">
+                    <RefreshCw :size="12" class="animate-spin" />
+                    atualizando
+                  </span>
+                </template>
+                <template v-else-if="carregando">
+                  <RefreshCw :size="14" class="animate-spin opacity-70" />
+                  Carregando produtos...
+                </template>
+                <template v-else-if="!modoBusca">
+                  Catálogo disponível
+                </template>
+              </p>
+            </div>
+          </div>
 
-        <!-- BUSCA -->
-        <div class="mx-auto mt-7 max-w-2xl">
-          <div class="relative">
-            <Search class="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-(--texto-suave)" :size="20" />
+          <!-- Busca dentro da categoria (a do header busca no site inteiro) -->
+          <div v-if="!modoBusca" class="relative w-full md:max-w-sm">
+            <Search class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-(--texto-suave)" :size="17" />
             <input
               v-model="busca"
               type="search"
               :aria-label="`Buscar em ${titulo}`"
-              placeholder="Buscar produtos, marcas, categorias..."
-              class="h-14 w-full rounded-2xl border border-(--borda-forte) bg-(--bg-cartao) pl-14 pr-14 text-base text-(--texto-primario) outline-none ring-0 transition placeholder:text-(--texto-suave) focus:ring-2"
+              :placeholder="`Buscar em ${titulo}`"
+              class="h-11 w-full rounded-full border border-(--borda-forte) bg-(--bg-cartao) pl-11 pr-10 text-[15px] text-(--texto-primario) shadow-(--sombra-1) outline-none transition placeholder:text-(--texto-suave) focus:ring-4 [&::-webkit-search-cancel-button]:hidden"
               :class="ring"
             >
             <button
               v-if="busca"
               type="button"
               aria-label="Limpar busca"
-              class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-(--texto-suave) transition hover:text-(--texto-primario)"
+              class="absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-(--texto-suave) transition hover:bg-(--bg-elevado) hover:text-(--texto-primario)"
               @click="busca = ''"
             >
-              <X :size="18" />
+              <X :size="16" />
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- ═════ FILTROS ═════ -->
-    <!-- Não é sticky: o HeaderMain já ocupa top-0 com altura variável (72px no
-         mobile, 150px no desktop) e não há como calcular o offset certo sem JS. -->
-    <div v-if="!erro" class="border-b border-(--borda) bg-(--bg-pagina)">
-      <div class="mx-auto flex w-full max-w-7xl flex-col gap-2.5 px-3 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6">
-        <!-- Chips de subcategoria -->
-        <div
-          v-if="tiposDisponiveis.length"
-          class="-mx-1 flex items-center gap-2 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          <button
-            type="button"
-            class="shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-semibold transition"
-            :class="tipoSelecionado === null ? `${botao} text-white shadow-sm` : 'border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario)'"
-            @click="selecionarTipo(null)"
-          >
-            Todos
-          </button>
-          <button
-            v-for="faceta in tiposDisponiveis"
-            :key="faceta.tipo"
-            type="button"
-            class="shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-semibold transition"
-            :class="tipoSelecionado === faceta.tipo ? `${botao} text-white shadow-sm` : 'border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario)'"
-            @click="selecionarTipo(faceta.tipo)"
-          >
-            {{ faceta.tipo }} <span class="opacity-60">({{ faceta.total }})</span>
-          </button>
+    <!-- ═════ FILTROS (grudam embaixo do header) ═════ -->
+    <div
+      v-if="!erro"
+      class="sticky z-30 border-b border-(--borda) bg-(--bg-vidro) backdrop-blur-xl transition-[top] duration-300"
+      style="top: var(--altura-header-visivel, 0px)"
+    >
+      <div class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5 md:px-6 lg:px-8">
+        <div class="trilho -mx-1 flex min-w-0 flex-1 items-center gap-2 overflow-x-auto px-1 py-0.5">
+          <template v-if="tiposDisponiveis.length">
+            <button
+              type="button"
+              class="h-8 shrink-0 whitespace-nowrap rounded-full px-3.5 text-[13px] font-medium transition"
+              :class="tipoSelecionado === null ? `${botao} text-white shadow-sm` : 'border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario)'"
+              @click="selecionarTipo(null)"
+            >
+              Todos
+            </button>
+            <button
+              v-for="faceta in tiposDisponiveis"
+              :key="faceta.tipo"
+              type="button"
+              class="h-8 shrink-0 whitespace-nowrap rounded-full px-3.5 text-[13px] font-medium transition"
+              :class="tipoSelecionado === faceta.tipo ? `${botao} text-white shadow-sm` : 'border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario)'"
+              @click="selecionarTipo(faceta.tipo)"
+            >
+              {{ formatarTipo(faceta.tipo) }} <span class="numeros opacity-60">{{ faceta.total }}</span>
+            </button>
+          </template>
+          <div v-else-if="carregando" class="flex gap-2">
+            <div v-for="n in 5" :key="n" class="h-8 w-24 shrink-0 animate-pulse rounded-full bg-(--bg-elevado)" />
+          </div>
         </div>
-        <div v-else class="h-7.5" />
 
-        <!-- Ordenação + limpar -->
-        <div class="flex shrink-0 items-center justify-end gap-2">
+        <div class="flex shrink-0 items-center gap-1.5">
           <div class="relative">
-            <ListFilter class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-(--texto-suave)" :size="13" />
+            <ListFilter class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-(--texto-suave)" :size="14" />
             <select
               id="ordenar"
               aria-label="Ordenar por"
-              class="h-9 appearance-none rounded-lg border border-(--borda-forte) bg-(--bg-cartao) py-0 pl-7 pr-3 text-xs font-semibold text-(--texto-secundario) outline-none transition focus:ring-2"
+              class="h-8 appearance-none rounded-full border border-(--borda-forte) bg-(--bg-cartao) py-0 pl-8 pr-3 text-[13px] font-medium text-(--texto-secundario) outline-none transition hover:border-(--borda-hover) focus:ring-4"
               :class="ring"
               :value="ordenacao"
               @change="aoMudarOrdenacao"
@@ -216,10 +239,10 @@ onUnmounted(() => {
           <button
             v-if="filtrosAtivos"
             type="button"
-            class="flex h-9 shrink-0 items-center gap-1 rounded-lg px-2.5 text-xs font-semibold text-(--texto-fraco) transition hover:bg-(--bg-elevado) hover:text-(--texto-primario)"
+            class="hidden h-8 shrink-0 items-center gap-1 rounded-full px-3 text-[13px] font-medium text-(--texto-fraco) transition hover:bg-(--bg-elevado) hover:text-(--texto-primario) sm:flex"
             @click="limparFiltros"
           >
-            <X :size="13" />
+            <X :size="14" />
             Limpar
           </button>
         </div>
@@ -227,20 +250,20 @@ onUnmounted(() => {
     </div>
 
     <!-- ═════ ERRO ═════ -->
-    <div v-if="erro" class="flex flex-1 items-center justify-center py-32">
-      <div class="text-center">
-        <p class="text-5xl">
-          😕
-        </p>
-        <h2 class="mt-4 text-xl font-bold text-(--texto-primario)">
-          Erro ao carregar produtos
+    <div v-if="erro" class="flex flex-1 items-center justify-center px-4 py-28">
+      <div class="max-w-sm text-center">
+        <span class="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-(--bg-elevado) text-(--texto-fraco)">
+          <RefreshCw :size="26" />
+        </span>
+        <h2 class="mt-5 text-xl font-bold text-(--texto-primario)">
+          Não conseguimos carregar os produtos
         </h2>
-        <p class="mt-1 text-(--texto-fraco)">
-          Verifique sua conexão e tente novamente.
+        <p class="mt-1.5 text-(--texto-fraco)">
+          Verifique sua conexão e tente de novo.
         </p>
         <button
           type="button"
-          class="mt-6 rounded-xl px-6 py-3 text-white font-bold transition"
+          class="mt-6 rounded-full px-6 py-3 font-semibold text-white transition active:scale-[0.97]"
           :class="botao"
           @click="carregar(1)"
         >
@@ -250,152 +273,126 @@ onUnmounted(() => {
     </div>
 
     <template v-else>
-      <!-- ═════ SKELETON ═════ -->
-      <div v-if="carregando" class="mx-auto w-full max-w-7xl px-3 py-6 md:px-6">
-        <div class="mb-4 flex items-center justify-between">
-          <div class="h-4 w-48 rounded bg-(--bg-elevado) animate-pulse" />
-          <div class="h-4 w-24 rounded bg-(--bg-elevado) animate-pulse" />
-        </div>
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4">
-          <div
-            v-for="n in 24"
-            :key="n"
-            class="flex flex-col overflow-hidden rounded-2xl bg-(--bg-cartao) border border-(--borda)"
-          >
-            <div class="h-36 bg-(--bg-elevado) animate-pulse" />
-            <div class="p-3 flex flex-col gap-2">
-              <div class="h-3 rounded bg-(--borda) animate-pulse w-full" />
-              <div class="h-3 rounded bg-(--borda) animate-pulse w-3/4" />
-              <div class="h-5 rounded bg-(--borda) animate-pulse w-1/2 mt-1" />
-              <div class="h-8 rounded-xl bg-(--bg-elevado) animate-pulse mt-2" />
-            </div>
+      <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:px-6 lg:px-8">
+        <!-- ═════ SKELETON ═════ -->
+        <div v-if="carregando" class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div v-for="n in 18" :key="n" class="rounded-2xl border border-(--borda) bg-(--bg-cartao) p-2.5">
+            <div class="aspect-square animate-pulse rounded-xl bg-(--bg-elevado)" />
+            <div class="mt-3 h-3 w-full animate-pulse rounded bg-(--bg-elevado)" />
+            <div class="mt-2 h-3 w-2/3 animate-pulse rounded bg-(--bg-elevado)" />
+            <div class="mt-4 h-6 w-1/2 animate-pulse rounded bg-(--bg-elevado)" />
+            <div class="mt-3 h-10 animate-pulse rounded-xl bg-(--bg-elevado)" />
           </div>
         </div>
-      </div>
 
-      <!-- ═════ GRID ═════ -->
-      <div v-else class="mx-auto w-full max-w-7xl px-3 py-6 md:px-6">
-        <div class="mb-4 flex items-center justify-between">
-          <p class="text-sm text-(--texto-fraco) flex items-center gap-2">
-            <span class="font-semibold text-(--texto-primario)">{{ totalProdutos.toLocaleString('pt-BR') }}</span>
-            produtos
-            <template v-if="busca">
-              para "<span :class="texto">{{ busca }}</span>"
-            </template>
-            <template v-if="tipoSelecionado">
-              em <span :class="texto">{{ tipoSelecionado }}</span>
-            </template>
-            <span
-              v-if="!cacheCompleto"
-              class="inline-flex items-center gap-1 rounded-full border border-(--borda) bg-(--bg-elevado) px-2 py-0.5 text-[11px] font-medium"
-              :class="badge"
-            >
-              <RefreshCw :size="10" class="animate-spin" />
-              atualizando
+        <template v-else>
+          <div class="mb-4 flex items-center justify-between gap-3 text-sm text-(--texto-fraco)">
+            <p class="min-w-0 truncate">
+              <template v-if="termoBusca && !modoBusca">
+                Resultados para "<span class="font-medium text-(--texto-primario)">{{ termoBusca }}</span>"
+              </template>
+              <template v-if="tipoSelecionado">
+                {{ termoBusca && !modoBusca ? 'em' : 'Mostrando' }} <span class="font-medium text-(--texto-primario)">{{ formatarTipo(tipoSelecionado) }}</span>
+              </template>
+            </p>
+            <p v-if="totalPaginas > 1" class="numeros shrink-0">
+              Página {{ paginaAtual }} de {{ totalPaginas }}
+            </p>
+          </div>
+
+          <!-- Sem resultado -->
+          <div v-if="produtos.length === 0" class="flex flex-col items-center px-4 py-20 text-center">
+            <span class="grid h-16 w-16 place-items-center rounded-2xl bg-(--bg-elevado) text-(--texto-fraco)">
+              <SearchX :size="28" />
             </span>
-          </p>
-          <p class="text-sm text-(--texto-suave)">
-            Página {{ paginaAtual }} de {{ totalPaginas }}
-          </p>
-        </div>
-
-        <!-- Sem resultado -->
-        <div v-if="produtos.length === 0" class="flex flex-col items-center py-24 text-(--texto-suave)">
-          <Search :size="48" class="mb-4 opacity-30" />
-          <p class="text-lg font-medium text-(--texto-esmaecido)">
-            Nenhum produto encontrado
-          </p>
-          <p class="mt-1 text-sm">
-            {{ filtrosAtivos ? 'Tente outro termo ou remova alguns filtros' : 'Tente outro termo de busca' }}
-          </p>
-          <button
-            v-if="filtrosAtivos"
-            type="button"
-            class="mt-4 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition"
-            :class="botao"
-            @click="limparFiltros"
-          >
-            Limpar filtros
-          </button>
-        </div>
-
-        <div
-          v-else
-          class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 md:gap-4"
-        >
-          <CardProduto
-            v-for="produto in produtos"
-            :key="produto.id"
-            :produto="produto"
-            :hover-card="hoverCard"
-          />
-        </div>
-
-        <!-- ═════ PAGINAÇÃO ═════ -->
-        <nav v-if="totalPaginas > 1" class="mt-10 flex flex-col items-center gap-3" aria-label="Paginação">
-          <div class="flex items-center gap-1">
+            <p class="mt-5 text-lg font-semibold text-(--texto-primario)">
+              {{ modoBusca && !termoBusca ? 'O que você procura hoje?' : 'Nenhum produto encontrado' }}
+            </p>
+            <p class="mt-1 max-w-sm text-sm text-(--texto-fraco)">
+              {{ modoBusca && !termoBusca
+                ? 'Use a busca lá em cima — dá pra procurar por produto, marca ou tipo.'
+                : filtrosAtivos ? 'Tente outro termo ou remova alguns filtros.' : 'Tente um termo mais geral.' }}
+            </p>
             <button
+              v-if="filtrosAtivos && !modoBusca"
               type="button"
-              aria-label="Página anterior"
-              :disabled="paginaAtual === 1"
-              class="flex h-9 w-9 items-center justify-center rounded-xl border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario) disabled:opacity-30 disabled:cursor-not-allowed transition"
-              @click="irParaPagina(paginaAtual - 1)"
+              class="mt-6 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition active:scale-[0.97]"
+              :class="botao"
+              @click="limparFiltros"
             >
-              <ChevronLeft :size="16" />
-            </button>
-
-            <template v-for="(p, idx) in paginasVisiveis" :key="idx">
-              <span
-                v-if="p === '...'"
-                class="flex h-9 w-9 items-center justify-center text-(--texto-suave) text-sm select-none"
-              >…</span>
-              <button
-                v-else
-                type="button"
-                :aria-current="p === paginaAtual ? 'page' : undefined"
-                class="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-medium transition"
-                :class="p === paginaAtual
-                  ? `${botao} text-white shadow`
-                  : 'border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario)'"
-                @click="irParaPagina(p as number)"
-              >
-                {{ p }}
-              </button>
-            </template>
-
-            <button
-              type="button"
-              aria-label="Próxima página"
-              :disabled="paginaAtual === totalPaginas"
-              class="flex h-9 w-9 items-center justify-center rounded-xl border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario) disabled:opacity-30 disabled:cursor-not-allowed transition"
-              @click="irParaPagina(paginaAtual + 1)"
-            >
-              <ChevronRight :size="16" />
+              Limpar filtros
             </button>
           </div>
 
-          <p class="text-xs text-(--texto-suave)">
-            {{ intervaloExibido.de.toLocaleString('pt-BR') }}
-            –
-            {{ intervaloExibido.ate.toLocaleString('pt-BR') }}
-            de
-            {{ totalProdutos.toLocaleString('pt-BR') }} produtos
-          </p>
-        </nav>
-      </div>
+          <div v-else class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6">
+            <CardProduto
+              v-for="produto in produtos"
+              :key="produto.id"
+              :produto="produto"
+              :hover-card="hoverCard"
+            />
+          </div>
+
+          <!-- ═════ PAGINAÇÃO ═════ -->
+          <nav v-if="totalPaginas > 1" class="mt-12 flex flex-col items-center gap-3" aria-label="Paginação">
+            <div class="flex items-center gap-1">
+              <button
+                type="button"
+                aria-label="Página anterior"
+                :disabled="paginaAtual === 1"
+                class="grid h-10 w-10 place-items-center rounded-full border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) transition hover:border-(--borda-hover) hover:text-(--texto-primario) disabled:cursor-not-allowed disabled:opacity-30"
+                @click="irParaPagina(paginaAtual - 1)"
+              >
+                <ChevronLeft :size="17" />
+              </button>
+
+              <template v-for="(p, idx) in paginasVisiveis" :key="idx">
+                <span v-if="p === '...'" class="grid h-10 w-8 select-none place-items-center text-sm text-(--texto-suave)">…</span>
+                <button
+                  v-else
+                  type="button"
+                  :aria-current="p === paginaAtual ? 'page' : undefined"
+                  class="numeros grid h-10 min-w-10 place-items-center rounded-full px-2 text-sm font-medium transition"
+                  :class="p === paginaAtual
+                    ? `${botao} text-white shadow-sm`
+                    : 'text-(--texto-esmaecido) hover:bg-(--bg-elevado) hover:text-(--texto-primario)'"
+                  @click="irParaPagina(p as number)"
+                >
+                  {{ p }}
+                </button>
+              </template>
+
+              <button
+                type="button"
+                aria-label="Próxima página"
+                :disabled="paginaAtual === totalPaginas"
+                class="grid h-10 w-10 place-items-center rounded-full border border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) transition hover:border-(--borda-hover) hover:text-(--texto-primario) disabled:cursor-not-allowed disabled:opacity-30"
+                @click="irParaPagina(paginaAtual + 1)"
+              >
+                <ChevronRight :size="17" />
+              </button>
+            </div>
+
+            <p class="numeros text-xs text-(--texto-suave)">
+              {{ intervaloExibido.de.toLocaleString('pt-BR') }}–{{ intervaloExibido.ate.toLocaleString('pt-BR') }}
+              de {{ totalProdutos.toLocaleString('pt-BR') }} produtos
+            </p>
+          </nav>
+        </template>
+      </main>
     </template>
 
     <!-- ═════ VOLTAR AO TOPO ═════ -->
-    <Transition name="fade">
+    <Transition name="subir">
       <button
         v-if="mostrarTopo"
         type="button"
         aria-label="Voltar ao topo"
-        class="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-xl active:scale-90 transition-all"
-        :class="botao"
+        class="fixed bottom-6 left-1/2 z-40 flex h-10 -translate-x-1/2 items-center gap-1.5 rounded-full border border-(--borda) bg-(--bg-cartao) px-4 text-sm font-medium text-(--texto-primario) shadow-(--sombra-3) transition hover:border-(--borda-forte) active:scale-95"
         @click="scrollTopo"
       >
-        <ChevronUp :size="22" />
+        <ArrowUp :size="16" />
+        Voltar ao topo
       </button>
     </Transition>
 
@@ -404,6 +401,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; transform: scale(0.8); }
+.subir-enter-active, .subir-leave-active { transition: opacity 0.2s ease, transform 0.2s ease; }
+.subir-enter-from, .subir-leave-to { opacity: 0; transform: translate(-50%, 12px); }
 </style>

@@ -75,7 +75,7 @@ useHead({
             'alternateName': ['Alô Pará', 'Alo Para'],
             'url': SITE_URL,
             'logo': `${SITE_URL}/favicon.png`,
-            'image': `${SITE_URL}/og-image.png`,
+            'image': `${SITE_URL}/og-image.jpg`,
             'telephone': '+5594991923141',
             'priceRange': '$$',
             'sameAs': [

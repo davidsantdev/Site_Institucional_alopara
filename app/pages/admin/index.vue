@@ -25,7 +25,7 @@ import {
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { imagemErro, imgSrc } from '~/composables/useCatalogo'
-import { formatarReais } from '~/data/composable/UseCarrinho'
+import { formatarReais } from '~/composables/useFormatacao'
 
 // Página de uso interno — nunca deve ser indexada nem seguida pelo Google.
 useSeoMeta({
@@ -133,7 +133,7 @@ const LABEL_CATEGORIA: Record<string, string> = {
   limpeza: 'Limpeza',
   perfumaria: 'Perfumaria',
   frutas: 'Hortifruti',
-  carnes: 'Carnes',
+  carnes: 'Carnes e frios',
 }
 
 async function carregarStats() {

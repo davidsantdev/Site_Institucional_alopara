@@ -66,8 +66,10 @@ export default defineNuxtConfig({
   // e ainda dilui o crawl budget se ficar listado ao lado das páginas reais.
   // /pesquisa-satisfacao é a pesquisa interna dos colaboradores — link enviado
   // direto a eles, nunca deve aparecer pra ninguém via busca.
+  // /busca é a página de resultados da busca do site — conteúdo infinito e
+  // "fino" pro Google (a própria página também manda noindex).
   sitemap: {
-    exclude: ['/Carrinho', '/pesquisa-satisfacao'],
+    exclude: ['/Carrinho', '/pesquisa-satisfacao', '/busca'],
   },
 
   // @nuxtjs/robots v5 usa `groups`, não `rules` (a chave antiga também era ignorada).
@@ -114,6 +116,11 @@ export default defineNuxtConfig({
     // Painel de admin: depende de sessão (cookie) — nunca pode ser prerenderizado
     // nem cacheado, ou uma pessoa veria a tela logada de outra.
     '/admin/**': { cache: false, prerender: false },
+
+    // A antiga página de vinhos tinha uma lista fixa, digitada à mão, com preço
+    // velho — quem chega pelo link antigo cai nos vinhos do catálogo de verdade.
+    '/Vinhos': { redirect: { to: '/bebidas?q=vinho', statusCode: 301 } },
+    '/vinhos': { redirect: { to: '/bebidas?q=vinho', statusCode: 301 } },
   },
 
   imports: {
@@ -156,13 +163,16 @@ export default defineNuxtConfig({
         { property: 'og:type', content: 'website' },
         { property: 'og:locale', content: 'pt_BR' },
         { property: 'og:site_name', content: 'Supermercado Alô Pará' },
-        { property: 'og:image', content: 'https://alopara.com.br/og-image.png' },
-        { property: 'og:image:width', content: '1920' },
-        { property: 'og:image:height', content: '1080' },
+        // JPG de ~100 KB em 1200x630 — o PNG antigo tinha 3,8 MB, acima do que
+        // o WhatsApp aceita pra montar a prévia do link (saía sem imagem).
+        { property: 'og:image', content: 'https://alopara.com.br/og-image.jpg' },
+        { property: 'og:image:type', content: 'image/jpeg' },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
         { property: 'og:image:alt', content: 'Equipe do Supermercado Alô Pará' },
 
         { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:image', content: 'https://alopara.com.br/og-image.png' },
+        { name: 'twitter:image', content: 'https://alopara.com.br/og-image.jpg' },
 
         { name: 'google', content: 'notranslate' },
       ],

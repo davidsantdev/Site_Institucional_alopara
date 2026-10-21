@@ -1,5 +1,7 @@
-import { computed, watch } from 'vue'
+import type { Ref } from 'vue'
+import { computed, effectScope, watch } from 'vue'
 import { toast } from 'vue-sonner'
+import { formatarNome, formatarReais } from '~/composables/useFormatacao'
 
 // Os produtos vêm de fontes diferentes (categorias, ofertas, cosmos) e nem
 // todas usam o mesmo nome de campo pra preço — algumas com acento, outras
@@ -15,11 +17,6 @@ export function subtotalItem(item: any): number {
   const quantidade = item?.quantidade ?? 1
   const centavos = Math.round(precoUnitario(item) * 100)
   return Math.round(centavos * quantidade) / 100
-}
-
-/** 6.9 → "6,90" — o carrinho e a mensagem do WhatsApp mostram com vírgula. */
-export function formatarReais(valor: number): string {
-  return valor.toFixed(2).replace('.', ',')
 }
 
 // ═════════════ PRODUTO VENDIDO POR PESO ═════════════
@@ -72,34 +69,51 @@ export function restaurarItens(anteriores: any[], atuais: any[]): any[] {
   return [...anteriores.filter(item => !atuais.some(atual => atual.nome === item.nome)), ...atuais]
 }
 
-export function useCarrinho() {
-  const carrinho = useState<any[]>('carrinho', () => [])
+/**
+ * Liga a persistência UMA vez por carregamento de página. Antes, cada
+ * `useCarrinho()` (um por card de produto!) registrava o próprio watcher
+ * profundo — 40 cards na tela = 40 regravações do carrinho inteiro no
+ * localStorage a cada clique. O escopo destacado mantém o watcher vivo mesmo
+ * quando o componente que o criou sai da tela.
+ */
+let persistenciaLigada = false
 
-  if (import.meta.client && carrinho.value.length === 0) {
+function ligarPersistencia(carrinho: Ref<any[]>, carregado: Ref<boolean>) {
+  if (!import.meta.client || persistenciaLigada)
+    return
+  persistenciaLigada = true
+
+  // Só depois da hidratação: o servidor não tem localStorage, então ler antes
+  // faria a tela do cliente nascer diferente da do servidor (o contador do
+  // carrinho "piscava"). Quem precisa saber se já carregou usa `carregado`.
+  onNuxtReady(() => {
     try {
-      const salvo = localStorage.getItem('carrinho')
-      if (salvo)
-        carrinho.value = JSON.parse(salvo)
+      const salvo = JSON.parse(localStorage.getItem('carrinho') ?? '[]')
+      if (Array.isArray(salvo) && salvo.length && carrinho.value.length === 0)
+        carrinho.value = salvo
     }
     catch {
       // localStorage indisponível (modo privado, cookies bloqueados) — segue com carrinho vazio.
     }
-  }
+    carregado.value = true
 
-  watch(
-    carrinho,
-    () => {
-      if (import.meta.client) {
+    effectScope(true).run(() => {
+      watch(carrinho, () => {
         try {
           localStorage.setItem('carrinho', JSON.stringify(carrinho.value))
         }
         catch {
           // Sem storage disponível: o carrinho continua funcionando na sessão atual.
         }
-      }
-    },
-    { deep: true },
-  )
+      }, { deep: true })
+    })
+  })
+}
+
+export function useCarrinho() {
+  const carrinho = useState<any[]>('carrinho', () => [])
+  const carregado = useState('carrinho-carregado', () => false)
+  ligarPersistencia(carrinho, carregado)
 
   const totalItens = computed(() => {
     if (carrinho.value.length === 0) {
@@ -108,7 +122,17 @@ export function useCarrinho() {
     return { total: carrinho.value.length, vazio: false, compra: true }
   })
 
-  function adicionarCarrinho(produto: any, quantidade: number = 1) {
+  /** Soma em centavos inteiros — somar reais em ponto flutuante errava o centavo. */
+  const valorTotal = computed(() =>
+    carrinho.value.reduce((acc, item) => acc + Math.round(subtotalItem(item) * 100), 0) / 100,
+  )
+
+  /** Quanto deste produto já está no carrinho (0 se não está) — em kg no produto pesado. */
+  function quantidadeDe(nome: string): number {
+    return carrinho.value.find((p: any) => p.nome === nome)?.quantidade ?? 0
+  }
+
+  function adicionarCarrinho(produto: any, quantidade: number = 1, opcoes: { silencioso?: boolean } = {}) {
     const existente = carrinho.value.find((p: any) => p.nome === produto.nome)
     if (existente) {
       existente.quantidade = somarQuantidade(existente.quantidade, quantidade, Boolean(produto.pesavel))
@@ -117,9 +141,12 @@ export function useCarrinho() {
       carrinho.value.push({ ...produto, quantidade })
     }
 
-    toast.success('Adicionado ao carrinho', {
-      description: produto.pesavel ? `${produto.nome} — ${formatarPeso(quantidade)}` : produto.nome,
-    })
+    if (!opcoes.silencioso) {
+      toast.success('Adicionado ao carrinho', {
+        description: produto.pesavel ? `${formatarNome(produto.nome)} — ${formatarPeso(quantidade)}` : formatarNome(produto.nome),
+        action: { label: 'Ver carrinho', onClick: () => navigateTo('/Carrinho') },
+      })
+    }
 
     // GA4 Ecommerce — faltava por completo: o Analytics só via o clique final
     // no WhatsApp, nunca o "adicionar ao carrinho" (é aqui que TODO botão de
@@ -136,6 +163,35 @@ export function useCarrinho() {
         quantity: quantidade,
       }],
     })
+  }
+
+  /**
+   * Contador − / + direto no card: o primeiro "+" adiciona (com aviso), os
+   * seguintes só mudam a quantidade (sem um aviso por clique). Abaixo do
+   * mínimo o item sai do carrinho.
+   */
+  function alterarQuantidade(produto: any, sentido: 1 | -1) {
+    const pesavel = Boolean(produto.pesavel)
+    const item = carrinho.value.find((p: any) => p.nome === produto.nome)
+    const passo = pesavel ? PESO.PASSO_GRAMAS / 1000 : 1
+
+    if (sentido > 0) {
+      const maximo = pesavel ? PESO.MAX_GRAMAS / 1000 : 99
+      if (!item)
+        adicionarCarrinho(produto, pesavel ? PESO.PADRAO_GRAMAS / 1000 : 1)
+      else if (item.quantidade < maximo)
+        adicionarCarrinho(produto, Math.min(passo, maximo - item.quantidade), { silencioso: true })
+      return
+    }
+
+    if (!item)
+      return
+    const minimo = pesavel ? PESO.MIN_GRAMAS / 1000 : 1
+    const nova = pesavel ? Math.round((item.quantidade - passo) * 1000) / 1000 : item.quantidade - 1
+    if (nova < minimo)
+      carrinho.value = carrinho.value.filter((p: any) => p.nome !== produto.nome)
+    else
+      item.quantidade = nova
   }
 
   function removeItem(nome: string) {
@@ -172,5 +228,5 @@ export function useCarrinho() {
     })
   }
 
-  return { carrinho, adicionarCarrinho, removeItem, esvaziarCarrinho, concluirPedido, totalItens }
+  return { carrinho, carregado, adicionarCarrinho, alterarQuantidade, quantidadeDe, removeItem, esvaziarCarrinho, concluirPedido, totalItens, valorTotal }
 }

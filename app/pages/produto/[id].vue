@@ -6,13 +6,15 @@
  * responde 404 de verdade (a página mostra o aviso e sai do índice).
  */
 import type { Produto } from '~/composables/useCatalogo'
-import { Check, ChevronRight, Home, PackageX, ShoppingCart } from 'lucide-vue-next'
+import { Check, ChevronRight, CreditCard, MessageCircle, Minus, PackageX, Plus, ShoppingCart } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import CardProduto from '~/components/Layout/CardProduto.vue'
 import Footer from '~/components/Layout/Footer.vue'
 import FotoProduto from '~/components/Layout/FotoProduto.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
+import Preco from '~/components/Layout/Preco.vue'
 import { linkProduto, percentualDesconto } from '~/composables/useCatalogo'
+import { formatarNome, formatarReais, formatarTipo } from '~/composables/useFormatacao'
 import { formatarPeso, PESO, precoUnitario, rotuloQuantidade, subtotalItem, useCarrinho } from '~/data/composable/UseCarrinho'
 
 const SITE_URL = 'https://alopara.com.br'
@@ -23,8 +25,8 @@ const CATEGORIAS: Record<string, { titulo: string, rota: string }> = {
   bebidas: { titulo: 'Bebidas', rota: '/bebidas' },
   limpeza: { titulo: 'Limpeza', rota: '/limpeza' },
   perfumaria: { titulo: 'Perfumaria', rota: '/perfumaria' },
-  frutas: { titulo: 'Frutas & Verduras', rota: '/frutas' },
-  carnes: { titulo: 'Carnes & Aves', rota: '/carnes' },
+  frutas: { titulo: 'Hortifruti', rota: '/frutas' },
+  carnes: { titulo: 'Carnes e frios', rota: '/carnes' },
 }
 
 interface RespostaProduto {
@@ -34,7 +36,7 @@ interface RespostaProduto {
 }
 
 const route = useRoute()
-const { carrinho, adicionarCarrinho } = useCarrinho()
+const { adicionarCarrinho, quantidadeDe, carregado } = useCarrinho()
 
 const { data, error } = await useFetch<RespostaProduto>(`/api/produto/${route.params.id}`, {
   key: `produto-${route.params.id}`,
@@ -43,6 +45,7 @@ const { data, error } = await useFetch<RespostaProduto>(`/api/produto/${route.pa
 const produto = computed(() => data.value?.produto ?? null)
 const similares = computed(() => data.value?.similares ?? [])
 const categoria = computed(() => (data.value?.categoria ? CATEGORIAS[data.value.categoria] : null) ?? null)
+const nome = computed(() => produto.value ? formatarNome(produto.value.nome) : '')
 
 // ═════════════ URL CANÔNICA / STATUS ═════════════
 
@@ -60,16 +63,16 @@ else if (import.meta.server) {
 
 // ═════════════ SEO ═════════════
 
-const tituloPagina = computed(() => produto.value ? `${produto.value.nome.trim()} | Alô Pará` : 'Produto indisponível | Alô Pará')
+const tituloPagina = computed(() => produto.value ? `${nome.value} | Alô Pará` : 'Produto indisponível | Alô Pará')
 const descricaoPagina = computed(() => produto.value
-  ? `${produto.value.nome.trim()} por R$ ${produto.value.preco2} no Supermercado Alô Pará, em Novo Repartimento - PA. Compre online.`
+  ? `${nome.value} por R$ ${formatarReais(produto.value.preco2)}${produto.value.pesavel ? ' o quilo' : ''} no Supermercado Alô Pará, em Novo Repartimento - PA. Compre online.`
   : 'Este produto não está disponível no momento no Supermercado Alô Pará.')
 
 /** Foto pro compartilhamento: só a confirmada (a "adivinhada" pode nem existir) — senão a imagem padrão do site. */
 const imagemCompartilhamento = computed(() => {
   const img = produto.value?.imagemReal ? produto.value.img : ''
   if (!img)
-    return `${SITE_URL}/og-image.png`
+    return `${SITE_URL}/og-image.jpg`
   return img.startsWith('/') ? `${SITE_URL}${img}` : img
 })
 
@@ -90,9 +93,9 @@ useHead(computed(() => ({
         innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'Product',
-          'name': produto.value.nome.trim(),
+          'name': nome.value,
           'image': imagemCompartilhamento.value,
-          'category': produto.value.tipo,
+          'category': formatarTipo(produto.value.tipo),
           'offers': {
             '@type': 'Offer',
             'url': `${SITE_URL}${linkProduto(produto.value)}`,
@@ -122,6 +125,8 @@ useHead(computed(() => ({
 const OPCOES_GRAMAS = [250, 500, 750, 1000, 1500, 2000]
 
 const pesavel = computed(() => Boolean(produto.value?.pesavel))
+const desconto = computed(() => produto.value?.emPromocao ? percentualDesconto(produto.value.precoOriginal, produto.value.preco2) : 0)
+const economia = computed(() => produto.value?.emPromocao ? Number(produto.value.precoOriginal) - Number(produto.value.preco2) : 0)
 /** Produto comum: quantas unidades. */
 const quantidade = ref(1)
 /** Produto pesado: quantas gramas. */
@@ -135,7 +140,7 @@ const quantidadeEscolhida = computed(() => pesavel.value ? gramas.value / 1000 :
 const totalEscolhido = computed(() => produto.value ? subtotalItem({ ...produto.value, quantidade: quantidadeEscolhida.value }) : 0)
 
 /** Quanto desse produto já está no carrinho (o carrinho é compartilhado e persiste, então isto é sempre verdade). */
-const noCarrinho = computed(() => carrinho.value.find((i: any) => i.nome === produto.value?.nome)?.quantidade ?? 0)
+const noCarrinho = computed(() => carregado.value && produto.value ? quantidadeDe(produto.value.nome) : 0)
 
 /** Arredonda pra 10 g (a balança não mede menos que isso) e segura entre o mínimo e o máximo. */
 function ajustarGramas(valor: number) {
@@ -192,15 +197,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-(--bg-pagina) flex flex-col font-sans">
+  <div class="flex min-h-screen flex-col bg-(--bg-pagina) font-sans">
     <HeaderMain />
 
-    <main class="mx-auto w-full max-w-7xl flex-1 px-3 py-6 md:px-6 md:py-10">
+    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-6 md:px-6 md:py-10 lg:px-8">
       <template v-if="produto">
         <!-- ═════ CAMINHO ═════ -->
-        <nav aria-label="Caminho" class="mb-5 flex flex-wrap items-center gap-1 text-xs text-(--texto-fraco)">
-          <NuxtLink to="/" class="flex items-center gap-1 transition hover:text-(--texto-primario)">
-            <Home :size="13" />
+        <nav aria-label="Caminho" class="mb-6 flex flex-wrap items-center gap-1 text-xs text-(--texto-fraco)">
+          <NuxtLink to="/" class="transition hover:text-(--texto-primario)">
             Início
           </NuxtLink>
           <template v-if="categoria">
@@ -211,142 +215,165 @@ onMounted(() => {
             <template v-if="produto.tipo">
               <ChevronRight :size="12" class="opacity-50" />
               <NuxtLink :to="{ path: categoria.rota, query: { tipo: produto.tipo } }" class="transition hover:text-(--texto-primario)">
-                {{ produto.tipo }}
+                {{ formatarTipo(produto.tipo) }}
               </NuxtLink>
             </template>
           </template>
           <ChevronRight :size="12" class="opacity-50" />
-          <span class="line-clamp-1 font-semibold text-(--texto-secundario)" aria-current="page">{{ produto.nome }}</span>
+          <span class="line-clamp-1 font-medium text-(--texto-secundario)" aria-current="page">{{ nome }}</span>
         </nav>
 
         <!-- ═════ PRODUTO ═════ -->
-        <section class="grid gap-6 md:grid-cols-2 md:gap-10">
+        <section class="grid gap-6 md:grid-cols-2 md:gap-12">
           <!-- Fundo claro fixo: a foto do produto é sempre em fundo branco, até no tema escuro. -->
-          <div class="relative flex min-h-76 items-center justify-center rounded-3xl border border-(--borda) bg-[#fafafa] p-6 md:min-h-112 md:p-10">
-            <span
-              v-if="produto.emPromocao"
-              class="absolute left-4 top-4 rounded-full bg-red-600 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-white shadow"
-            >
-              -{{ percentualDesconto(produto.precoOriginal, produto.preco2) }}%
-            </span>
-            <FotoProduto
-              :produto="produto"
-              img-class="h-64 w-full object-contain drop-shadow-lg md:h-96"
-              emoji-class="text-9xl md:text-[12rem]"
-            />
+          <div class="md:sticky md:top-[calc(var(--altura-header-visivel,0px)+1.5rem)] md:self-start">
+            <div class="relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl border border-(--borda) bg-(--bg-foto) p-8 md:p-12">
+              <span
+                v-if="desconto > 0"
+                class="numeros absolute left-4 top-4 rounded-lg bg-red-600 px-2.5 py-1 text-sm font-bold text-white shadow"
+              >
+                -{{ desconto }}%
+              </span>
+              <FotoProduto
+                :produto="produto"
+                img-class="h-full w-full object-contain drop-shadow-md"
+                emoji-class="text-[9rem] md:text-[12rem]"
+              />
+            </div>
           </div>
 
           <div class="flex flex-col">
-            <span v-if="produto.tipo" class="text-[11px] font-bold uppercase tracking-widest text-red-500">{{ produto.tipo }}</span>
-            <h1 class="mt-1 text-2xl font-black leading-tight tracking-tight text-(--texto-primario) md:text-4xl">
-              {{ produto.nome }}
+            <NuxtLink
+              v-if="produto.tipo && categoria"
+              :to="{ path: categoria.rota, query: { tipo: produto.tipo } }"
+              class="self-start text-xs font-semibold uppercase tracking-wide text-red-600 hover:underline"
+            >
+              {{ formatarTipo(produto.tipo) }}
+            </NuxtLink>
+            <h1 class="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-(--texto-primario) md:text-[2.5rem]">
+              {{ nome }}
             </h1>
 
-            <div class="mt-5">
-              <template v-if="produto.emPromocao">
-                <p class="text-sm text-(--texto-fraco)">
-                  Preço normal: <span class="line-through">R$ {{ produto.precoOriginal }}</span>{{ pesavel ? '/kg' : '' }}
+            <div class="mt-6 rounded-3xl border border-(--borda) bg-(--bg-cartao) p-5 shadow-(--sombra-1) md:p-6">
+              <div v-if="produto.emPromocao" class="mb-2 flex flex-wrap items-center gap-2 text-sm">
+                <span class="rounded-md bg-(--clube-fundo) px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-(--clube)">Preço de clube</span>
+                <span class="numeros text-(--texto-fraco)">de <span class="line-through">R$ {{ formatarReais(produto.precoOriginal) }}</span></span>
+                <span v-if="economia > 0" class="numeros font-semibold text-(--clube)">economize R$ {{ formatarReais(economia) }}</span>
+              </div>
+              <Preco :valor="produto.preco2" :por-kg="pesavel" class="text-5xl" />
+              <p v-if="pesavel" class="mt-2 text-sm text-(--texto-fraco)">
+                Preço por quilo — você escolhe quantas gramas quer.
+              </p>
+
+              <!-- Produto pesado: a pessoa escolhe quantas gramas quer (o preço acima é por quilo). -->
+              <div v-if="pesavel" class="mt-5">
+                <p class="mb-2 text-sm font-semibold text-(--texto-primario)">
+                  Quanto você quer?
                 </p>
-                <span class="block text-[11px] font-black uppercase tracking-wide text-emerald-500">Preço do clube</span>
-              </template>
-              <p class="text-5xl font-extrabold text-(--preco)">
-                R$ {{ produto.preco2 }}<span v-if="pesavel" class="ml-1 text-xl font-bold text-(--texto-fraco)">/kg</span>
-              </p>
-            </div>
-
-            <!-- Produto pesado: a pessoa escolhe quantas gramas quer (o preço acima é por quilo). -->
-            <div v-if="pesavel" class="mt-6">
-              <p class="mb-2 text-sm font-bold text-(--texto-primario)">
-                Quanto você quer?
-              </p>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="g in OPCOES_GRAMAS"
-                  :key="g"
-                  type="button"
-                  class="rounded-full border px-3.5 py-1.5 text-sm font-semibold transition"
-                  :class="gramas === g ? 'border-red-600 bg-red-600 text-white' : 'border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario)'"
-                  @click="ajustarGramas(g)"
-                >
-                  {{ formatarPeso(g / 1000) }}
-                </button>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-3" :class="pesavel ? 'mt-4' : 'mt-6'">
-              <div class="flex items-center gap-1 rounded-xl border border-(--borda-forte) bg-(--bg-elevado) p-1">
-                <button
-                  type="button"
-                  aria-label="Diminuir quantidade"
-                  class="flex h-10 w-10 items-center justify-center rounded-lg text-lg text-(--texto-primario) transition hover:bg-(--borda-forte)"
-                  @click="diminuir"
-                >
-                  −
-                </button>
-                <label v-if="pesavel" class="flex items-center">
-                  <input
-                    :value="gramas"
-                    type="number"
-                    inputmode="numeric"
-                    aria-label="Gramas"
-                    :min="PESO.MIN_GRAMAS"
-                    :max="PESO.MAX_GRAMAS"
-                    step="50"
-                    class="w-16 bg-transparent text-center text-lg font-bold text-(--texto-primario) outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                    @change="aoDigitarGramas"
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    v-for="g in OPCOES_GRAMAS"
+                    :key="g"
+                    type="button"
+                    class="numeros h-9 rounded-full border px-3.5 text-sm font-medium transition"
+                    :class="gramas === g ? 'border-red-600 bg-red-600 text-white' : 'border-(--borda-forte) bg-(--bg-cartao) text-(--texto-esmaecido) hover:border-(--borda-hover) hover:text-(--texto-primario)'"
+                    @click="ajustarGramas(g)"
                   >
-                  <span class="pr-1 text-sm font-bold text-(--texto-fraco)">g</span>
-                </label>
-                <span v-else class="min-w-8 text-center text-lg font-bold text-(--texto-primario)">{{ quantidade }}</span>
+                    {{ formatarPeso(g / 1000) }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="mt-5 flex items-center gap-3">
+                <div class="flex h-12 items-center rounded-xl border border-(--borda-forte)">
+                  <button
+                    type="button"
+                    aria-label="Diminuir quantidade"
+                    class="grid h-12 w-11 place-items-center rounded-l-xl text-(--texto-primario) transition hover:bg-(--bg-elevado)"
+                    @click="diminuir"
+                  >
+                    <Minus :size="17" />
+                  </button>
+                  <label v-if="pesavel" class="flex items-center">
+                    <input
+                      :value="gramas"
+                      type="number"
+                      inputmode="numeric"
+                      aria-label="Gramas"
+                      :min="PESO.MIN_GRAMAS"
+                      :max="PESO.MAX_GRAMAS"
+                      step="50"
+                      class="numeros w-16 bg-transparent text-center text-lg font-bold text-(--texto-primario) outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      @change="aoDigitarGramas"
+                    >
+                    <span class="pr-1 text-sm font-semibold text-(--texto-fraco)">g</span>
+                  </label>
+                  <span v-else class="numeros min-w-9 text-center text-lg font-bold text-(--texto-primario)">{{ quantidade }}</span>
+                  <button
+                    type="button"
+                    aria-label="Aumentar quantidade"
+                    class="grid h-12 w-11 place-items-center rounded-r-xl text-(--texto-primario) transition hover:bg-(--bg-elevado)"
+                    @click="aumentar"
+                  >
+                    <Plus :size="17" />
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  aria-label="Aumentar quantidade"
-                  class="flex h-10 w-10 items-center justify-center rounded-lg text-lg text-(--texto-primario) transition hover:bg-(--borda-forte)"
-                  @click="aumentar"
+                  class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl px-6 text-base font-semibold text-white shadow-sm transition-all active:scale-[0.98]"
+                  :class="adicionado ? 'bg-emerald-600 shadow-emerald-900/20' : 'bg-red-600 shadow-red-900/20 hover:bg-red-700'"
+                  @click="adicionar"
                 >
-                  +
+                  <component :is="adicionado ? Check : ShoppingCart" :size="19" />
+                  {{ adicionado ? 'Adicionado' : 'Adicionar ao carrinho' }}
                 </button>
               </div>
 
-              <button
-                type="button"
-                class="flex flex-1 items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-base font-bold text-white shadow-lg transition-all active:scale-95 md:max-w-xs"
-                :class="adicionado ? 'bg-emerald-600 shadow-emerald-900/30' : 'bg-red-600 shadow-red-900/30 hover:bg-red-700'"
-                @click="adicionar"
-              >
-                <component :is="adicionado ? Check : ShoppingCart" :size="18" />
-                {{ adicionado ? 'Adicionado' : 'Adicionar ao carrinho' }}
-              </button>
+              <!-- Quanto fica o que foi escolhido — mesma conta do carrinho (preço/kg × kg, no centavo). -->
+              <p v-if="pesavel" class="mt-3 flex items-baseline gap-1.5 text-sm text-(--texto-fraco)">
+                <span class="numeros">{{ formatarPeso(gramas / 1000) }} =</span>
+                <Preco :valor="totalEscolhido" class="text-xl" />
+              </p>
+
+              <p v-if="noCarrinho > 0" class="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl bg-(--bg-elevado) px-4 py-3 text-sm text-(--texto-fraco)">
+                <span><strong class="numeros text-(--texto-primario)">{{ rotuloQuantidade({ quantidade: noCarrinho, pesavel }) }}</strong> no seu carrinho</span>
+                <NuxtLink to="/Carrinho" class="font-semibold text-red-600 hover:underline">
+                  Ver carrinho →
+                </NuxtLink>
+              </p>
             </div>
 
-            <!-- Quanto fica o que foi escolhido — mesma conta do carrinho (preço/kg × kg, no centavo). -->
-            <p v-if="pesavel" class="mt-3 text-sm text-(--texto-fraco)">
-              {{ formatarPeso(gramas / 1000) }} =
-              <strong class="text-xl font-extrabold text-(--preco)">R$ {{ totalEscolhido.toFixed(2) }}</strong>
-            </p>
-
-            <p v-if="noCarrinho > 0" class="mt-4 flex flex-wrap items-center gap-x-3 text-sm text-(--texto-fraco)">
-              <span><strong class="text-(--texto-primario)">{{ rotuloQuantidade({ quantidade: noCarrinho, pesavel }) }}</strong> no seu carrinho</span>
-              <NuxtLink to="/Carrinho" class="font-bold text-red-500 hover:underline">
-                Ver carrinho →
-              </NuxtLink>
-            </p>
+            <ul class="mt-6 flex flex-col gap-3.5 text-sm text-(--texto-esmaecido)">
+              <li class="flex items-start gap-3">
+                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-(--bg-cartao) text-(--texto-primario) ring-1 ring-(--borda)">
+                  <MessageCircle :size="17" />
+                </span>
+                <span class="pt-1.5">Monte o carrinho e finalize pelo WhatsApp, direto com a nossa equipe.</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-(--bg-cartao) text-(--texto-primario) ring-1 ring-(--borda)">
+                  <CreditCard :size="17" />
+                </span>
+                <span class="pt-1.5">Pix, cartão de débito e crédito ou dinheiro.</span>
+              </li>
+            </ul>
           </div>
         </section>
 
         <!-- ═════ SIMILARES ═════ -->
-        <section v-if="similares.length" class="mt-12" aria-label="Produtos similares">
-          <div class="mb-4 flex items-end justify-between gap-3">
-            <h2 class="text-xl font-black tracking-tight text-(--texto-primario) md:text-2xl">
+        <section v-if="similares.length" class="mt-16" aria-labelledby="titulo-similares">
+          <div class="mb-5 flex items-end justify-between gap-3">
+            <h2 id="titulo-similares" class="text-xl font-bold tracking-tight text-(--texto-primario) md:text-2xl">
               Produtos similares
             </h2>
             <NuxtLink
               v-if="categoria && produto.tipo"
               :to="{ path: categoria.rota, query: { tipo: produto.tipo } }"
-              class="flex items-center gap-0.5 text-sm font-bold text-red-500 hover:underline"
+              class="flex items-center gap-0.5 rounded-full px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-(--marca-suave)"
             >
-              ver todos
-              <ChevronRight :size="15" />
+              Ver todos
+              <ChevronRight :size="16" />
             </NuxtLink>
           </div>
 
@@ -357,24 +384,50 @@ onMounted(() => {
       </template>
 
       <!-- ═════ INDISPONÍVEL ═════ -->
-      <div v-else class="flex flex-col items-center py-24 text-center">
-        <PackageX :size="56" class="mb-4 text-(--texto-suave) opacity-40" />
-        <h1 class="text-2xl font-black text-(--texto-primario)">
+      <div v-else class="mx-auto flex max-w-lg flex-col items-center py-20 text-center">
+        <span class="grid h-20 w-20 place-items-center rounded-3xl bg-(--bg-elevado) text-(--texto-fraco)">
+          <PackageX :size="34" />
+        </span>
+        <h1 class="mt-6 text-2xl font-extrabold tracking-tight text-(--texto-primario)">
           Produto indisponível
         </h1>
-        <p class="mt-2 max-w-md text-(--texto-fraco)">
+        <p class="mt-2 text-(--texto-fraco)">
           Esse produto não está disponível no momento ou saiu do nosso catálogo. Que tal dar uma olhada nas ofertas?
         </p>
-        <div class="mt-6 flex flex-wrap justify-center gap-3">
-          <NuxtLink to="/ofertas" class="rounded-xl bg-red-600 px-6 py-3 font-bold text-white transition hover:bg-red-700">
+        <div class="mt-7 flex flex-wrap justify-center gap-3">
+          <NuxtLink to="/ofertas" class="rounded-full bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700">
             Ver ofertas
           </NuxtLink>
-          <NuxtLink to="/alimentos" class="rounded-xl border border-(--borda-forte) bg-(--bg-cartao) px-6 py-3 font-bold text-(--texto-primario) transition hover:border-(--borda-hover)">
-            Continuar comprando
+          <NuxtLink to="/" class="rounded-full border border-(--borda-forte) bg-(--bg-cartao) px-6 py-3 font-semibold text-(--texto-primario) transition hover:border-(--borda-hover)">
+            Página inicial
           </NuxtLink>
         </div>
       </div>
     </main>
+
+    <!-- Celular: preço e botão acompanham a tela enquanto a pessoa rola. -->
+    <div
+      v-if="produto"
+      class="sticky bottom-0 z-40 border-t border-(--borda) bg-(--bg-vidro) px-4 py-3 backdrop-blur-xl md:hidden"
+    >
+      <div class="flex items-center gap-4">
+        <div class="shrink-0">
+          <Preco :valor="pesavel ? totalEscolhido : produto.preco2" class="text-2xl" />
+          <p class="numeros text-xs text-(--texto-fraco)">
+            {{ pesavel ? formatarPeso(gramas / 1000) : (quantidade > 1 ? `${quantidade} unidades` : 'cada') }}
+          </p>
+        </div>
+        <button
+          type="button"
+          class="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl font-semibold text-white shadow-sm transition-all active:scale-[0.98]"
+          :class="adicionado ? 'bg-emerald-600' : 'bg-red-600 hover:bg-red-700'"
+          @click="adicionar"
+        >
+          <component :is="adicionado ? Check : ShoppingCart" :size="19" />
+          {{ adicionado ? 'Adicionado' : 'Adicionar' }}
+        </button>
+      </div>
+    </div>
 
     <Footer />
   </div>

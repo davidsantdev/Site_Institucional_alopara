@@ -44,16 +44,16 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
         v-if="showCloseButton"
         data-slot="dialog-close"
         class="absolute top-3 right-3 z-10
-         w-8 h-8 rounded-full
+         w-9 h-9 rounded-full
          flex items-center justify-center
-         bg-black/60 border border-zinc-700 text-zinc-400
-         hover:text-white hover:border-zinc-500
-         focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-0
+         bg-(--bg-elevado) text-(--texto-fraco)
+         hover:text-(--texto-primario) hover:bg-(--borda)
+         focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600
          disabled:pointer-events-none transition-all duration-200
          [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
       >
         <X />
-        <span class="sr-only">Close</span>
+        <span class="sr-only">Fechar</span>
       </DialogClose>
     </DialogContent>
   </DialogPortal>

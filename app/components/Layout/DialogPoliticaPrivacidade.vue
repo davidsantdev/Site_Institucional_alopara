@@ -34,30 +34,28 @@ const blocos = [
 <template>
   <Dialog>
     <DialogTrigger as-child>
-      <button type="button" class="text-[#2a2a2a] text-[11px] font-bold tracking-[1px] hover:text-[#555] transition-colors">
+      <button type="button" class="text-[13px] text-(--texto-fraco) transition-colors hover:text-(--texto-primario)">
         Política de privacidade
       </button>
     </DialogTrigger>
 
-    <DialogContent class="bg-[#111] border border-[#1f1f1f] p-0 w-[92vw] md:w-[560px] max-h-[85vh] overflow-hidden rounded-2xl flex flex-col">
-      <!-- header -->
-      <div class="px-7 pt-7 pb-5 border-b border-[#1a1a1a] shrink-0">
-        <span class="text-red-600 text-[10px] font-black tracking-[3px] uppercase">Alô Pará</span>
-        <h2 class="text-white text-[22px] font-black tracking-tight mt-1 leading-none">
+    <DialogContent class="flex max-h-[85vh] w-[92vw] flex-col overflow-hidden rounded-2xl border border-(--borda) bg-(--bg-cartao) p-0 md:w-140">
+      <div class="shrink-0 border-b border-(--borda) px-7 pb-5 pt-7">
+        <span class="text-xs font-semibold uppercase tracking-wide text-red-600">Alô Pará</span>
+        <h2 class="mt-1 text-[22px] font-extrabold leading-tight tracking-tight text-(--texto-primario)">
           Política de privacidade
         </h2>
-        <p class="text-[#444] text-[12px] mt-2">
+        <p class="mt-1.5 text-xs text-(--texto-fraco)">
           Última atualização: julho de 2026
         </p>
       </div>
 
-      <!-- corpo rolável -->
-      <div class="px-7 py-6 overflow-y-auto flex flex-col gap-6">
+      <div class="flex flex-col gap-6 overflow-y-auto px-7 py-6">
         <section v-for="bloco in blocos" :key="bloco.titulo">
-          <h3 class="text-white text-[14px] font-bold mb-2">
+          <h3 class="mb-1.5 text-sm font-bold text-(--texto-primario)">
             {{ bloco.titulo }}
           </h3>
-          <p class="text-[#888] text-[13px] leading-relaxed">
+          <p class="text-sm leading-relaxed text-(--texto-esmaecido)">
             {{ bloco.texto }}
           </p>
         </section>

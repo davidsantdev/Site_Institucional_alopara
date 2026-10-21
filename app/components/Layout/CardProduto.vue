@@ -1,96 +1,110 @@
 <script setup lang="ts">
 /**
- * Card de produto das listas (categorias, Ofertas) e dos "produtos similares"
- * da página do produto. O card inteiro clica pelo link do nome (o `::after`
- * dele cobre o card) — é link de verdade: abre em nova aba, o Google enxerga
- * e o "voltar" do navegador funciona. O "+" fica acima (z-10) e não navega.
+ * Card de produto das listas (categorias, Ofertas, busca, prateleiras da home
+ * e "produtos similares"). O card inteiro clica pelo link do nome (o `::after`
+ * dele cobre o card) — é link de verdade: abre em nova aba, o Google enxerga e
+ * o "voltar" funciona. O botão de adicionar fica acima (z-10) e não navega:
+ * depois do primeiro toque ele vira o contador − / + do próprio carrinho.
  */
 import type { Produto } from '~/composables/useCatalogo'
+import { Minus, Plus } from 'lucide-vue-next'
 import { computed } from 'vue'
 import FotoProduto from '~/components/Layout/FotoProduto.vue'
+import Preco from '~/components/Layout/Preco.vue'
 import { linkProduto, percentualDesconto } from '~/composables/useCatalogo'
-import { formatarPeso, PESO, useCarrinho } from '~/data/composable/UseCarrinho'
+import { formatarNome, formatarReais } from '~/composables/useFormatacao'
+import { rotuloQuantidade, useCarrinho } from '~/data/composable/UseCarrinho'
 
 const props = withDefaults(defineProps<{
   produto: Produto
   /** Classe completa (pro Tailwind enxergar) do fundo da foto no hover — vem do tema da categoria. */
   hoverCard?: string
 }>(), {
-  hoverCard: 'group-hover:bg-red-50',
+  hoverCard: '',
 })
 
-const { adicionarCarrinho } = useCarrinho()
+const { alterarQuantidade, quantidadeDe, carregado } = useCarrinho()
 
-/** Produto pesado entra com 500 g (dá pra mudar na página do produto e no carrinho); o resto entra com 1. */
-const quantidadeRapida = computed(() => props.produto.pesavel ? PESO.PADRAO_GRAMAS / 1000 : 1)
-
-function adicionarRapido() {
-  adicionarCarrinho(props.produto, quantidadeRapida.value)
-}
+const nome = computed(() => formatarNome(props.produto.nome))
+const desconto = computed(() => props.produto.emPromocao ? percentualDesconto(props.produto.precoOriginal, props.produto.preco2) : 0)
+const noCarrinho = computed(() => carregado.value ? quantidadeDe(props.produto.nome) : 0)
+const rotulo = computed(() => rotuloQuantidade({ quantidade: noCarrinho.value, pesavel: props.produto.pesavel }))
 </script>
 
 <template>
-  <div class="card group relative flex flex-col overflow-hidden rounded-2xl border border-(--borda) bg-(--bg-cartao) transition-all duration-200 hover:-translate-y-0.5 hover:border-(--borda-hover)">
-    <span
-      v-if="produto.emPromocao"
-      class="absolute left-2 top-2 z-10 rounded-full bg-red-600 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white shadow"
-    >
-      -{{ percentualDesconto(produto.precoOriginal, produto.preco2) }}%
-    </span>
-
-    <button
-      type="button"
-      :aria-label="produto.pesavel ? `Adicionar ${formatarPeso(quantidadeRapida)} de ${produto.nome} ao carrinho` : `Adicionar ${produto.nome} ao carrinho`"
-      class="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-green-500 text-base font-bold text-white shadow transition-all hover:bg-green-600 active:scale-95"
-      @click="adicionarRapido"
-    >
-      +
-    </button>
-
-    <div class="flex h-36 items-center justify-center bg-[#fafafa] p-3 transition-colors duration-200" :class="hoverCard">
+  <article class="card group relative flex flex-col rounded-2xl border border-(--borda) bg-(--bg-cartao) p-2 transition-[box-shadow,transform,border-color] duration-200 hover:-translate-y-0.5 hover:border-(--borda-forte) hover:shadow-(--sombra-2) sm:p-2.5">
+    <div class="relative flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-(--bg-foto) transition-colors duration-200" :class="hoverCard">
+      <span
+        v-if="desconto > 0"
+        class="numeros absolute left-2 top-2 z-1 rounded-md bg-red-600 px-1.5 py-0.5 text-[11px] font-bold text-white"
+      >
+        -{{ desconto }}%
+      </span>
       <FotoProduto
         :produto="produto"
-        img-class="h-28 w-28 object-contain drop-shadow-sm transition-transform duration-200 group-hover:scale-105"
-        emoji-class="text-7xl transition-transform duration-200 group-hover:scale-110"
+        img-class="h-[82%] w-[82%] object-contain transition-transform duration-300 group-hover:scale-[1.04]"
+        emoji-class="text-6xl transition-transform duration-300 group-hover:scale-110 sm:text-7xl"
       />
     </div>
 
-    <div class="flex flex-1 flex-col gap-1 p-3 pt-2">
+    <div class="flex flex-1 flex-col px-1 pt-2.5">
       <NuxtLink
         :to="linkProduto(produto)"
-        class="line-clamp-2 min-h-10 text-[12px] font-medium leading-snug text-(--texto-secundario) after:absolute after:inset-0 after:z-1 md:text-[13px]"
+        :title="nome"
+        class="line-clamp-2 min-h-10 text-[13px] font-medium leading-5 text-(--texto-secundario) after:absolute after:inset-0 after:rounded-2xl sm:text-[13.5px]"
       >
-        {{ produto.nome }}
+        {{ nome }}
       </NuxtLink>
 
-      <div class="mt-auto pt-1">
-        <template v-if="produto.emPromocao">
-          <p class="text-[10px] leading-tight text-(--texto-fraco)">
-            Preço normal: <span class="line-through">R$ {{ produto.precoOriginal }}</span>{{ produto.pesavel ? '/kg' : '' }}
-          </p>
-          <p class="leading-tight">
-            <span class="block text-[9px] font-black uppercase tracking-wide text-emerald-500">Preço do clube</span>
-            <span class="text-xl font-extrabold text-(--preco) md:text-2xl">R$ {{ produto.preco2 }}</span>
-            <span v-if="produto.pesavel" class="ml-0.5 text-xs font-bold text-(--texto-fraco)">/kg</span>
-          </p>
-        </template>
-        <p v-else class="leading-tight">
-          <span class="text-xl font-extrabold text-(--preco) md:text-2xl">R$ {{ produto.preco2 }}</span>
-          <span v-if="produto.pesavel" class="ml-0.5 text-xs font-bold text-(--texto-fraco)">/kg</span>
+      <div class="mt-2 flex min-h-13 flex-col justify-end">
+        <p v-if="produto.emPromocao" class="mb-1.5 flex items-center gap-1.5 text-[11px] leading-none">
+          <span class="rounded bg-(--clube-fundo) px-1.5 py-0.5 font-bold uppercase tracking-wide text-(--clube)">Clube</span>
+          <span class="numeros text-(--texto-fraco) line-through">R$ {{ formatarReais(produto.precoOriginal) }}</span>
         </p>
+        <Preco :valor="produto.preco2" :por-kg="produto.pesavel" class="text-[22px] sm:text-2xl" />
+      </div>
+
+      <div class="relative z-10 mt-3">
+        <button
+          v-if="!noCarrinho"
+          type="button"
+          :aria-label="`Adicionar ${nome} ao carrinho`"
+          class="flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-(--borda-forte) bg-(--bg-cartao) text-sm font-semibold text-(--texto-primario) transition hover:border-red-600 hover:bg-red-600 hover:text-white active:scale-[0.97]"
+          @click="alterarQuantidade(produto, 1)"
+        >
+          <Plus :size="16" />
+          Adicionar
+        </button>
+        <div v-else class="flex h-10 items-center justify-between rounded-xl bg-red-600 text-white shadow-sm shadow-red-900/20">
+          <button
+            type="button"
+            :aria-label="`Diminuir ${nome}`"
+            class="grid h-10 w-10 place-items-center rounded-l-xl transition hover:bg-black/15 active:scale-90"
+            @click="alterarQuantidade(produto, -1)"
+          >
+            <Minus :size="16" />
+          </button>
+          <span class="numeros text-sm font-bold" aria-live="polite">{{ rotulo }}</span>
+          <button
+            type="button"
+            :aria-label="`Aumentar ${nome}`"
+            class="grid h-10 w-10 place-items-center rounded-r-xl transition hover:bg-black/15 active:scale-90"
+            @click="alterarQuantidade(produto, 1)"
+          >
+            <Plus :size="16" />
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <style scoped>
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+@keyframes surgir {
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.card { animation: fadeIn 0.25s ease both; }
-
-@media (prefers-reduced-motion: reduce) {
-  .card { animation: none; }
-}
+/* `backwards`: depois de surgir, o card volta aos estilos normais (senão o
+   transform final da animação travaria o "levanta" do hover). */
+.card { animation: surgir 0.3s ease backwards; }
 </style>

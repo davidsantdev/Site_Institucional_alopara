@@ -70,7 +70,7 @@ export interface Produto {
    * admin corrige as exceções na mão.
    */
   pesavel: boolean
-  /** Emoji do hortifruti — usado no lugar da foto quando não há foto de verdade (ver emojiProduto.ts). */
+  /** Emoji do hortifruti/açougue — usado no lugar da foto quando não há foto de verdade (ver emojiProduto.ts). */
   emoji: string
 }
 
@@ -666,8 +666,17 @@ async function publicar(produtos: Produto[], atualizadoEm: number, completo: boo
     produtos,
     atualizadoEm,
     completo,
-    indice: produtos.map(p => `${p.nome} ${p.tipo}`.toLowerCase()),
+    indice: produtos.map(p => normalizarBusca(`${p.nome} ${p.tipo}`)),
   }
+}
+
+/**
+ * Minúsculas e sem acento — a CISS grava "FEIJAO", mas quem busca digita
+ * "feijão" (e as subcategorias vêm COM acento: "CAFÉ EM PÓ"). Sem isto, a
+ * busca com acento não achava nada.
+ */
+export function normalizarBusca(texto: string): string {
+  return texto.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 }
 
 // ═══════════════════════ DISCO ═══════════════════════
@@ -685,7 +694,7 @@ type CatalogoDisco = Omit<Catalogo, 'indice'>
  * Subir este número força uma varredura nova no próximo boot, sem precisar
  * lembrar de apagar `.cache/catalogo.json` manualmente a cada deploy.
  */
-const CACHE_VERSAO = 5
+const CACHE_VERSAO = 6
 
 /**
  * `versaoAtual: false` = o formato mudou desde que isto foi salvo (campo novo
@@ -1078,7 +1087,7 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
       ean: String(p.codigoBarra || p.nrcodbarprod || ''),
       unidade,
       pesavel: pesavelPorPadrao({ hortifruti: Boolean(cat & CAT.frutas), unidade, nome }),
-      emoji: cat & CAT.frutas ? emojiProduto(nome) : '',
+      emoji: cat & CAT.frutas ? emojiProduto(nome) : cat & CAT.carnes ? emojiProduto(nome, 'acougue') : '',
     })
     novos++
   }
@@ -1360,6 +1369,19 @@ const MAX_FACETAS = 20
 const ANCORAS_POR_CATEGORIA: Partial<Record<Categoria, string[]>> = {
   alimentos: ['ARROZ', 'FEIJAO', 'FEIJÃO', 'MACARRAO', 'MACARRÃO'],
   perfumaria: ['SHAMPOO', 'XAMPU'],
+  // A CISS prefixa o hortifruti fresco com "F " (fruta) e "V " (verdura) — sem
+  // isto, os congelados e embalados (que têm foto) abriam "Frutas & Verduras".
+  frutas: ['F', 'V'],
+}
+
+/**
+ * Subcategorias que abrem a categoria, na ordem — pra quando o que importa é o
+ * TIPO, não o nome. O departamento de frios da CISS (FIAMBRERIA) traz junto
+ * margarina, massa fresca e banha; "Carnes e frios" tem que abrir com carne.
+ * Subcategoria fora da lista vai pro fim.
+ */
+const TIPOS_PRIORITARIOS: Partial<Record<Categoria, string[]>> = {
+  carnes: ['BOVINO', 'AVES', 'SUINO', 'OUTROS', 'DEFUMADOS', 'MORTADELA/SALAME', 'PRESUNTO', 'APRESUNTADO', 'QUEIJOS FATIADOS', 'PATÊS / ANTEPASTO'],
 }
 
 /**
@@ -1399,7 +1421,10 @@ export function consultar(
     ? 0
     : (Array.isArray(categoria) ? categoria : [categoria])
         .reduce((acc, c) => acc | CAT[c], 0)
-  const termo = busca.toLowerCase().trim()
+  const termo = normalizarBusca(busca).replace(/\s+/g, ' ').trim()
+  // Cada palavra tem que aparecer, em qualquer ordem: "tio joao arroz" acha
+  // "ARROZ TIO JOAO" (antes só achava se fosse o trecho exato, na ordem).
+  const palavrasBusca = termo ? termo.split(' ') : []
   // produtos e indice vêm do MESMO objeto: não há como estarem desalinhados,
   // mesmo se uma varredura em segundo plano publicar uma versão nova agora.
   const { produtos, indice } = catalogo
@@ -1413,8 +1438,8 @@ export function consultar(
     const p = produtos[i]!
     if (mascara && !(p.cat & mascara))
       continue
-    // Índice pré-computado: evita um toLowerCase() por item, por requisição.
-    if (termo && !indice[i]!.includes(termo))
+    // Índice pré-computado: evita normalizar o texto de cada item a cada requisição.
+    if (palavrasBusca.length && !palavrasBusca.every(palavra => indice[i]!.includes(palavra)))
       continue
 
     const oculto = produtoEstaOculto(p.id)
@@ -1474,6 +1499,20 @@ export function consultar(
   // separa em dois blocos sem embaralhar a ordenação já aplicada acima.
   filtrados.sort((a, b) => (a.imagemReal ? 0 : 1) - (b.imagemReal ? 0 : 1))
 
+  // "Mais relevantes" COM busca: quem é aquilo que a pessoa digitou vem antes de
+  // quem só cita a palavra — "arroz" abre com "ARROZ TIO JOAO", não com
+  // "BISCOITO DE ARROZ" (a CISS põe o tipo do produto sempre na frente do nome).
+  if ((!opcoes.ordenar || opcoes.ordenar === 'relevancia') && palavrasBusca.length) {
+    const primeira = palavrasBusca[0]!
+    // Calculado uma vez por produto (não a cada comparação do sort).
+    const ranks = new Map<Produto, number>()
+    for (const p of filtrados) {
+      const nome = normalizarBusca(p.nome)
+      ranks.set(p, nome.startsWith(termo) ? 0 : nome.startsWith(primeira) ? 1 : nome.includes(` ${primeira}`) ? 2 : 3)
+    }
+    filtrados.sort((a, b) => ranks.get(a)! - ranks.get(b)!)
+  }
+
   // "Mais relevantes" (padrão, sem busca): dentro de UMA categoria só, alguns
   // produtos-âncora aparecem primeiro — o que a maioria já vai procurar de
   // cara, em vez de depender da ordem arbitrária que a CISS mandou. Sem
@@ -1483,13 +1522,26 @@ export function consultar(
   // cima continua valendo.
   if ((!opcoes.ordenar || opcoes.ordenar === 'relevancia') && !termo && (typeof categoria === 'string' || categoria === null)) {
     const ancoras = typeof categoria === 'string' ? ANCORAS_POR_CATEGORIA[categoria] : ANCORAS_GERAL
-    if (ancoras?.length) {
-      const rank = (p: Produto) => {
+    const tipos = typeof categoria === 'string' ? TIPOS_PRIORITARIOS[categoria] : undefined
+    if (ancoras?.length || tipos?.length) {
+      // Só o COMEÇO do nome conta (a CISS põe o tipo do produto na frente):
+      // "BISCOITO DE ARROZ" e "VINAGRE DE ARROZ" não são arroz.
+      const rankAncora = (p: Produto) => {
+        if (!ancoras?.length)
+          return 0
         const nome = p.nome.toUpperCase()
-        const i = ancoras.findIndex(palavra => nome.includes(palavra))
+        const i = ancoras.findIndex(palavra => nome.startsWith(`${palavra} `))
         return i === -1 ? ancoras.length : i
       }
-      filtrados.sort((a, b) => rank(a) - rank(b))
+      const rankTipo = (p: Produto) => {
+        const i = tipos?.indexOf(p.tipo) ?? -1
+        return i === -1 ? (tipos?.length ?? 0) : i
+      }
+      // Calculado uma vez por produto (não a cada comparação do sort).
+      const ranks = new Map<Produto, number>()
+      for (const p of filtrados)
+        ranks.set(p, rankAncora(p) * 1000 + rankTipo(p))
+      filtrados.sort((a, b) => ranks.get(a)! - ranks.get(b)!)
     }
   }
 

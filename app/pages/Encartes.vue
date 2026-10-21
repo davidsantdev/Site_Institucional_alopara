@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Newspaper, X } from 'lucide-vue-next'
+import { ChevronRight, Newspaper, X } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
 import Footer from '~/components/Layout/Footer.vue'
 import HeaderMain from '~/components/Layout/HeaderMain.vue'
@@ -53,27 +53,34 @@ onMounted(carregar)
   <div class="min-h-screen bg-(--bg-pagina) flex flex-col font-sans">
     <HeaderMain />
 
-    <!-- ═════ HERO ═════ -->
-    <div class="relative overflow-hidden bg-(--bg-pagina) px-4 py-12 md:py-16 text-center border-b border-(--borda)">
-      <div class="pointer-events-none absolute top-[-180px] left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 opacity-20 blur-3xl" />
-
-      <div class="relative mx-auto max-w-3xl">
-        <div class="mb-3 inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 px-4 py-1.5 text-[10px] font-black uppercase tracking-[3px] text-white">
-          <Newspaper :size="14" />
-          Alô Pará Supermercado
+    <!-- ═════ CABEÇALHO ═════ -->
+    <section class="relative overflow-hidden border-b border-(--borda)">
+      <div class="pointer-events-none absolute -right-20 -top-40 h-105 w-105 rounded-full bg-linear-to-br from-red-600 via-red-500 to-orange-500 opacity-15 blur-3xl" />
+      <div class="relative mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-9 lg:px-8">
+        <nav aria-label="Caminho" class="mb-4 flex items-center gap-1 text-xs text-(--texto-fraco)">
+          <NuxtLink to="/" class="transition hover:text-(--texto-primario)">
+            Início
+          </NuxtLink>
+          <ChevronRight :size="12" class="opacity-50" />
+          <span class="font-medium text-(--texto-secundario)" aria-current="page">Encartes</span>
+        </nav>
+        <div class="flex items-center gap-4">
+          <span class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-linear-to-br from-red-600 via-red-500 to-orange-500 text-white shadow-lg md:h-16 md:w-16">
+            <Newspaper :size="28" />
+          </span>
+          <div>
+            <h1 class="text-2xl font-extrabold tracking-tight text-(--texto-primario) md:text-4xl">
+              Encartes
+            </h1>
+            <p class="mt-1 text-sm text-(--texto-fraco) md:text-base">
+              As promoções da semana, direto por aqui
+            </p>
+          </div>
         </div>
-
-        <h1 class="mt-2 text-3xl font-black tracking-tight text-(--texto-primario) md:text-5xl">
-          Encartes
-        </h1>
-
-        <p class="mt-3 text-sm text-(--texto-fraco) md:text-base">
-          Acompanhe as promoções da semana direto por aqui
-        </p>
       </div>
-    </div>
+    </section>
 
-    <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-10 md:px-6">
+    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 md:px-6 md:py-10 lg:px-8">
       <!-- ═════ SKELETON ═════ -->
       <div v-if="carregando" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <div v-for="n in 3" :key="n" class="overflow-hidden rounded-2xl border border-(--borda) bg-(--bg-cartao)">
@@ -110,7 +117,7 @@ onMounted(carregar)
           v-for="e in encartes"
           :key="e.id"
           type="button"
-          class="group overflow-hidden rounded-2xl border border-(--borda) bg-(--bg-cartao) text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-red-600"
+          class="group overflow-hidden rounded-2xl border border-(--borda) bg-(--bg-cartao) text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-(--borda-forte) hover:shadow-(--sombra-2)"
           @click="selecionado = e"
         >
           <div class="aspect-3/4 overflow-hidden bg-(--bg-elevado)">

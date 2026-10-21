@@ -12,9 +12,11 @@ useSeoMeta({
 </script>
 
 <template>
-  <div>
+  <div class="flex min-h-screen flex-col bg-(--bg-pagina)">
     <HeaderMain />
-    <LayoutTrabalho />
+    <main>
+      <LayoutTrabalho />
+    </main>
     <Footer />
   </div>
 </template>
