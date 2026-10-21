@@ -11,6 +11,8 @@ const navLinks = [
   { label: 'Ofertas', to: '/ofertas' },
   { label: 'Encartes', to: '/encartes' },
   { label: 'Alimentos', to: '/alimentos' },
+  { label: 'Frutas', to: '/frutas' },
+  { label: 'Carnes', to: '/carnes' },
   { label: 'Bebidas', to: '/bebidas' },
   { label: 'Limpeza', to: '/limpeza' },
   { label: 'Perfumaria', to: '/perfumaria' },

@@ -8,9 +8,9 @@ import ProdutosRedondo from '~/components/Layout/ProdutosRedondo.vue'
 
 useSeoMeta({
   title: 'Alô Pará | Supermercado em Novo Repartimento - PA',
-  description: 'Supermercado Alô Pará em Novo Repartimento - PA. Ofertas atualizadas todos os dias em alimentos, bebidas, limpeza e perfumaria. Compre online.',
+  description: 'Supermercado Alô Pará em Novo Repartimento - PA. Ofertas atualizadas todos os dias em alimentos, hortifruti, carnes, bebidas, limpeza e perfumaria. Compre online.',
   ogTitle: 'Supermercado Alô Pará',
-  ogDescription: 'Ofertas atualizadas todos os dias. Alimentos, bebidas, limpeza e perfumaria com o melhor preço em Novo Repartimento - PA.',
+  ogDescription: 'Ofertas atualizadas todos os dias. Alimentos, hortifruti, carnes, bebidas, limpeza e perfumaria com o melhor preço em Novo Repartimento - PA.',
 })
 </script>
 

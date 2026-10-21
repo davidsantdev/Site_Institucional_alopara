@@ -24,6 +24,10 @@ export interface Produto {
   img: string
   /** true só quando a foto foi confirmada — foto "adivinhada" que não existe no CDN vem false. */
   imagemReal?: boolean
+  /** Emoji do hortifruti, usado no lugar da foto quando `imagemReal` é falso (ver FotoProduto). */
+  emoji?: string
+  /** Vendido por peso: `preco2` é por KG e a `quantidade` no carrinho é em KG (ver UseCarrinho). */
+  pesavel?: boolean
   quantidade: number
 }
 

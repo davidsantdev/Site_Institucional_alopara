@@ -7,7 +7,7 @@ import PaginaCategoria from '~/components/Layout/PaginaCategoria.vue'
   <PaginaCategoria
     endpoint="/api/alimentos"
     titulo="Alimentos & Mercearia"
-    descricao="Mercearia, hortifruti, padaria, frios e congelados no Supermercado Alô Pará."
+    descricao="Mercearia, padaria, frios e congelados no Supermercado Alô Pará."
     gradiente="from-red-600 via-red-500 to-orange-500"
     ring="focus:ring-red-500/50"
     botao="bg-red-500 hover:bg-red-600"
