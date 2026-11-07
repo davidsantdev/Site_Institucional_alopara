@@ -296,9 +296,11 @@ export async function responder(
   }
 
   let texto = ''
+  // Mesmo modelo do começo ao fim desta mensagem (ver `conversar`).
+  const sessao: { modelo?: string } = {}
   for (let rodada = 0; rodada < MAX_RODADAS; rodada++) {
     // Se na última rodada ainda quiser ferramenta, para por aí e usa a frase padrão lá embaixo.
-    const resposta = await conversar(mensagens, FERRAMENTAS)
+    const resposta = await conversar(mensagens, FERRAMENTAS, sessao)
     if (!resposta.chamadas.length || rodada === MAX_RODADAS - 1) {
       texto = resposta.texto
       break

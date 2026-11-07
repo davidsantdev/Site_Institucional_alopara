@@ -12,11 +12,13 @@ const LIMITE_DIARIO = Number(process.env.ASSISTENTE_LIMITE_DIARIO) || 1000
 
 interface Uso { minuto: number[], dia: number }
 
-const estado = (globalThis as any).__assistenteLimite ??= {
+interface EstadoLimite { dia: string, totalDia: number, porIp: Map<string, Uso> }
+
+const estado: EstadoLimite = (globalThis as any).__assistenteLimite ??= {
   dia: '',
   totalDia: 0,
   porIp: new Map<string, Uso>(),
-} as { dia: string, totalDia: number, porIp: Map<string, Uso> }
+} satisfies EstadoLimite
 
 function hoje(): string {
   return new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Belem' })
