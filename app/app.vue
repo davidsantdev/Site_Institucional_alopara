@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { defineAsyncComponent, onMounted } from 'vue'
 import { capturarCodigoAfiliado } from '~/composables/useAfiliado'
 
 // Canonical + og:url por página. Sem isso, TODA página (inclusive as de
@@ -15,6 +15,9 @@ const route = useRoute()
 // reaparecer na mensagem do WhatsApp quando a pessoa finalizar a compra,
 // mesmo que ela chegue por outra página que não seja a home.
 onMounted(capturarCodigoAfiliado)
+
+// Assistente de compras com IA — carregado à parte, pra não pesar o primeiro carregamento.
+const AssistenteVirtual = defineAsyncComponent(() => import('~/components/Layout/AssistenteVirtual.vue'))
 
 useHead({
   link: [
@@ -98,5 +101,8 @@ useHead({
 
 <template>
   <NuxtPage />
+  <ClientOnly>
+    <AssistenteVirtual />
+  </ClientOnly>
   <Toaster position="bottom-right" rich-colors close-button />
 </template>
