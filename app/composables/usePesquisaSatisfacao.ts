@@ -61,7 +61,7 @@ export const SECOES_PESQUISA: Secao[] = [
         tipo: 'radio',
         texto: 'Existe alguma situação, comportamento ou atitude no ambiente de trabalho que incomoda você?',
         opcoes: ['Não', 'Sim'],
-        detalhe: { id: 'p14_detalhe', label: 'Qual?', mostrarSe: ['Sim'] },
+        detalhe: { id: 'p14_detalhe', label: 'Se quiser, conte o que acontece (opcional)' },
       },
       {
         id: 'p15',
@@ -77,7 +77,13 @@ export const SECOES_PESQUISA: Secao[] = [
     perguntas: [
       { id: 'p16', tipo: 'radio', texto: 'Você sente que pode conversar com seu líder ou com a gerência quando tem algum problema?', opcoes: ['Sim, tranquilamente', 'Na maioria das vezes', 'Às vezes', 'Não'] },
       { id: 'p17', tipo: 'radio', texto: 'Você considera que seu líder trata a equipe com respeito e igualdade?', opcoes: FREQ5 },
-      { id: 'p18', tipo: 'radio', texto: 'As orientações recebidas dos responsáveis pelo seu setor são claras?', opcoes: FREQ5 },
+      {
+        id: 'p18',
+        tipo: 'radio',
+        texto: 'As orientações recebidas dos responsáveis pelo seu setor são claras?',
+        opcoes: FREQ5,
+        detalhe: { id: 'p18_detalhe', label: 'Se quiser, explique (opcional)' },
+      },
       { id: 'p19', tipo: 'radio', texto: 'Você sente que seu trabalho é reconhecido pela liderança?', opcoes: ['Sim', 'Às vezes', 'Não'] },
       { id: 'p20', tipo: 'texto', texto: 'O que você acha que a liderança poderia melhorar?' },
     ],
@@ -95,7 +101,13 @@ export const SECOES_PESQUISA: Secao[] = [
     titulo: '6. Horários, folgas e carga de trabalho',
     perguntas: [
       { id: 'p25', tipo: 'radio', texto: 'Como você avalia sua carga de trabalho atualmente?', opcoes: ['Adequada', 'Um pouco pesada', 'Muito pesada', 'Poderia receber mais responsabilidades'] },
-      { id: 'p26', tipo: 'radio', texto: 'Você considera sua escala de trabalho adequada?', opcoes: ['Sim', 'Em parte', 'Não'] },
+      {
+        id: 'p26',
+        tipo: 'radio',
+        texto: 'Você considera sua escala de trabalho adequada?',
+        opcoes: ['Sim', 'Em parte', 'Não'],
+        detalhe: { id: 'p26_detalhe', label: 'Se quiser, explique (opcional)' },
+      },
       { id: 'p27', tipo: 'radio', texto: 'Quando houver horas a 100%, qual opção você prefere?', opcoes: ['Receber o valor das horas a 100%', 'Compensar as horas com folga', 'Depende da situação', 'Não tenho preferência'] },
       { id: 'p28', tipo: 'radio', texto: 'Você considera que consegue conciliar adequadamente trabalho e vida pessoal?', opcoes: ['Sim', 'Na maioria das vezes', 'Às vezes', 'Não'] },
     ],

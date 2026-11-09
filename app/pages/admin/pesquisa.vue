@@ -78,8 +78,12 @@ function escaparCSV(valor: string): string {
 }
 
 function baixarCSV() {
-  const perguntas = listarPerguntas()
-  const detalhes = perguntas.filter(p => p.detalhe).map(p => p.detalhe!)
+  // Cada comentário logo depois da pergunta dele — vários têm o mesmo rótulo
+  // ("Se quiser, explique"), então no fim da planilha ninguém saberia de qual era.
+  const colunas = listarPerguntas().flatMap(p => [
+    { id: p.id, titulo: p.texto },
+    ...(p.detalhe ? [{ id: p.detalhe.id, titulo: `${p.texto} (comentário)` }] : []),
+  ])
 
   const cabecalho = [
     'Enviado em',
@@ -87,21 +91,18 @@ function baixarCSV() {
     'Setor',
     'Tempo de empresa',
     'Data',
-    ...perguntas.map(p => p.texto),
-    ...detalhes.map(d => d.label),
+    ...colunas.map(c => c.titulo),
   ]
 
   const linhas = respostasPesquisa.value.map((r) => {
-    const colunas = [
+    return [
       formatarData(r.criadoEm),
       r.nome ?? '',
       r.setor,
       r.tempoEmpresa ?? '',
       r.data,
-      ...perguntas.map(p => r.respostas[p.id] ?? ''),
-      ...detalhes.map(d => r.respostas[d.id] ?? ''),
-    ]
-    return colunas.map(escaparCSV).join(',')
+      ...colunas.map(c => r.respostas[c.id] ?? ''),
+    ].map(escaparCSV).join(',')
   })
 
   const csv = [cabecalho.map(escaparCSV).join(','), ...linhas].join('\n')
