@@ -200,7 +200,16 @@ const DEPS_ALIMENTOS = [
   'PADARIA',
 
   'FRIOS',
-  'LATICINIOS',
+  // Laticínios (leite, iogurte, bebida láctea, requeijão): a CISS escreve com
+  // acento, e antes a comparação era sem — o departamento inteiro era descartado
+  // (o site não tinha nenhum leite UHT). Os nomes alternativos cobrem como
+  // outras lojas costumam chamar o mesmo setor. Tudo é comparado sem acento.
+  'LATICINIO',
+  'LACTEO',
+  'IOGURTE',
+  'RESFRIADO',
+  'REFRIGERADO',
+  'PERECIVE',
   'CONGELADOS',
 
   'BOMBONIERE',
@@ -269,30 +278,45 @@ const TERMOS_PERFUMARIA = [
   'PAPEL',
 ]
 
-function classificar(bruto: any): number {
-  const dep = String(bruto.departamento || '').toUpperCase()
+/** Maiúsculas e sem acento: "LATICÍNIOS" e "LATICINIOS" têm que ser a mesma coisa. */
+function semAcento(texto: string): string {
+  return texto.normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase()
+}
 
-  const blob = [
-    bruto.departamento,
-    bruto.categoria,
-    bruto.subcategoria,
-    bruto.nome,
-    bruto.descricao,
-  ].filter(Boolean).join(' ').toUpperCase()
+// Normalizadas uma vez só (classificar() roda pra cada um dos ~38 mil produtos).
+const DEPS_NORMALIZADOS: [Categoria, string[]][] = [
+  ['alimentos', DEPS_ALIMENTOS.map(semAcento)],
+  ['bebidas', DEPS_BEBIDAS.map(semAcento)],
+  ['limpeza', DEPS_LIMPEZA.map(semAcento)],
+  ['frutas', DEPS_FRUTAS.map(semAcento)],
+  ['carnes', DEPS_CARNES.map(semAcento)],
+]
+const TERMOS_PERFUMARIA_NORMALIZADOS = TERMOS_PERFUMARIA.map(semAcento)
+const COMIDA_OU_BEBIDA = CAT.alimentos | CAT.bebidas | CAT.frutas | CAT.carnes
+
+function classificar(bruto: any): number {
+  const dep = semAcento(String(bruto.departamento || ''))
 
   let cat = 0
-  if (DEPS_ALIMENTOS.some(d => dep.includes(d)))
-    cat |= CAT.alimentos
-  if (DEPS_BEBIDAS.some(d => dep.includes(d)))
-    cat |= CAT.bebidas
-  if (DEPS_LIMPEZA.some(d => dep.includes(d)))
-    cat |= CAT.limpeza
-  if (TERMOS_PERFUMARIA.some(t => blob.includes(t)))
-    cat |= CAT.perfumaria
-  if (DEPS_FRUTAS.some(d => dep.includes(d)))
-    cat |= CAT.frutas
-  if (DEPS_CARNES.some(d => dep.includes(d)))
-    cat |= CAT.carnes
+  for (const [categoria, deps] of DEPS_NORMALIZADOS) {
+    if (deps.some(d => dep.includes(d)))
+      cat |= CAT[categoria]
+  }
+
+  // Perfumaria casa por palavra no texto todo (CREME, PAPEL, PASTA, BEBE...) — só
+  // pra quem o departamento ainda não disse que é comida/bebida: senão "creme de
+  // leite", "macarrão" e "papinha" iam parar na Perfumaria.
+  if (!(cat & COMIDA_OU_BEBIDA)) {
+    const blob = semAcento([
+      bruto.departamento,
+      bruto.categoria,
+      bruto.subcategoria,
+      bruto.nome,
+      bruto.descricao,
+    ].filter(Boolean).join(' '))
+    if (TERMOS_PERFUMARIA_NORMALIZADOS.some(t => blob.includes(t)))
+      cat |= CAT.perfumaria
+  }
   return cat
 }
 
@@ -694,7 +718,7 @@ type CatalogoDisco = Omit<Catalogo, 'indice'>
  * Subir este número força uma varredura nova no próximo boot, sem precisar
  * lembrar de apagar `.cache/catalogo.json` manualmente a cada deploy.
  */
-const CACHE_VERSAO = 7
+const CACHE_VERSAO = 8
 
 /**
  * `versaoAtual: false` = o formato mudou desde que isto foi salvo (campo novo
@@ -1021,7 +1045,10 @@ async function buscarPagina(pagina: number, headers: Record<string, string>): Pr
   return null
 }
 
-function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): number {
+/** Departamento descartado (não caiu em categoria nenhuma) → quantos produtos e um exemplo. */
+type Descartados = Map<string, { total: number, exemplo: string }>
+
+function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[], descartados?: Descartados): number {
   let novos = 0
 
   for (const p of brutos) {
@@ -1034,8 +1061,18 @@ function normalizar(brutos: any[], vistos: Set<string>, destino: Produto[]): num
 
     const cat = classificar(p)
     // Produto que não cai em nenhuma categoria não é armazenado — economiza memória e disco.
-    if (cat === 0)
+    // Mas fica anotado: foi assim que um departamento inteiro (laticínios) sumiu do site sem ninguém ver.
+    if (cat === 0) {
+      if (descartados) {
+        const dep = String(p.departamento || '(sem departamento)').trim()
+        const atual = descartados.get(dep)
+        if (atual)
+          atual.total++
+        else
+          descartados.set(dep, { total: 1, exemplo: String(p.nome || '').trim() })
+      }
       continue
+    }
 
     const id = String(p.plu || p.codigoBarra || p.id || '')
     if (!id || vistos.has(id))
@@ -1117,6 +1154,7 @@ async function varrer(): Promise<void> {
 
   const vistos = new Set<string>()
   const produtos: Produto[] = []
+  const descartados: Descartados = new Map()
 
   let pagina = 1
   let vazias = 0
@@ -1145,7 +1183,7 @@ async function varrer(): Promise<void> {
       }
       else {
         vazias = 0
-        novosNoLote += normalizar(dados, vistos, produtos)
+        novosNoLote += normalizar(dados, vistos, produtos, descartados)
       }
     }
 
@@ -1216,6 +1254,15 @@ async function varrer(): Promise<void> {
   const semEstoque = produtos.filter(p => p.semEstoque).length
   const emPromocao = produtos.filter(p => p.emPromocao).length
   log(`[catálogo] ✅ ${produtos.length} produtos (${semEstoque} sem estoque, ${emPromocao} em promoção — ${novasPromocoes} vieram da Mercafácil)`)
+  // Departamentos que ficaram de fora do site (nenhuma categoria bateu). Se aparecer
+  // um que deveria estar à venda, é só incluir nas listas DEPS_* lá em cima.
+  if (descartados.size) {
+    const resumo = [...descartados.entries()]
+      .sort((a, b) => b[1].total - a[1].total)
+      .slice(0, 15)
+      .map(([dep, { total, exemplo }]) => `${dep}: ${total} (ex.: ${exemplo})`)
+    log(`[catálogo] 🚫 departamentos fora do site: ${resumo.join(' · ')}`)
+  }
 
   await salvarDisco({ produtos, atualizadoEm: agora, completo: true })
 }
